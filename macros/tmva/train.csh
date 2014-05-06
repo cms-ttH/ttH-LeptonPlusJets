@@ -1,4 +1,4 @@
-s#!/bin/csh
+#!/bin/csh
 
 mkdir weights #complains if "weights" exists, but job runs fine.
 
