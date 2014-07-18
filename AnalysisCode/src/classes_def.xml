@@ -3,4 +3,10 @@
   <class name="std::vector<eventVars>" />
   <class pattern="edm::Wrapper<eventVars>"/>
   <class name="edm::Wrapper<std::vector<eventVars> >" />
+
+  <class name="BEANeventVars_NLO" />
+  <class name="std::vector<BEANeventVars_NLO>" />
+  <class pattern="edm::Wrapper<BEANeventVars_NLO>"/>
+  <class name="edm::Wrapper<std::vector<BEANeventVars_NLO> >" />
+
 </lcgdict>
