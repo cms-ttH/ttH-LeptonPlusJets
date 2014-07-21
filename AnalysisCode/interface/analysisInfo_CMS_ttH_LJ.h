@@ -6,9 +6,9 @@
 
 #if !defined(__CINT__) && !defined(__MAKECINT__)
 
-#include "AnalysisCode/LeptonPlusJets/interface/categoryInfo.h"
-#include "AnalysisCode/LeptonPlusJets/interface/sampleInfo.h"
-#include "AnalysisCode/LeptonPlusJets/interface/systematicInfo.h"
+#include "ttH-LeptonPlusJets/AnalysisCode/interface/categoryInfo.h"
+#include "ttH-LeptonPlusJets/AnalysisCode/interface/sampleInfo.h"
+#include "ttH-LeptonPlusJets/AnalysisCode/interface/systematicInfo.h"
 
 #endif
 
