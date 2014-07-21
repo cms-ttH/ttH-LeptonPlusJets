@@ -655,8 +655,8 @@ void yggdrasil_NLO::makeTree(int sampleId, int maxNentries, int Njobs, int jobN)
 	      extraBQuarks.push_back(allStatesThisParticle);
 	      extraQuark_initiates_hadronization.push_back( allStatesThisParticle[(int)allStatesThisParticle.size()-1] );
 
-	      maxPtExtraBQuarks = std::max( allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), maxPtExtraBQuarks );
-	      minPtExtraBQuarks = std::min( allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), minPtExtraBQuarks );
+	      maxPtExtraBQuarks = std::max( (double)allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), maxPtExtraBQuarks );
+	      minPtExtraBQuarks = std::min( (double)allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), minPtExtraBQuarks );
 	      eve->genParticle_extraBQuarks_pt_.push_back( allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt() );
 	      eve->genParticle_extraBQuarks_mother_pdgId_.push_back(allStatesThisParticle[0].mother(0)->pdgId());
 
@@ -668,8 +668,8 @@ void yggdrasil_NLO::makeTree(int sampleId, int maxNentries, int Njobs, int jobN)
 	      extraCQuarks.push_back(allStatesThisParticle);
 	      extraQuark_initiates_hadronization.push_back( allStatesThisParticle[(int)allStatesThisParticle.size()-1] );
 
-	      maxPtExtraCQuarks = std::max( allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), maxPtExtraCQuarks );
-	      minPtExtraCQuarks = std::min( allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), minPtExtraCQuarks );
+	      maxPtExtraCQuarks = std::max( (double)allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), maxPtExtraCQuarks );
+	      minPtExtraCQuarks = std::min( (double)allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), minPtExtraCQuarks );
 	      eve->genParticle_extraCQuarks_pt_.push_back( allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt() );
 	      eve->genParticle_extraCQuarks_mother_pdgId_.push_back(allStatesThisParticle[0].mother(0)->pdgId());
 
