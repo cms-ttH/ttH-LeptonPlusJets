@@ -270,10 +270,10 @@ void yggdrasil_NLO::makeTree(int sampleId, int maxNentries, int Njobs, int jobN)
       double lep_cut_tight_eta = 2.4;
 
 
-      std::vector< reco::GenParticle > genParticle_leptons_loose;
+      std::vector< std::vector< reco::GenParticle > > genParticle_leptons_loose;
       yggdrasil_NLO::getGoodGenLeptons(genParticles,  genParticle_leptons_loose, false, true, lep_cut_tight_pt, lep_cut_tight_eta, lep_cut_loose_pt, lep_cut_loose_eta);
 
-      std::vector< reco::GenParticle > genParticle_leptons_tight;
+      std::vector< std::vector< reco::GenParticle > > genParticle_leptons_tight;
       yggdrasil_NLO::getGoodGenLeptons(genParticles,  genParticle_leptons_tight, true, false, lep_cut_tight_pt, lep_cut_tight_eta, lep_cut_loose_pt, lep_cut_loose_eta);
 
      
@@ -1031,17 +1031,18 @@ void yggdrasil_NLO::makeTree(int sampleId, int maxNentries, int Njobs, int jobN)
       //
       // Get Information on tightLepton that passed selection
       //
-      vdouble tight_lep_tlv;
-      tight_lep_tlv.push_back(genParticle_leptons_tight[0].px());
-      tight_lep_tlv.push_back(genParticle_leptons_tight[0].py());
-      tight_lep_tlv.push_back(genParticle_leptons_tight[0].pz());
-      tight_lep_tlv.push_back(genParticle_leptons_tight[0].energy());
-      eve->genParticle_tightLepton_TLV_.push_back(tight_lep_tlv);
-      
-      eve->genParticle_tightLepton_status_.push_back(genParticle_leptons_tight[0].status());
-      eve->genParticle_tightLepton_pdgId_.push_back(genParticle_leptons_tight[0].pdgId());
-      eve->genParticle_tightLepton_mother_pdgId_.push_back(genParticle_leptons_tight[0].mother(0)->pdgId());
-      
+      for(int iGenLepton=0; iGenLepton<(int)genParticle_leptons_tight[0].size(); iGenLepton++){
+	vdouble tight_lep_tlv;
+	tight_lep_tlv.push_back(genParticle_leptons_tight[0][iGenLepton].px());
+	tight_lep_tlv.push_back(genParticle_leptons_tight[0][iGenLepton].py());
+	tight_lep_tlv.push_back(genParticle_leptons_tight[0][iGenLepton].pz());
+	tight_lep_tlv.push_back(genParticle_leptons_tight[0][iGenLepton].energy());
+	eve->genParticle_tightLepton_TLV_.push_back(tight_lep_tlv);
+     
+	eve->genParticle_tightLepton_status_.push_back(genParticle_leptons_tight[0][iGenLepton].status());
+	eve->genParticle_tightLepton_pdgId_.push_back(genParticle_leptons_tight[0][iGenLepton].pdgId());
+	eve->genParticle_tightLepton_mother_pdgId_.push_back(genParticle_leptons_tight[0][iGenLepton].mother(0)->pdgId());
+      }
    
       //
       // Loop over genParticles
@@ -1887,7 +1888,7 @@ void yggdrasil_NLO::getGoodGenJets(std::vector< reco::GenJet > genJets,  std::ve
 //*****************************************************************************
 
 
-void yggdrasil_NLO::getGoodGenLeptons(std::vector< reco::GenParticle > genParticles,  std::vector< reco::GenParticle > &target, bool getTightLeptons, bool getLooseLeptons, double cut_tight_pt, double cut_tight_eta, double cut_loose_pt, double cut_loose_eta){
+void yggdrasil_NLO::getGoodGenLeptons(std::vector< reco::GenParticle > genParticles,  std::vector< std::vector< reco::GenParticle > > &target, bool getTightLeptons, bool getLooseLeptons, double cut_tight_pt, double cut_tight_eta, double cut_loose_pt, double cut_loose_eta){
 
 
   // Loop over genJets and check that they pass quality cuts
@@ -1899,14 +1900,15 @@ void yggdrasil_NLO::getGoodGenLeptons(std::vector< reco::GenParticle > genPartic
       std::vector< reco::GenParticle > allStagesThisLepton;
       yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, allStagesThisLepton);
       
-      std::vector< reco::GenParticle >::const_iterator lastStage = allStagesThisLepton.end()-1;
-      
+      std::vector< reco::GenParticle >::iterator checkStage = allStagesThisLepton.end()-1;
+      if( fabs(iGenParticle->pdgId()) == 11 ) checkStage = allStagesThisLepton.begin();
+
       if(getTightLeptons){
 
-	if( lastStage->pt()        > cut_tight_pt   &&
-	    fabs(lastStage->eta()) < cut_tight_eta     ){
+	if( checkStage->pt()        > cut_tight_pt   &&
+	    fabs(checkStage->eta()) < cut_tight_eta     ){
 	  
-	  target.push_back(*lastStage);
+	  target.push_back(allStagesThisLepton);
 	  
 	} // end if pass cuts
       
@@ -1914,11 +1916,11 @@ void yggdrasil_NLO::getGoodGenLeptons(std::vector< reco::GenParticle > genPartic
 
       if(getLooseLeptons){
 
-	if( lastStage->pt() < cut_tight_pt         &&
-	    lastStage->pt() > cut_loose_pt         &&
-	    fabs(lastStage->eta()) < cut_loose_eta    ){
+	if( checkStage->pt() < cut_tight_pt         &&
+	    checkStage->pt() > cut_loose_pt         &&
+	    fabs(checkStage->eta()) < cut_loose_eta    ){
 
-	  target.push_back(*lastStage);
+	  target.push_back(allStagesThisLepton);
 
 	} // end if pass cuts
  
