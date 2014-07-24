@@ -220,9 +220,9 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
   double min_dPtRel = 0.0;
   double max_dPtRel = 3.0;
 
-  int nBins_pdgId = 200;
-  double min_pdgId = -100;
-  double max_pdgId = 100;
+  int nBins_pdgId = 50;
+  double min_pdgId = -25;
+  double max_pdgId = 25;
 
   int nBins_weight = 2000;
   double min_weight = -1000;
@@ -600,7 +600,7 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
     }
     h_genParticle_wDaughter1_fromTop_pt->Fill(genParticle_wDaughter1_fromTop_TLV[nStates_wDaughter1_fromTop-1].Pt(), wgt);
     h_genParticle_wDaughter1_fromTop_eta->Fill(genParticle_wDaughter1_fromTop_TLV[nStates_wDaughter1_fromTop-1].Eta(), wgt);
-    h_genParticle_wDaughter1_fromTop_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter1_fromTop_pdgId_[nStates_wDaughter1_fromTop-1], eve->genParticle_wDaughter1_fromTop_mother_pdgId_[nStates_wDaughter1_fromTop-1], wgt);
+    h_genParticle_wDaughter1_fromTop_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter1_fromTop_pdgId_[0], eve->genParticle_wDaughter1_fromTop_mother_pdgId_[0], wgt);
     
 
     // wDaughter2_fromTop
@@ -614,7 +614,7 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
     }
     h_genParticle_wDaughter2_fromTop_pt->Fill(genParticle_wDaughter2_fromTop_TLV[nStates_wDaughter2_fromTop-1].Pt(), wgt);
     h_genParticle_wDaughter2_fromTop_eta->Fill(genParticle_wDaughter2_fromTop_TLV[nStates_wDaughter2_fromTop-1].Eta(), wgt);
-    h_genParticle_wDaughter2_fromTop_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter2_fromTop_pdgId_[nStates_wDaughter2_fromTop-1], eve->genParticle_wDaughter2_fromTop_mother_pdgId_[nStates_wDaughter2_fromTop-1], wgt);
+    h_genParticle_wDaughter2_fromTop_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter2_fromTop_pdgId_[0], eve->genParticle_wDaughter2_fromTop_mother_pdgId_[0], wgt);
     
     
     // topBar_quark
@@ -672,7 +672,7 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
     }
     h_genParticle_wDaughter1_fromTopBar_pt->Fill(genParticle_wDaughter1_fromTopBar_TLV[nStates_wDaughter1_fromTopBar-1].Pt(), wgt);
     h_genParticle_wDaughter1_fromTopBar_eta->Fill(genParticle_wDaughter1_fromTopBar_TLV[nStates_wDaughter1_fromTopBar-1].Eta(), wgt);
-    h_genParticle_wDaughter1_fromTopBar_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter1_fromTopBar_pdgId_[nStates_wDaughter1_fromTopBar-1], eve->genParticle_wDaughter1_fromTopBar_mother_pdgId_[nStates_wDaughter1_fromTopBar-1], wgt);
+    h_genParticle_wDaughter1_fromTopBar_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter1_fromTopBar_pdgId_[0], eve->genParticle_wDaughter1_fromTopBar_mother_pdgId_[0], wgt);
     
 
     // wDaughter2_fromTopBar
@@ -686,7 +686,7 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
     }
     h_genParticle_wDaughter2_fromTopBar_pt->Fill(genParticle_wDaughter2_fromTopBar_TLV[nStates_wDaughter2_fromTopBar-1].Pt(), wgt);
     h_genParticle_wDaughter2_fromTopBar_eta->Fill(genParticle_wDaughter2_fromTopBar_TLV[nStates_wDaughter2_fromTopBar-1].Eta(), wgt);
-    h_genParticle_wDaughter2_fromTopBar_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter2_fromTopBar_pdgId_[nStates_wDaughter2_fromTopBar-1], eve->genParticle_wDaughter2_fromTopBar_mother_pdgId_[nStates_wDaughter2_fromTopBar-1], wgt);
+    h_genParticle_wDaughter2_fromTopBar_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter2_fromTopBar_pdgId_[0], eve->genParticle_wDaughter2_fromTopBar_mother_pdgId_[0], wgt);
     
     
     //
@@ -714,9 +714,9 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
       genParticle_extraBQuark_TLV.push_back(allStates_thisBQuark_TLV);
 
       h_genParticle_extraBQuarks_pt->Fill(allStates_thisBQuark_TLV[nStates_thisBQuark-1].Pt(), wgt);
-      h_genParticle_extraBQuarks_mother_pdgId->Fill(eve->genParticle_extraBQuark_mother_pdgId_[i][nStates_thisBQuark-1]);
+      h_genParticle_extraBQuarks_mother_pdgId->Fill(eve->genParticle_extraBQuark_mother_pdgId_[i][0]);
       h_genParticle_extraQuarks_pt->Fill(allStates_thisBQuark_TLV[nStates_thisBQuark-1].Pt(), wgt);
-      h_genParticle_extraQuarks_mother_pdgId->Fill(eve->genParticle_extraBQuark_mother_pdgId_[i][nStates_thisBQuark-1]);
+      h_genParticle_extraQuarks_mother_pdgId->Fill(eve->genParticle_extraBQuark_mother_pdgId_[i][0]);
       
       extraBQuark_minPt = std::min( allStates_thisBQuark_TLV[nStates_thisBQuark-1].Pt(), extraBQuark_minPt );
       extraBQuark_maxPt = std::max( allStates_thisBQuark_TLV[nStates_thisBQuark-1].Pt(), extraBQuark_maxPt );
@@ -745,9 +745,9 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
       genParticle_extraCQuark_TLV.push_back(allStates_thisCQuark_TLV);
 
       h_genParticle_extraCQuarks_pt->Fill(allStates_thisCQuark_TLV[nStates_thisCQuark-1].Pt(), wgt);
-      h_genParticle_extraCQuarks_mother_pdgId->Fill(eve->genParticle_extraCQuark_mother_pdgId_[i][nStates_thisCQuark-1]);
+      h_genParticle_extraCQuarks_mother_pdgId->Fill(eve->genParticle_extraCQuark_mother_pdgId_[i][0]);
       h_genParticle_extraQuarks_pt->Fill(allStates_thisCQuark_TLV[nStates_thisCQuark-1].Pt(), wgt);
-      h_genParticle_extraQuarks_mother_pdgId->Fill(eve->genParticle_extraCQuark_mother_pdgId_[i][nStates_thisCQuark-1]);
+      h_genParticle_extraQuarks_mother_pdgId->Fill(eve->genParticle_extraCQuark_mother_pdgId_[i][0]);
 
       extraCQuark_minPt = std::min( allStates_thisCQuark_TLV[nStates_thisCQuark-1].Pt(), extraCQuark_minPt );
       extraCQuark_maxPt = std::max( allStates_thisCQuark_TLV[nStates_thisCQuark-1].Pt(), extraCQuark_maxPt );
@@ -776,12 +776,18 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
       iTLV.SetPxPyPzE(genParticle_tightLepton_vect[i][0], genParticle_tightLepton_vect[i][1], genParticle_tightLepton_vect[i][2], genParticle_tightLepton_vect[i][3]);
       genParticle_tightLepton_TLV.push_back(iTLV);
     }
-
-    h_genParticle_tightLepton_pt->Fill( genParticle_tightLepton_TLV[nStates_tightLepton-1].Pt(), wgt );
-    h_genParticle_tightLepton_eta->Fill( genParticle_tightLepton_TLV[nStates_tightLepton-1].Eta(), wgt );
+    
+    if(fabs(eve->genParticle_tightLepton_pdgId_[0])==11){
+      h_genParticle_tightLepton_pt->Fill( genParticle_tightLepton_TLV[0].Pt(), wgt );
+      h_genParticle_tightLepton_eta->Fill( genParticle_tightLepton_TLV[0].Eta(), wgt );
+    }
+    else{
+      h_genParticle_tightLepton_pt->Fill( genParticle_tightLepton_TLV[nStates_tightLepton-1].Pt(), wgt );
+      h_genParticle_tightLepton_eta->Fill( genParticle_tightLepton_TLV[nStates_tightLepton-1].Eta(), wgt );
+    }
     h_genParticle_tightLepton_status->Fill( eve->genParticle_tightLepton_status_[nStates_tightLepton-1], wgt );
-    h_genParticle_tightLepton_motherPdgId_vs_pdgId->Fill( eve->genParticle_tightLepton_pdgId_[nStates_tightLepton-1], eve->genParticle_tightLepton_mother_pdgId_[nStates_tightLepton-1], wgt);
-
+    h_genParticle_tightLepton_motherPdgId_vs_pdgId->Fill( eve->genParticle_tightLepton_pdgId_[0], eve->genParticle_tightLepton_mother_pdgId_[0], wgt);
+    
   
 
 
