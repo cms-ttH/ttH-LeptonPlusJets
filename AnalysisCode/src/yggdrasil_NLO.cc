@@ -220,7 +220,7 @@ void yggdrasil_NLO::makeTree(int sampleId, int maxNentries, int Njobs, int jobN)
       
       /////////
       ///
-      /// Initialize Tree Branches
+      /// Initialize Tree Variables
       ///
       ////////
       
@@ -283,21 +283,15 @@ void yggdrasil_NLO::makeTree(int sampleId, int maxNentries, int Njobs, int jobN)
       nevents_pass_lepCut_wgt+=eve->weight_;
 
       
-
+      
+  
       /////////
       ///
-      /// Loop over genParticles
+      /// Get Gen ttbar Sytem
       ///
-      ////////
+      /////////
 
-      // Container for entire decay sequence
-      std::vector< reco::GenParticle > top_decayChain_finalState;
-      std::vector< reco::GenParticle > topBar_decayChain_finalState;
-      
       // Containers for initial, immediate, and final stages of particle's lifetime in ttbar decay sequence
-      int pdgIdFirstWDaughterFromTop    = 0;
-      int pdgIdFirstWDaughterFromTopBar = 0;
-
       std::vector< reco::GenParticle > top_quark; 
       std::vector< reco::GenParticle > b_quark_fromTop;
       std::vector< reco::GenParticle > w_boson_fromTop;
@@ -310,6 +304,71 @@ void yggdrasil_NLO::makeTree(int sampleId, int maxNentries, int Njobs, int jobN)
       std::vector< reco::GenParticle > wDaughter1_fromTopBar;
       std::vector< reco::GenParticle > wDaughter2_fromTopBar;
 
+      yggdrasil_NLO::getGenTTbarSystem( genParticles, top_quark, b_quark_fromTop, w_boson_fromTop, wDaughter1_fromTop, wDaughter2_fromTop, topBar_quark, b_quark_fromTopBar, w_boson_fromTopBar, wDaughter1_fromTopBar, wDaughter2_fromTopBar);
+      
+
+      // Container for entire decay sequence
+      std::vector< reco::GenParticle > top_decayChain_finalState;
+      std::vector< reco::GenParticle > topBar_decayChain_finalState;
+      
+      yggdrasil_NLO::getDecayChainFinalState(top_quark.begin(),    genParticles, top_decayChain_finalState); 
+      yggdrasil_NLO::getDecayChainFinalState(topBar_quark.begin(), genParticles, topBar_decayChain_finalState);
+      
+      
+      // Determine if this is a hadronic, semiLeptonic, or DiLeptonic event
+      int nTTbarLeptons = 0;
+      bool topIsLeptonic=false;
+      bool topBarIsLeptonic=false;
+      bool topIsTau=false;
+      bool topBarIsTau=false;
+      // Check if top decays leptonically
+      if( fabs(wDaughter1_fromTop[0].pdgId())>=11 &&
+	  fabs(wDaughter1_fromTop[0].pdgId())<=16    ){
+	topIsLeptonic=true;
+	nTTbarLeptons++;
+	if( fabs(wDaughter1_fromTop[0].pdgId())==15 ||
+	    fabs(wDaughter2_fromTop[0].pdgId())==15    ) topIsTau=true;
+      }
+      else{
+	nevents_topIsHadronic++;
+	nevents_topIsHadronic_wgt+=eve->weight_;
+      }
+      // Check if topbar decays leptonically
+      if( fabs(wDaughter1_fromTopBar[0].pdgId())>=11 &&
+	  fabs(wDaughter1_fromTopBar[0].pdgId())<=16    ){
+	topBarIsLeptonic=true;
+	nTTbarLeptons++;
+	if( fabs(wDaughter1_fromTopBar[0].pdgId())==15 ||
+	    fabs(wDaughter2_fromTopBar[0].pdgId())==15    ) topBarIsTau=true;
+      }
+      else{
+	nevents_topBarIsHadronic++;
+	nevents_topBarIsHadronic_wgt+=eve->weight_;
+      }
+
+      bool isHadronicDecay=false;
+      bool isSemiLeptonicDecay=false;
+      bool isDiLeptonicDecay=false;
+      if(nTTbarLeptons==0){
+	isHadronicDecay=true;
+	nevents_hadronic++;
+	nevents_hadronic_wgt+=eve->weight_;
+      }
+      if(nTTbarLeptons==1){
+	isSemiLeptonicDecay=true;
+	nevents_semiLeptonic++;
+	nevents_semiLeptonic_wgt+=eve->weight_;
+      }
+      if(nTTbarLeptons==2){
+	isDiLeptonicDecay=true;
+	nevents_diLeptonic++;
+	nevents_diLeptonic_wgt+=eve->weight_;
+      }
+
+      
+      // Containers for hadronization products
+      std::vector< reco::GenParticle > ttbar_system_hadrons;
+      
       std::vector< reco::GenParticle > b_quark_fromTop_hadrons;
       std::vector< reco::GenParticle > wDaughter1_fromTop_hadrons;
       std::vector< reco::GenParticle > wDaughter2_fromTop_hadrons;
@@ -318,395 +377,18 @@ void yggdrasil_NLO::makeTree(int sampleId, int maxNentries, int Njobs, int jobN)
       std::vector< reco::GenParticle > wDaughter1_fromTopBar_hadrons;
       std::vector< reco::GenParticle > wDaughter2_fromTopBar_hadrons;
 
-      // Container for genParticles initiating hadronization
-      std::vector< reco::GenParticle > quark_initiates_hadronization;
-
-      for( std::vector< reco::GenParticle >::const_iterator iGenParticle = genParticles.begin(); iGenParticle != genParticles.end(); iGenParticle++){
-
-	// Store GenParicle Information
-	eve->genParticle_pt_.push_back(iGenParticle->pt());
-	eve->genParticle_eta_.push_back(iGenParticle->eta());
-	eve->genParticle_phi_.push_back(iGenParticle->phi());
-	eve->genParticle_energy_.push_back(iGenParticle->energy());
-	eve->genParticle_pdgId_.push_back(iGenParticle->pdgId());
-
-	int nGenParticleMothers = (int)iGenParticle->numberOfMothers();
-	if(nGenParticleMothers>0){
-	  eve->genParticle_mother_pdgId_.push_back(iGenParticle->mother()->pdgId());
-	}
-	else{
-	  eve->genParticle_mother_pdgId_.push_back(-99);
-	}
-
-	//
-	// Get ttbar system
-	//
-	
-	// Get pointer to top quark
-	if( iGenParticle->pdgId()==6             && 
-	    iGenParticle->numberOfDaughters()==2    ){
-	  if( ( iGenParticle->daughter(0)->pdgId()==5  && 
-		iGenParticle->daughter(1)->pdgId()==24    ) || 
-	      ( iGenParticle->daughter(1)->pdgId()==5  && 
-		iGenParticle->daughter(0)->pdgId()==24)        ){
-	    yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, top_quark);
-	  } // end if duaghters are b-qaurk and W
-	} // end if iGenParticle is top quark with 2 daughters
-	
-	// Get pointer to b quark from top
-	if( iGenParticle->pdgId()<=5           &&
-	    iGenParticle->pdgId()>=1           &&
-	    iGenParticle->numberOfMothers()==1    ){
-	  if( iGenParticle->mother(0)->pdgId()==6 ){
-	    yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, b_quark_fromTop);
-	    // Grab hadron daughters
-	    yggdrasil_NLO::getDecayChainAll(b_quark_fromTop.end()-1, genParticles, b_quark_fromTop_hadrons);
-	  }
-	}
-      
-
-	// Get pointer to W boson from top
-	if( iGenParticle->pdgId()==24          &&
-	  iGenParticle->numberOfMothers()==1    ){
-	  if( iGenParticle->mother(0)->pdgId()==6 ){
-	   yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, w_boson_fromTop);
-	  }
-	}
-	
-	// Get pointer to 1st daughter of W daughter from top 
-	if( pdgIdFirstWDaughterFromTop==0      &&
-	    iGenParticle->numberOfMothers()==1   ){
-	  if( iGenParticle->mother(0)->pdgId()==24            && 
-	      iGenParticle->mother(0)->numberOfDaughters()==2    ){
-	    yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, wDaughter1_fromTop);
-	    pdgIdFirstWDaughterFromTop = iGenParticle->pdgId();
-	    // Grab hadron daughters
-	    if( fabs(iGenParticle->pdgId())<=5) yggdrasil_NLO::getDecayChainAll(wDaughter1_fromTop.end()-1, genParticles, wDaughter1_fromTop_hadrons);
-	  }
-	}
-
-	// Get pointer to 2nd daughter of W daughter from top 
-	if( pdgIdFirstWDaughterFromTop!=0                     &&
-	    iGenParticle->pdgId()!=pdgIdFirstWDaughterFromTop &&
-	    iGenParticle->numberOfMothers()==1                   ){
-	  if( iGenParticle->mother(0)->pdgId()==24            && 
-	      iGenParticle->mother(0)->numberOfDaughters()==2     ){
-	    yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, wDaughter2_fromTop);
-	    // Grab hadron daughters
-	    if( fabs(iGenParticle->pdgId())<=5) yggdrasil_NLO::getDecayChainAll(wDaughter2_fromTop.end()-1, genParticles, wDaughter2_fromTop_hadrons);
-	  }
-	}
-
-
-	// Get pointer to topBar quark
-	if( iGenParticle->pdgId()==-6            && 
-	    iGenParticle->numberOfDaughters()==2    ){
-	  if( ( iGenParticle->daughter(0)->pdgId()==-5  && 
-		iGenParticle->daughter(1)->pdgId()==-24    ) || 
-	      ( iGenParticle->daughter(1)->pdgId()==-5  && 
-		iGenParticle->daughter(0)->pdgId()==-24)        ){
-	    yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, topBar_quark);
-	  } // end if duaghters are b-qaurk and W
-	} // end if iGenParticle is topBar quark with 2 daughters
-
-	// Get pointer to b quark from topBar
-	if( iGenParticle->pdgId()>=-5          &&
-	    iGenParticle->pdgId()<=-1          &&
-	    iGenParticle->numberOfMothers()==1    ){
-	  if( iGenParticle->mother(0)->pdgId()==-6  ){
-	    yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, b_quark_fromTopBar);
-	    // Grab hadron daughters
-	    yggdrasil_NLO::getDecayChainAll(b_quark_fromTopBar.end()-1, genParticles, b_quark_fromTopBar_hadrons);
-	  }
-	}
-
-	// Get pointer to W boson from topBar
-	if( iGenParticle->pdgId()==-24         &&
-	    iGenParticle->numberOfMothers()==1     ){
-	  if( iGenParticle->mother(0)->pdgId()==-6 ){
-	   yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, w_boson_fromTopBar);
-	  }
-	}
-
-	// Get pointer to 1st daughter of W daughter from topBar 
-	if( pdgIdFirstWDaughterFromTopBar==0   &&
-	    iGenParticle->numberOfMothers()==1    ){
-	  if( iGenParticle->mother(0)->pdgId()==-24           && 
-	      iGenParticle->mother(0)->numberOfDaughters()==2     ){
-	    yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, wDaughter1_fromTopBar);
-	    pdgIdFirstWDaughterFromTopBar = iGenParticle->pdgId();
-	    // Grab hadron daughters
-	    if( fabs(iGenParticle->pdgId())<=5) yggdrasil_NLO::getDecayChainAll(wDaughter1_fromTopBar.end()-1, genParticles, wDaughter1_fromTopBar_hadrons);
-	  }
-	}
-
-	// Get pointer to 2nd daughter of W daughter from topBar 
-	if( pdgIdFirstWDaughterFromTopBar!=0                     &&
-	    iGenParticle->pdgId()!=pdgIdFirstWDaughterFromTopBar &&
-	    iGenParticle->numberOfMothers()==1                      ){
-	  if( iGenParticle->mother(0)->pdgId()==-24           && 
-	      iGenParticle->mother(0)->numberOfDaughters()==2     ){
-	    yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, wDaughter2_fromTopBar);
-	    // Grab hadron daughters
-	    if( fabs(iGenParticle->pdgId())<=5) yggdrasil_NLO::getDecayChainAll(wDaughter2_fromTopBar.end()-1, genParticles, wDaughter2_fromTopBar_hadrons);
-	  }
-	}
-
-	
-  
-	// top final state decay chain
-	if( iGenParticle->pdgId()==6   && 
-	    iGenParticle->status()==22    ){
-	  yggdrasil_NLO::getDecayChainFinalState(iGenParticle, genParticles, top_decayChain_finalState);
-	}
-	
-	// topBar final state decay chain
-	if( iGenParticle->pdgId()==-6  && 
-	    iGenParticle->status()==22    ){
-	  yggdrasil_NLO::getDecayChainFinalState(iGenParticle, genParticles, topBar_decayChain_finalState);
-	}
-
-
-	//
-	// Get quarks that intiate hadronizations
-	//
-	if( fabs(iGenParticle->pdgId())<=5       &&
-	    iGenParticle->numberOfDaughters()>=2    ){
-	  bool daughtersAreHadrons=false;
-	  for(int iD=0; iD<(int)iGenParticle->numberOfDaughters(); iD++){
-	    if( fabs(iGenParticle->daughter(iD)->pdgId())>=100 ){
-	      daughtersAreHadrons=true;
-	    }
-	    if(daughtersAreHadrons) break;
-	  } // end loop over daughters
-	  if(daughtersAreHadrons){
-	    quark_initiates_hadronization.push_back(*iGenParticle);
-	  }
-	  
-	} // end if particle is quark with >=2 daughters
-
-
-	
-	//
-	// Print Heritage of this Particle
-	//
-	if( iGenParticle->pdgId()==6   && 
-	    iGenParticle->status()==22 && 
-	    nevents==1                    ){
-	  //yggdrasil_NLO::printMothers(iGenParticle, genParticles);
-	  //yggdrasil_NLO::printDaughters(iGenParticle, genParticles);
-	} // end if print heritage
-
-      } // end loop over genParticles
-      
-      
-      //
-      // Get differences in beginning and final stage of decay sequence
-      //
-      
-      // top quark
-      if( (int)top_quark.size()>1){
-	std::vector< reco::GenParticle >::const_iterator top_quark_begin = top_quark.begin();
-	std::vector< reco::GenParticle >::const_iterator top_quark_end   = top_quark.end()-1;
-	eve->dR_final_intial_gen_top_     = sqrt( pow(top_quark_begin->eta()-top_quark_end->eta(), 2) + pow(top_quark_begin->phi()-top_quark_end->phi(),2) );
-	eve->dPtRel_final_intial_gen_top_ = fabs( top_quark_begin->pt() - top_quark_end->pt() )/top_quark_begin->pt();
-      }
-      
-      // topBar quark
-      if( (int)topBar_quark.size()>1){
-	std::vector< reco::GenParticle >::const_iterator topBar_quark_begin = topBar_quark.begin();
-	std::vector< reco::GenParticle >::const_iterator topBar_quark_end   = topBar_quark.end()-1;
-	eve->dR_final_intial_gen_topBar_     = sqrt( pow(topBar_quark_begin->eta()-topBar_quark_end->eta(), 2) + pow(topBar_quark_begin->phi()-topBar_quark_end->phi(),2) );
-	eve->dPtRel_final_intial_gen_topBar_ = fabs( topBar_quark_begin->pt() - topBar_quark_end->pt() )/topBar_quark_begin->pt();
-      }
-      
-      // b quark from top
-      if( (int)b_quark_fromTop.size()>1){
-	std::vector< reco::GenParticle >::const_iterator b_quark_fromTop_begin = b_quark_fromTop.begin();
-	std::vector< reco::GenParticle >::const_iterator b_quark_fromTop_end   = b_quark_fromTop.end()-1;
-	eve->dR_final_intial_gen_b_fromTop_     = sqrt( pow(b_quark_fromTop_begin->eta()-b_quark_fromTop_end->eta(), 2) + pow(b_quark_fromTop_begin->phi()-b_quark_fromTop_end->phi(),2) );
-	eve->dPtRel_final_intial_gen_b_fromTop_ = fabs( b_quark_fromTop_begin->pt() - b_quark_fromTop_end->pt() )/b_quark_fromTop_begin->pt();
-      }
-      
-      // b quark from topBar
-      if( (int)b_quark_fromTopBar.size()>1){
-	std::vector< reco::GenParticle >::const_iterator b_quark_fromTopBar_begin = b_quark_fromTopBar.begin();
-	std::vector< reco::GenParticle >::const_iterator b_quark_fromTopBar_end   = b_quark_fromTopBar.end()-1;
-	eve->dR_final_intial_gen_b_fromTopBar_     = sqrt( pow(b_quark_fromTopBar_begin->eta()-b_quark_fromTopBar_end->eta(), 2) + pow(b_quark_fromTopBar_begin->phi()-b_quark_fromTopBar_end->phi(),2) );
-	eve->dPtRel_final_intial_gen_b_fromTopBar_ = fabs( b_quark_fromTopBar_begin->pt() - b_quark_fromTopBar_end->pt() )/b_quark_fromTopBar_begin->pt();
-      }
-      
-          
-
-      /////////
-      //
-      // Classify event
-      //
-      /////////
-
-
-      // 
-      // Determine if this is a hadronic, semiLeptonic, or DiLeptonic event
-      //
-      int nTTbarLeptons = 0;
-      bool topIsLeptonic=false;
-      bool topBarIsLeptonic=false;
-      if( fabs(wDaughter1_fromTop[0].pdgId())>=11 &&
-	  fabs(wDaughter1_fromTop[0].pdgId())<=18    ){
-	nTTbarLeptons++;
-	topIsLeptonic=true;
-      }
-
-      if( fabs(wDaughter1_fromTopBar[0].pdgId())>=11 &&
-	  fabs(wDaughter1_fromTopBar[0].pdgId())<=18    ){
-	nTTbarLeptons++;
-	topBarIsLeptonic=true;
-      }
-
+      yggdrasil_NLO::getDecayChainAll(b_quark_fromTop.end()-1, genParticles, b_quark_fromTop_hadrons);
       if(!topIsLeptonic){
-	nevents_topIsHadronic++;
-	nevents_topIsHadronic_wgt+=eve->weight_;
+	yggdrasil_NLO::getDecayChainAll(wDaughter1_fromTop.end()-1, genParticles, wDaughter1_fromTop_hadrons);
+	yggdrasil_NLO::getDecayChainAll(wDaughter2_fromTop.end()-1, genParticles, wDaughter2_fromTop_hadrons);
       }
+      
+      yggdrasil_NLO::getDecayChainAll(b_quark_fromTopBar.end()-1,    genParticles, b_quark_fromTopBar_hadrons);
       if(!topBarIsLeptonic){
-	nevents_topBarIsHadronic++;
-	nevents_topBarIsHadronic_wgt+=eve->weight_;
+	yggdrasil_NLO::getDecayChainAll(wDaughter1_fromTopBar.end()-1, genParticles, wDaughter1_fromTopBar_hadrons);
+	yggdrasil_NLO::getDecayChainAll(wDaughter2_fromTopBar.end()-1, genParticles, wDaughter2_fromTopBar_hadrons);
       }
-
-      if(nTTbarLeptons==0){
-	nevents_hadronic++;
-	nevents_hadronic_wgt+=eve->weight_;
-      }
-      if(nTTbarLeptons==1){
-	nevents_semiLeptonic++;
-	nevents_semiLeptonic_wgt+=eve->weight_;
-      }
-      if(nTTbarLeptons==2){
-	nevents_diLeptonic++;
-	nevents_diLeptonic_wgt+=eve->weight_;
-      }
-
-
-      //
-      // Determine if this is a ttbar+lf/cc/1b/2b event
-      //
-
-
-      //
-      // Find extra B/C quarks not associated with ttbar system
-      //
-      std::vector< reco::GenParticle > vetoCandidates;
-      vetoCandidates.insert(vetoCandidates.end(), b_quark_fromTop.begin(), b_quark_fromTop.end()); 
-      vetoCandidates.insert(vetoCandidates.end(), b_quark_fromTopBar.begin(), b_quark_fromTopBar.end());
-      vetoCandidates.insert(vetoCandidates.end(), wDaughter1_fromTop.begin(), wDaughter1_fromTop.end());
-      vetoCandidates.insert(vetoCandidates.end(), wDaughter2_fromTop.begin(), wDaughter2_fromTop.end());
-      vetoCandidates.insert(vetoCandidates.end(), wDaughter1_fromTopBar.begin(), wDaughter1_fromTopBar.end());
-      vetoCandidates.insert(vetoCandidates.end(), wDaughter2_fromTopBar.begin(), wDaughter2_fromTopBar.end());
-
-      vetoCandidates.insert(vetoCandidates.end(), b_quark_fromTop_hadrons.begin(), b_quark_fromTop_hadrons.end()); 
-      vetoCandidates.insert(vetoCandidates.end(), b_quark_fromTopBar_hadrons.begin(), b_quark_fromTopBar_hadrons.end());
-      vetoCandidates.insert(vetoCandidates.end(), wDaughter1_fromTop_hadrons.begin(), wDaughter1_fromTop_hadrons.end());
-      vetoCandidates.insert(vetoCandidates.end(), wDaughter2_fromTop_hadrons.begin(), wDaughter2_fromTop_hadrons.end());
-      vetoCandidates.insert(vetoCandidates.end(), wDaughter1_fromTopBar_hadrons.begin(), wDaughter1_fromTopBar_hadrons.end());
-      vetoCandidates.insert(vetoCandidates.end(), wDaughter2_fromTopBar_hadrons.begin(), wDaughter2_fromTopBar_hadrons.end());
-
-
-      // Loop over genParticles, look for b, c quarks, check heritage
-      std::vector< std::vector< reco::GenParticle > > extraBQuarks;
-      std::vector< std::vector< reco::GenParticle > > extraCQuarks;
-      std::vector< reco::GenParticle > extraQuark_initiates_hadronization;
-      int nExtraBQuarks=0;
-      int nExtraCQuarks=0;
-      double maxPtExtraBQuarks = 0.0;
-      double maxPtExtraCQuarks = 0.0;
-      double minPtExtraBQuarks = 999.9;
-      double minPtExtraCQuarks = 999.9;
-
-      for( std::vector< reco::GenParticle >::const_iterator iGenParticle = genParticles.begin(); iGenParticle != genParticles.end(); iGenParticle++){
-
-	if(fabs(iGenParticle->pdgId())==5 ||
-	   fabs(iGenParticle->pdgId())==4    ){
-
-	  // Check if this particle belongs to veto collection
-	  bool isMatched=false;
-	  for( std::vector< reco::GenParticle >::const_iterator jGenParticle = vetoCandidates.begin(); jGenParticle != vetoCandidates.end(); jGenParticle++){
-
-	    if( jGenParticle->pdgId()  == iGenParticle->pdgId() &&
-		jGenParticle->pt()     == iGenParticle->pt()    &&
-		jGenParticle->eta()    == iGenParticle->eta()   &&
-		jGenParticle->phi()    == iGenParticle->phi()   &&
-		jGenParticle->status() == iGenParticle->status()   ){
-	    
-	      isMatched=true;
-	    } // end if matched
-
-	    if(isMatched) break; // if matched, break loop over vetoCandidates
-	  } // end loop over vetoCandidates
-
-	  if(!isMatched){
-
-	    std::vector< reco::GenParticle > allStatesThisParticle;
-	    yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, allStatesThisParticle);
-
-	    vetoCandidates.insert(vetoCandidates.end(), allStatesThisParticle.begin(), allStatesThisParticle.end());
-
-	    // If particle is a b quark
-	    if(fabs(iGenParticle->pdgId())==5){
-	      nExtraBQuarks++;
-	      extraBQuarks.push_back(allStatesThisParticle);
-	      extraQuark_initiates_hadronization.push_back( allStatesThisParticle[(int)allStatesThisParticle.size()-1] );
-
-	      maxPtExtraBQuarks = std::max( (double)allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), maxPtExtraBQuarks );
-	      minPtExtraBQuarks = std::min( (double)allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), minPtExtraBQuarks );
-	      eve->genParticle_extraBQuarks_pt_.push_back( allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt() );
-	      eve->genParticle_extraBQuarks_mother_pdgId_.push_back(allStatesThisParticle[0].mother(0)->pdgId());
-
-	    } // end if particle is a b-quark
-
-	    // If particle is a charm quark
-	    if(fabs(iGenParticle->pdgId())==4){
-	      nExtraCQuarks++;
-	      extraCQuarks.push_back(allStatesThisParticle);
-	      extraQuark_initiates_hadronization.push_back( allStatesThisParticle[(int)allStatesThisParticle.size()-1] );
-
-	      maxPtExtraCQuarks = std::max( (double)allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), maxPtExtraCQuarks );
-	      minPtExtraCQuarks = std::min( (double)allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt(), minPtExtraCQuarks );
-	      eve->genParticle_extraCQuarks_pt_.push_back( allStatesThisParticle[(int)allStatesThisParticle.size()-1].pt() );
-	      eve->genParticle_extraCQuarks_mother_pdgId_.push_back(allStatesThisParticle[0].mother(0)->pdgId());
-
-	      // For extra C quarks with non-gluon mother, check heritage
-	      //  NOTE: parents seem to be pdgId==2212 (proton) status==4 (a stage of event gen inside pythia), so not from ttbar system decays
-	      if(allStatesThisParticle[0].mother(0)->pdgId()!=21){
-		//cout << "PRINTING NONGLUON MOTHER HERITAGE FOR EXTRA C QUARK:" << endl;
-		//yggdrasil_NLO::printMothers(iGenParticle, genParticles);
-	      } // end if non-gluon mother
-	      
-	    } // end if extra particle is a c quark
-
-
-	  } // end if not matched to vetoCandidate	
-
-	} // end if iGenParticle is b or c quark
-     
-      } // end loop over genParticles looking for b or c quark
-
       
-
-      // 
-      // Associate GenJets to ttbar system genParticles intiating hadronization
-      //
-      double deltaR_match = 0.5;
-	
-      reco::GenJet genJet_b_quark_fromTop;
-      reco::GenJet genJet_wDaughter1_fromTop;
-      reco::GenJet genJet_wDaughter2_fromTop;
-
-      reco::GenJet genJet_b_quark_fromTopBar;
-      reco::GenJet genJet_wDaughter1_fromTopBar;
-      reco::GenJet genJet_wDaughter2_fromTopBar;
-
-      std::vector< reco::GenJet > genJet_matchedToTTbarSystem;
-      
-      std::vector< reco::GenParticle > ttbar_system_hadrons;
       // the first element of the _hadrons collection is quark intiating hadronization
       ttbar_system_hadrons.push_back(*(b_quark_fromTop_hadrons.begin()));
        if(!topIsLeptonic){
@@ -719,282 +401,169 @@ void yggdrasil_NLO::makeTree(int sampleId, int maxNentries, int Njobs, int jobN)
 	ttbar_system_hadrons.push_back(*(wDaughter2_fromTopBar_hadrons.begin()));
       }
 
-      // Find minDr pairs between ttbar system daughters and genJets
-      std::vector< reco::GenParticle > ttbar_system_hadrons_temp = ttbar_system_hadrons;
-      std::vector< reco::GenJet >      genJets_temp              = genJets;
-      while( (int)genJets_temp.size()>0 && (int)ttbar_system_hadrons_temp.size()>0){
-	
-	std::vector< reco::GenParticle >::iterator matched_ttbarSystem = ttbar_system_hadrons_temp.begin();
-	std::vector< reco::GenJet >::iterator      matched_genJet      = genJets_temp.begin();
-
-	double deltaR     = 0.0;
-	double deltaR_min = 99.9;
-	for( std::vector< reco::GenJet >::iterator iGenJet = genJets_temp.begin(); iGenJet != genJets_temp.end(); iGenJet++){
-	  for( std::vector< reco::GenParticle >::iterator iGenParticle = ttbar_system_hadrons_temp.begin(); iGenParticle != ttbar_system_hadrons_temp.end(); iGenParticle++){
-	    
-	    deltaR = sqrt( pow( iGenJet->eta()-iGenParticle->eta(), 2) + pow( iGenJet->phi()-iGenParticle->phi(), 2) );
-	   
-	    if( deltaR < deltaR_min ){
-	      
-	      deltaR_min          = deltaR;
-	      matched_ttbarSystem = iGenParticle;
-	      matched_genJet      = iGenJet;
-	      	      
-	    } // end if this is the minDr pair
-	    
-	  } // end loop over genParticles
-	  
-	} // end loop over genJets
-
-	// If matched is b quark from top
-	if( deltaR_min <= deltaR_match                                                 &&
-	    b_quark_fromTop_hadrons.begin()->pdgId()  == matched_ttbarSystem->pdgId()  &&
-	    b_quark_fromTop_hadrons.begin()->status() == matched_ttbarSystem->status() &&
-	    b_quark_fromTop_hadrons.begin()->pt()     == matched_ttbarSystem->pt()     &&
-	    b_quark_fromTop_hadrons.begin()->eta()    == matched_ttbarSystem->eta()    &&
-	    b_quark_fromTop_hadrons.begin()->phi()    == matched_ttbarSystem->phi()       ){
-	  genJet_b_quark_fromTop = *matched_genJet;
-	  genJet_matchedToTTbarSystem.push_back(*matched_genJet);
-	  if( yggdrasil_NLO::isGoodGenJet(*matched_genJet, jet_cut_pt, jet_cut_eta) ){
-	    nevents_match_b_quark_fromTop++;
-	    nevents_match_b_quark_fromTop_wgt+=eve->weight_;
-	  } // end if good genJet
-	  else{
-	    eve->matched_nonSelected_ttbar_genJet_pt_.push_back(matched_genJet->pt());
-	    eve->matched_nonSelected_ttbar_genJet_eta_.push_back(matched_genJet->eta());
-	  }
-	} // end if b quark from top
-	
-	if(!topIsLeptonic){
-	  // If matched is wDaughter1 from top
-	  if( deltaR_min <= deltaR_match                                                    &&
-	      wDaughter1_fromTop_hadrons.begin()->pdgId()  == matched_ttbarSystem->pdgId()  &&
-	      wDaughter1_fromTop_hadrons.begin()->status() == matched_ttbarSystem->status() &&
-	      wDaughter1_fromTop_hadrons.begin()->pt()     == matched_ttbarSystem->pt()     &&
-	      wDaughter1_fromTop_hadrons.begin()->eta()    == matched_ttbarSystem->eta()    &&
-	      wDaughter1_fromTop_hadrons.begin()->phi()    == matched_ttbarSystem->phi()        ){
-	    genJet_wDaughter1_fromTop = *matched_genJet;
-	    genJet_matchedToTTbarSystem.push_back(*matched_genJet);
-	    if( yggdrasil_NLO::isGoodGenJet(*matched_genJet, jet_cut_pt, jet_cut_eta) ){
-	      nevents_match_wDaughter1_fromTop++;
-	      nevents_match_wDaughter1_fromTop_wgt+=eve->weight_;
-	    } // end if good genJet
-	    else{
-	      eve->matched_nonSelected_ttbar_genJet_pt_.push_back(matched_genJet->pt());
-	      eve->matched_nonSelected_ttbar_genJet_eta_.push_back(matched_genJet->eta());
-	    }
-	  } // end if wDaughter1 from top
-
-	  // If matched is wDaughter2 from top
-	  if( deltaR_min <= deltaR_match                                                    &&
-	      wDaughter2_fromTop_hadrons.begin()->pdgId()  == matched_ttbarSystem->pdgId()  &&
-	      wDaughter2_fromTop_hadrons.begin()->status() == matched_ttbarSystem->status() &&
-	      wDaughter2_fromTop_hadrons.begin()->pt()     == matched_ttbarSystem->pt()     &&
-	      wDaughter2_fromTop_hadrons.begin()->eta()    == matched_ttbarSystem->eta()    &&
-	      wDaughter2_fromTop_hadrons.begin()->phi()    == matched_ttbarSystem->phi()        ){
-	    genJet_wDaughter2_fromTop = *matched_genJet;
-	    genJet_matchedToTTbarSystem.push_back(*matched_genJet);
-	    if( yggdrasil_NLO::isGoodGenJet(*matched_genJet, jet_cut_pt, jet_cut_eta) ){
-	      nevents_match_wDaughter2_fromTop++;
-	      nevents_match_wDaughter2_fromTop_wgt+=eve->weight_;
-	    } // end if good genJet
-	    else{
-	      eve->matched_nonSelected_ttbar_genJet_pt_.push_back(matched_genJet->pt());
-	      eve->matched_nonSelected_ttbar_genJet_eta_.push_back(matched_genJet->eta());
-	    }
-	  } // end if wDaughter2 from top
-	} // end if top is hadronic
-	
-	// If matched is b quark from topbar
-	if( deltaR_min <= deltaR_match                                                    &&
-	    b_quark_fromTopBar_hadrons.begin()->pdgId()  == matched_ttbarSystem->pdgId()  &&
-	    b_quark_fromTopBar_hadrons.begin()->status() == matched_ttbarSystem->status() &&
-	    b_quark_fromTopBar_hadrons.begin()->pt()     == matched_ttbarSystem->pt()     &&
-	    b_quark_fromTopBar_hadrons.begin()->eta()    == matched_ttbarSystem->eta()    &&
-	    b_quark_fromTopBar_hadrons.begin()->phi()    == matched_ttbarSystem->phi()        ){
-	  genJet_b_quark_fromTopBar = *matched_genJet;
-	  genJet_matchedToTTbarSystem.push_back(*matched_genJet);
-	  if( yggdrasil_NLO::isGoodGenJet(*matched_genJet, jet_cut_pt, jet_cut_eta) ){
-	    nevents_match_b_quark_fromTopBar++;
-	    nevents_match_b_quark_fromTopBar_wgt+=eve->weight_;
-	  } // end if good genJet
-	  else{
-	    eve->matched_nonSelected_ttbar_genJet_pt_.push_back(matched_genJet->pt());
-	    eve->matched_nonSelected_ttbar_genJet_eta_.push_back(matched_genJet->eta());
-	  }
-	} // end if b quark from topBar
-	
-	if(!topBarIsLeptonic){
-	  // If matched is wDaughter1 from topbar
-	  if( deltaR_min <= deltaR_match                                                       &&
-	      wDaughter1_fromTopBar_hadrons.begin()->pdgId()  == matched_ttbarSystem->pdgId()  &&
-	      wDaughter1_fromTopBar_hadrons.begin()->status() == matched_ttbarSystem->status() &&
-	      wDaughter1_fromTopBar_hadrons.begin()->pt()     == matched_ttbarSystem->pt()     &&
-	      wDaughter1_fromTopBar_hadrons.begin()->eta()    == matched_ttbarSystem->eta()    &&
-	      wDaughter1_fromTopBar_hadrons.begin()->phi()    == matched_ttbarSystem->phi()        ){
-	    genJet_wDaughter1_fromTopBar = *matched_genJet;
-	    genJet_matchedToTTbarSystem.push_back(*matched_genJet);
-	    if( yggdrasil_NLO::isGoodGenJet(*matched_genJet, jet_cut_pt, jet_cut_eta) ){
-	      nevents_match_wDaughter1_fromTopBar++;
-	      nevents_match_wDaughter1_fromTopBar_wgt+=eve->weight_;
-	    } // end if good genJet
-	    else{
-	      eve->matched_nonSelected_ttbar_genJet_pt_.push_back(matched_genJet->pt());
-	      eve->matched_nonSelected_ttbar_genJet_eta_.push_back(matched_genJet->eta());
-	    }
-	  } // end if wDaughter1 from topBar
-	  
-	  // If matched is wDaughter2 from topbar
-	  if( deltaR_min <= deltaR_match                                                       &&
-	      wDaughter2_fromTopBar_hadrons.begin()->pdgId()  == matched_ttbarSystem->pdgId()  &&
-	      wDaughter2_fromTopBar_hadrons.begin()->status() == matched_ttbarSystem->status() &&
-	      wDaughter2_fromTopBar_hadrons.begin()->pt()     == matched_ttbarSystem->pt()     &&
-	      wDaughter2_fromTopBar_hadrons.begin()->eta()    == matched_ttbarSystem->eta()    &&
-	      wDaughter2_fromTopBar_hadrons.begin()->phi()    == matched_ttbarSystem->phi()        ){
-	    genJet_matchedToTTbarSystem.push_back(*matched_genJet);
-	    genJet_wDaughter2_fromTopBar = *matched_genJet;
-	    if( yggdrasil_NLO::isGoodGenJet(*matched_genJet, jet_cut_pt, jet_cut_eta) ){
-	      nevents_match_wDaughter2_fromTopBar++;
-	      nevents_match_wDaughter2_fromTopBar_wgt+=eve->weight_;
-	    } // end if good genJet
-	    else{
-	      eve->matched_nonSelected_ttbar_genJet_pt_.push_back(matched_genJet->pt());
-	      eve->matched_nonSelected_ttbar_genJet_eta_.push_back(matched_genJet->eta());
-	    }
-	  } // end if wDaughter2 from topBar
-	} // end if topBar is hadronic
+      
+      // Containers for any quark intiating hadronization
+      std::vector< reco::GenParticle > quark_initiates_hadronization;
+      yggdrasil_NLO::getGenQuarksIntitiatingHadronization(genParticles, quark_initiates_hadronization);
 
       
-	// Erase pair from temporary collection
-	ttbar_system_hadrons_temp.erase(matched_ttbarSystem);
-	genJets_temp.erase(matched_genJet);
+      
+      //
+      // Determine if this is a ttbar+lf/cc/1b/2b event
+      //
+
+
+      //
+      // Get extra B/C quarks not associated with ttbar system
+      //
+      std::vector< std::vector< reco::GenParticle > > extraBQuarks;
+      std::vector< std::vector< reco::GenParticle > > extraCQuarks;
+      
+      std::vector< reco::GenParticle > vetoCandidates;
+      vetoCandidates.insert(vetoCandidates.end(), b_quark_fromTop.begin(), b_quark_fromTop.end()); 
+      vetoCandidates.insert(vetoCandidates.end(), b_quark_fromTopBar.begin(), b_quark_fromTopBar.end());
+      vetoCandidates.insert(vetoCandidates.end(), wDaughter1_fromTop.begin(), wDaughter1_fromTop.end());
+      vetoCandidates.insert(vetoCandidates.end(), wDaughter2_fromTop.begin(), wDaughter2_fromTop.end());
+      vetoCandidates.insert(vetoCandidates.end(), wDaughter1_fromTopBar.begin(), wDaughter1_fromTopBar.end());
+      vetoCandidates.insert(vetoCandidates.end(), wDaughter2_fromTopBar.begin(), wDaughter2_fromTopBar.end());
+      
+      vetoCandidates.insert(vetoCandidates.end(), b_quark_fromTop_hadrons.begin(), b_quark_fromTop_hadrons.end()); 
+      vetoCandidates.insert(vetoCandidates.end(), b_quark_fromTopBar_hadrons.begin(), b_quark_fromTopBar_hadrons.end());
+      vetoCandidates.insert(vetoCandidates.end(), wDaughter1_fromTop_hadrons.begin(), wDaughter1_fromTop_hadrons.end());
+      vetoCandidates.insert(vetoCandidates.end(), wDaughter2_fromTop_hadrons.begin(), wDaughter2_fromTop_hadrons.end());
+      vetoCandidates.insert(vetoCandidates.end(), wDaughter1_fromTopBar_hadrons.begin(), wDaughter1_fromTopBar_hadrons.end());
+      vetoCandidates.insert(vetoCandidates.end(), wDaughter2_fromTopBar_hadrons.begin(), wDaughter2_fromTopBar_hadrons.end());
+      
+      yggdrasil_NLO::getGenExtraBCQuarks(genParticles, vetoCandidates, extraBQuarks, extraCQuarks);
+      
+      
+      // Loop over extraQuarks in the event
+      std::vector< reco::GenParticle > extraQuark_initiates_hadronization;
+      int nExtraBQuarks=0;
+      int nExtraCQuarks=0;
+      
+      for(int iExtraB=0; iExtraB<(int)extraBQuarks.size(); iExtraB++){
+	nExtraBQuarks++;
+	int nStatesThisExtraB = (int)extraBQuarks[iExtraB].size();
+	extraQuark_initiates_hadronization.push_back( extraBQuarks[iExtraB][ nStatesThisExtraB-1 ] );
+      }
+      
+      for(int iExtraC=0; iExtraC<(int)extraCQuarks.size(); iExtraC++){
+	nExtraCQuarks++;
+	int nStatesThisExtraC = (int)extraCQuarks[iExtraC].size();
+	extraQuark_initiates_hadronization.push_back( extraCQuarks[iExtraC][ nStatesThisExtraC-1 ] );
+      }
+
+      
+      
+      // 
+      // Associate GenJets to ttbar system genParticles intiating hadronization
+      //
+      double deltaR_match = 0.5;
 	
-      } // end while loop 
+      std::vector< reco::GenJet > genJet_matchedToTTbarSystem;
+      
+      reco::GenJet genJet_b_quark_fromTop;
+      reco::GenJet genJet_wDaughter1_fromTop;
+      reco::GenJet genJet_wDaughter2_fromTop;
+
+      reco::GenJet genJet_b_quark_fromTopBar;
+      reco::GenJet genJet_wDaughter1_fromTopBar;
+      reco::GenJet genJet_wDaughter2_fromTopBar;
       
 
-
+      yggdrasil_NLO::getGenJetsMatchedToTTbarSystem( ttbar_system_hadrons, genJets, deltaR_match, topIsLeptonic, *(b_quark_fromTop.end()-1), *(wDaughter1_fromTop.end()-1), *(wDaughter2_fromTop.end()-1), topBarIsLeptonic, *(b_quark_fromTopBar.end()-1), *(wDaughter1_fromTopBar.end()-1), *(wDaughter2_fromTopBar.end()-1), genJet_b_quark_fromTop, genJet_wDaughter1_fromTop, genJet_wDaughter2_fromTop, genJet_b_quark_fromTopBar, genJet_wDaughter1_fromTopBar, genJet_wDaughter2_fromTopBar);
+      
+      genJet_matchedToTTbarSystem.push_back( genJet_b_quark_fromTop );
+      if(!topIsLeptonic){
+	genJet_matchedToTTbarSystem.push_back( genJet_wDaughter1_fromTop );
+	genJet_matchedToTTbarSystem.push_back( genJet_wDaughter2_fromTop );
+      }
+      genJet_matchedToTTbarSystem.push_back( genJet_b_quark_fromTopBar );
+      if(!topBarIsLeptonic){
+	genJet_matchedToTTbarSystem.push_back( genJet_wDaughter1_fromTopBar );
+	genJet_matchedToTTbarSystem.push_back( genJet_wDaughter2_fromTopBar );
+      }
+      
+      
       //
       // Associate genJets to extra B/C quarks in event
       //
+      deltaR_match = 0.5;
       int nExtraBJets=0;
       int nExtraCJets=0;
       std::vector< reco::GenJet > genJet_matchedToExtraBQuarks;
       std::vector< reco::GenJet > genJet_matchedToExtraCQuarks;
-
-      std::vector< reco::GenParticle > extraQuarks_temp = extraQuark_initiates_hadronization;
       
-      // Only consider jets not matched to ttbar system 
-      genJets_temp.clear();
-      for( std::vector< reco::GenJet >::const_iterator iGenJet = genJets.begin(); iGenJet != genJets.end(); iGenJet++){
-	bool alreadyMatched=false;
-	for( std::vector< reco::GenJet >::const_iterator jGenJet = genJet_matchedToTTbarSystem.begin(); jGenJet != genJet_matchedToTTbarSystem.end(); jGenJet++){
-	  if( iGenJet->pt()  == jGenJet->pt()  &&
-	      iGenJet->eta() == jGenJet->eta() &&
-	      iGenJet->phi() == jGenJet->phi()    ) alreadyMatched=true;
-	  if(alreadyMatched) break;
-	} // end loop over genJets already matched to ttbar system
-	
-	if(!alreadyMatched) genJets_temp.push_back(*iGenJet);
-
-      } // end loop over genJets
-
-
-      while( (int)genJets_temp.size()>0 && (int)extraQuarks_temp.size()>0){
-	
-	std::vector< reco::GenParticle >::iterator matched_extraQuark = extraQuarks_temp.begin();
-	std::vector< reco::GenJet >::iterator      matched_genJet     = genJets_temp.begin();
-
-	double deltaR     = 0.0;
-	double deltaR_min = 99.9;
-	for( std::vector< reco::GenJet >::iterator iGenJet = genJets_temp.begin(); iGenJet != genJets_temp.end(); iGenJet++){
-	  for( std::vector< reco::GenParticle >::iterator iGenParticle = extraQuarks_temp.begin(); iGenParticle != extraQuarks_temp.end(); iGenParticle++){
-	    
-	    deltaR = sqrt( pow( iGenJet->eta()-iGenParticle->eta(), 2) + pow( iGenJet->phi()-iGenParticle->phi(), 2) );
-	   
-	    if( deltaR < deltaR_min ){
-	      
-	      deltaR_min         = deltaR;
-	      matched_extraQuark = iGenParticle;
-	      matched_genJet     = iGenJet;
-	      	      
-	    } // end if this is the minDr pair
-	    
-	  } // end loop over genParticles
-	  
-	} // end loop over genJets
+      yggdrasil_NLO::getGenJetsMatchedToExtraQuarks(extraQuark_initiates_hadronization, genJets, genJet_matchedToTTbarSystem, deltaR_match, genJet_matchedToExtraBQuarks, genJet_matchedToExtraCQuarks);
       
-	if( deltaR_min <= deltaR_match           &&
-	    fabs(matched_extraQuark->pdgId())==5    ){
-	  if( yggdrasil_NLO::isGoodGenJet(*matched_genJet, jet_cut_pt, jet_cut_eta) ){
-	    nExtraBJets++;
-	    genJet_matchedToExtraBQuarks.push_back(*matched_genJet);
-	  }
-	}
-	if( deltaR_min <= deltaR_match           && 
-	    fabs(matched_extraQuark->pdgId())==4    ){
-	  if( yggdrasil_NLO::isGoodGenJet(*matched_genJet, jet_cut_pt, jet_cut_eta) ){
-	    nExtraCJets++;
-	    genJet_matchedToExtraCQuarks.push_back(*matched_genJet);
-	  }
-	}
+      // Count number of selected genJets matched to extra b/c quarks
+      for(int iExtraB=0; iExtraB<(int)genJet_matchedToExtraBQuarks.size(); iExtraB++){
+	if( yggdrasil_NLO::isGoodGenJet(genJet_matchedToExtraBQuarks[iExtraB], jet_cut_pt, jet_cut_eta) ){
+	  nExtraBJets++;
+	} // end if good genJet
+      } // end loop over genJets matched to extraBs
+      
+      for(int iExtraC=0; iExtraC<(int)genJet_matchedToExtraCQuarks.size(); iExtraC++){
+	if( yggdrasil_NLO::isGoodGenJet(genJet_matchedToExtraCQuarks[iExtraC], jet_cut_pt, jet_cut_eta) ){
+	  nExtraCJets++;
+	} // end if good genJet
+      } // end loop over genJets matched to extraCs
 
-	// Erase pair from temporary collection
-	extraQuarks_temp.erase(matched_extraQuark);
-	genJets_temp.erase(matched_genJet);
+      
 
-      } // end while loop
-
-
-
+      //
+      // Classify Event
+      //
+      bool isTTLF=false;
+      bool isTTCC=false;
+      bool isTT1B=false;
+      bool isTT2B=false;
 
       // If >=3 extra b quarks, tt+2b
       if(nExtraBQuarks>=3){
+	isTT2B=true;
 	nevents_2b++;
 	nevents_2b_wgt+=eve->weight_;
       }
       // If ==2 extra b quarks, matched to 2 jets, tt+2b
       else if(nExtraBQuarks==2 && nExtraBJets==2){
+	isTT2B=true;
 	nevents_2b++;
 	nevents_2b_wgt+=eve->weight_;
       }
       // If 2 extra B quarks, matched to 1 extra jet, tt+1b
       else if(nExtraBQuarks==2 && nExtraBJets==1){
+	isTT1B=true;
 	nevents_1b++;
 	nevents_1b_wgt+=eve->weight_;
       }
       // If 1 extra B quark, not matched to extra jet, tt+1b
       else if(nExtraBQuarks==1){
+	isTT1B=true;
 	nevents_1b++;
 	nevents_1b_wgt+=eve->weight_;
       }
       // If >=1 extra C quarks, 0 extra b quarks, tt+cc (tt+1/2c)
       else if(nExtraBQuarks==0 && nExtraCQuarks>0){
+	isTTCC=true;
 	nevents_cc++;
 	nevents_cc_wgt+=eve->weight_;
       }
       // If 0 extraB, extraC quarks, tt+lf
       else{
+	isTTLF=true;
 	nevents_lf++;
 	nevents_lf_wgt+=eve->weight_;
       }
 
-      eve->nExtraBQuarks_ = nExtraBQuarks;
-      eve->nExtraCQuarks_ = nExtraCQuarks;
-            
-      eve->maxPt_gen_extraBQuark_ = maxPtExtraBQuarks;
-      eve->minPt_gen_extraBQuark_ = minPtExtraBQuarks;
       
-      eve->maxPt_gen_extraCQuark_ = maxPtExtraCQuarks;
-      eve->minPt_gen_extraCQuark_ = minPtExtraCQuarks;
       
-      eve->nExtraBJets_ = nExtraBJets;
-      eve->nExtraCJets_ = nExtraCJets;
-      
-    
       //
       // Print results of grabbing ttbar system
       //
-      if(verbose_ && (nevents_pass_lepCut==1 || fabs(b_quark_fromTop[0].pdgId())!=5) ){
+      bool printCondition_ = ( verbose_ && (nevents_pass_lepCut==1) );
+      if(printCondition_){
 	
 	cout << "NEVENT = " << nevents << endl << endl;
 
@@ -1029,25 +598,492 @@ void yggdrasil_NLO::makeTree(int sampleId, int maxNentries, int Njobs, int jobN)
 
 	cout << endl << endl;
 
+	//yggdrasil_NLO::printMothers(wDaughter1_fromTop.begin(),genParticles);
+	//yggdrasil_NLO::printDaughters(top_quark.begin(),genParticles);
+
       } // end print conditions
       
-
+      
+      
       
       /////////
       ///
-      /// Loop over genJets
+      /// Set values of BEANeventVars_NLO object
       ///
       ////////
 
-      int counter_genJet=0;
+
+      //
+      // Information about nature of ttbar decay
+      //
+      eve->genTopIsLeptonic_    = (topIsLeptonic)    ? 1 : 0;
+      eve->genTopBarIsLeptonic_ = (topBarIsLeptonic) ? 1 : 0;
+
+      eve->genTopIsTau_    = (topIsTau)    ? 1 : 0;
+      eve->genTopBarIsTau_ = (topBarIsTau) ? 1 : 0;
+
+      eve->isHadronicDecay_     = (isHadronicDecay)     ? 1 : 0;
+      eve->isSemiLeptonicDecay_ = (isSemiLeptonicDecay) ? 1 : 0;
+      eve->isDiLeptonicDecay_   = (isDiLeptonicDecay)   ? 1 : 0;
+
+      eve->nExtraBQuarks_ = nExtraBQuarks;
+      eve->nExtraCQuarks_ = nExtraCQuarks;
+            
+      eve->nExtraBJets_ = nExtraBJets;
+      eve->nExtraCJets_ = nExtraCJets;
+     
+      eve->isTTLF_ = (isTTLF) ? 1 : 0;
+      eve->isTTCC_ = (isTTCC) ? 1 : 0;
+      eve->isTT1B_ = (isTT1B) ? 1 : 0;
+      eve->isTT2B_ = (isTT2B) ? 1 : 0;
+
+      
+      //
+      // Get Info on ttbar system 
+      //
+      
+      // top_quark
+      for( std::vector< reco::GenParticle >::const_iterator iGenParticle=top_quark.begin(); iGenParticle != top_quark.end(); iGenParticle++){
+	
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenParticle->px());
+	gen_TLV.push_back(iGenParticle->py());
+	gen_TLV.push_back(iGenParticle->pz());
+	gen_TLV.push_back(iGenParticle->energy());
+	eve->genParticle_top_quark_TLV_.push_back(gen_TLV);
+	
+	eve->genParticle_top_quark_status_.push_back(iGenParticle->status());
+	eve->genParticle_top_quark_pdgId_.push_back(iGenParticle->pdgId());
+	eve->genParticle_top_quark_mother_pdgId_.push_back(iGenParticle->mother(0)->pdgId());
+
+      } // end loop over top_quark
+      
+      
+      // b_quark_fromTop
+      for( std::vector< reco::GenParticle >::const_iterator iGenParticle=b_quark_fromTop.begin(); iGenParticle != b_quark_fromTop.end(); iGenParticle++){
+	
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenParticle->px());
+	gen_TLV.push_back(iGenParticle->py());
+	gen_TLV.push_back(iGenParticle->pz());
+	gen_TLV.push_back(iGenParticle->energy());
+	eve->genParticle_b_quark_fromTop_TLV_.push_back(gen_TLV);
+	
+	eve->genParticle_b_quark_fromTop_status_.push_back(iGenParticle->status());
+	eve->genParticle_b_quark_fromTop_pdgId_.push_back(iGenParticle->pdgId());
+	eve->genParticle_b_quark_fromTop_mother_pdgId_.push_back(iGenParticle->mother(0)->pdgId());
+
+      } // end loop over b_quark_fromTop
+
+      
+      // w_boson_fromTop
+      for( std::vector< reco::GenParticle >::const_iterator iGenParticle=w_boson_fromTop.begin(); iGenParticle != w_boson_fromTop.end(); iGenParticle++){
+	
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenParticle->px());
+	gen_TLV.push_back(iGenParticle->py());
+	gen_TLV.push_back(iGenParticle->pz());
+	gen_TLV.push_back(iGenParticle->energy());
+	eve->genParticle_w_boson_fromTop_TLV_.push_back(gen_TLV);
+	
+	eve->genParticle_w_boson_fromTop_status_.push_back(iGenParticle->status());
+	eve->genParticle_w_boson_fromTop_pdgId_.push_back(iGenParticle->pdgId());
+	eve->genParticle_w_boson_fromTop_mother_pdgId_.push_back(iGenParticle->mother(0)->pdgId());
+
+      } // end loop over w_boson_fromTop
+
+      
+      // wDaughter1_fromTop
+      for( std::vector< reco::GenParticle >::const_iterator iGenParticle=wDaughter1_fromTop.begin(); iGenParticle != wDaughter1_fromTop.end(); iGenParticle++){
+	
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenParticle->px());
+	gen_TLV.push_back(iGenParticle->py());
+	gen_TLV.push_back(iGenParticle->pz());
+	gen_TLV.push_back(iGenParticle->energy());
+	eve->genParticle_wDaughter1_fromTop_TLV_.push_back(gen_TLV);
+	
+	eve->genParticle_wDaughter1_fromTop_status_.push_back(iGenParticle->status());
+	eve->genParticle_wDaughter1_fromTop_pdgId_.push_back(iGenParticle->pdgId());
+	eve->genParticle_wDaughter1_fromTop_mother_pdgId_.push_back(iGenParticle->mother(0)->pdgId());
+
+      } // end loop over wDaughter1_fromTop
+      
+
+      // wDaughter2_fromTop
+      for( std::vector< reco::GenParticle >::const_iterator iGenParticle=wDaughter2_fromTop.begin(); iGenParticle != wDaughter2_fromTop.end(); iGenParticle++){
+	
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenParticle->px());
+	gen_TLV.push_back(iGenParticle->py());
+	gen_TLV.push_back(iGenParticle->pz());
+	gen_TLV.push_back(iGenParticle->energy());
+	eve->genParticle_wDaughter2_fromTop_TLV_.push_back(gen_TLV);
+	
+	eve->genParticle_wDaughter2_fromTop_status_.push_back(iGenParticle->status());
+	eve->genParticle_wDaughter2_fromTop_pdgId_.push_back(iGenParticle->pdgId());
+	eve->genParticle_wDaughter2_fromTop_mother_pdgId_.push_back(iGenParticle->mother(0)->pdgId());
+
+      } // end loop over wDaughter2_fromTop
+      
+
+       // topBar_quark
+      for( std::vector< reco::GenParticle >::const_iterator iGenParticle=topBar_quark.begin(); iGenParticle != topBar_quark.end(); iGenParticle++){
+	
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenParticle->px());
+	gen_TLV.push_back(iGenParticle->py());
+	gen_TLV.push_back(iGenParticle->pz());
+	gen_TLV.push_back(iGenParticle->energy());
+	eve->genParticle_topBar_quark_TLV_.push_back(gen_TLV);
+	
+	eve->genParticle_topBar_quark_status_.push_back(iGenParticle->status());
+	eve->genParticle_topBar_quark_pdgId_.push_back(iGenParticle->pdgId());
+	eve->genParticle_topBar_quark_mother_pdgId_.push_back(iGenParticle->mother(0)->pdgId());
+
+      } // end loop over topBar_quark
+      
+      
+      // b_quark_fromTopBar
+      for( std::vector< reco::GenParticle >::const_iterator iGenParticle=b_quark_fromTopBar.begin(); iGenParticle != b_quark_fromTopBar.end(); iGenParticle++){
+	
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenParticle->px());
+	gen_TLV.push_back(iGenParticle->py());
+	gen_TLV.push_back(iGenParticle->pz());
+	gen_TLV.push_back(iGenParticle->energy());
+	eve->genParticle_b_quark_fromTopBar_TLV_.push_back(gen_TLV);
+	
+	eve->genParticle_b_quark_fromTopBar_status_.push_back(iGenParticle->status());
+	eve->genParticle_b_quark_fromTopBar_pdgId_.push_back(iGenParticle->pdgId());
+	eve->genParticle_b_quark_fromTopBar_mother_pdgId_.push_back(iGenParticle->mother(0)->pdgId());
+
+      } // end loop over b_quark_fromTopBar
+      
+
+      // w_boson_fromTopBar
+      for( std::vector< reco::GenParticle >::const_iterator iGenParticle=w_boson_fromTopBar.begin(); iGenParticle != w_boson_fromTopBar.end(); iGenParticle++){
+	
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenParticle->px());
+	gen_TLV.push_back(iGenParticle->py());
+	gen_TLV.push_back(iGenParticle->pz());
+	gen_TLV.push_back(iGenParticle->energy());
+	eve->genParticle_w_boson_fromTopBar_TLV_.push_back(gen_TLV);
+	
+	eve->genParticle_w_boson_fromTopBar_status_.push_back(iGenParticle->status());
+	eve->genParticle_w_boson_fromTopBar_pdgId_.push_back(iGenParticle->pdgId());
+	eve->genParticle_w_boson_fromTopBar_mother_pdgId_.push_back(iGenParticle->mother(0)->pdgId());
+
+      } // end loop over w_boson_fromTopBar
+
+      
+      // wDaughter1_fromTopBar
+      for( std::vector< reco::GenParticle >::const_iterator iGenParticle=wDaughter1_fromTopBar.begin(); iGenParticle != wDaughter1_fromTopBar.end(); iGenParticle++){
+	
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenParticle->px());
+	gen_TLV.push_back(iGenParticle->py());
+	gen_TLV.push_back(iGenParticle->pz());
+	gen_TLV.push_back(iGenParticle->energy());
+	eve->genParticle_wDaughter1_fromTopBar_TLV_.push_back(gen_TLV);
+	
+	eve->genParticle_wDaughter1_fromTopBar_status_.push_back(iGenParticle->status());
+	eve->genParticle_wDaughter1_fromTopBar_pdgId_.push_back(iGenParticle->pdgId());
+	eve->genParticle_wDaughter1_fromTopBar_mother_pdgId_.push_back(iGenParticle->mother(0)->pdgId());
+
+      } // end loop over wDaughter1_fromTopBar
+     
+      
+      // wDaughter2_fromTopBar
+      for( std::vector< reco::GenParticle >::const_iterator iGenParticle=wDaughter2_fromTopBar.begin(); iGenParticle != wDaughter2_fromTopBar.end(); iGenParticle++){
+	
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenParticle->px());
+	gen_TLV.push_back(iGenParticle->py());
+	gen_TLV.push_back(iGenParticle->pz());
+	gen_TLV.push_back(iGenParticle->energy());
+	eve->genParticle_wDaughter2_fromTopBar_TLV_.push_back(gen_TLV);
+	
+	eve->genParticle_wDaughter2_fromTopBar_status_.push_back(iGenParticle->status());
+	eve->genParticle_wDaughter2_fromTopBar_pdgId_.push_back(iGenParticle->pdgId());
+	eve->genParticle_wDaughter2_fromTopBar_mother_pdgId_.push_back(iGenParticle->mother(0)->pdgId());
+
+      } // end loop over wDaughter2_fromTopBar
+     
+      
+      
+
+      //
+      // Get Information on genJets matched to ttbar system genPartons
+      //
+
+      // b quark from top
+      eve->genJet_matchedTo_b_quark_fromTop_TLV_.push_back(genJet_b_quark_fromTop.px());
+      eve->genJet_matchedTo_b_quark_fromTop_TLV_.push_back(genJet_b_quark_fromTop.py());
+      eve->genJet_matchedTo_b_quark_fromTop_TLV_.push_back(genJet_b_quark_fromTop.pz());
+      eve->genJet_matchedTo_b_quark_fromTop_TLV_.push_back(genJet_b_quark_fromTop.energy());
+      if( yggdrasil_NLO::isGoodGenJet(genJet_b_quark_fromTop, jet_cut_pt, jet_cut_eta) ){
+	nevents_match_b_quark_fromTop++;
+	nevents_match_b_quark_fromTop_wgt+=eve->weight_;
+	eve->genJet_matchedTo_b_quark_fromTop_isSelected_ = 1;
+      } // end if good genJet
+      else{
+	eve->genJet_matchedTo_b_quark_fromTop_isSelected_ = 0;
+      }
+      
+      // Check if top is decaying hadronically
+      if(!topIsLeptonic){
+	
+	// wDaughter1 from top
+	eve->genJet_matchedTo_wDaughter1_fromTop_TLV_.push_back(genJet_wDaughter1_fromTop.px());
+	eve->genJet_matchedTo_wDaughter1_fromTop_TLV_.push_back(genJet_wDaughter1_fromTop.py());
+	eve->genJet_matchedTo_wDaughter1_fromTop_TLV_.push_back(genJet_wDaughter1_fromTop.pz());
+	eve->genJet_matchedTo_wDaughter1_fromTop_TLV_.push_back(genJet_wDaughter1_fromTop.energy());
+	if( yggdrasil_NLO::isGoodGenJet(genJet_wDaughter1_fromTop, jet_cut_pt, jet_cut_eta) ){
+	  nevents_match_wDaughter1_fromTop++;
+	  nevents_match_wDaughter1_fromTop_wgt+=eve->weight_;
+	  eve->genJet_matchedTo_wDaughter1_fromTop_isSelected_ = 1;
+	} // end if good genJet
+	else{
+	  eve->genJet_matchedTo_wDaughter1_fromTop_isSelected_ = 0;
+	}
+	
+	// wDaughter2 from top
+	eve->genJet_matchedTo_wDaughter2_fromTop_TLV_.push_back(genJet_wDaughter2_fromTop.px());
+	eve->genJet_matchedTo_wDaughter2_fromTop_TLV_.push_back(genJet_wDaughter2_fromTop.py());
+	eve->genJet_matchedTo_wDaughter2_fromTop_TLV_.push_back(genJet_wDaughter2_fromTop.pz());
+	eve->genJet_matchedTo_wDaughter2_fromTop_TLV_.push_back(genJet_wDaughter2_fromTop.energy());	
+	if( yggdrasil_NLO::isGoodGenJet(genJet_wDaughter2_fromTop, jet_cut_pt, jet_cut_eta) ){
+	  nevents_match_wDaughter2_fromTop++;
+	  nevents_match_wDaughter2_fromTop_wgt+=eve->weight_;
+	  eve->genJet_matchedTo_wDaughter2_fromTop_isSelected_ = 1;
+	} // end if good genJet
+	else{
+	  eve->genJet_matchedTo_wDaughter2_fromTop_isSelected_ = 0;
+	}
+      
+      } // end if top decays hadronically
+      
+
+      // b quark from topBar
+      eve->genJet_matchedTo_b_quark_fromTopBar_TLV_.push_back(genJet_b_quark_fromTopBar.px());
+      eve->genJet_matchedTo_b_quark_fromTopBar_TLV_.push_back(genJet_b_quark_fromTopBar.py());
+      eve->genJet_matchedTo_b_quark_fromTopBar_TLV_.push_back(genJet_b_quark_fromTopBar.pz());
+      eve->genJet_matchedTo_b_quark_fromTopBar_TLV_.push_back(genJet_b_quark_fromTopBar.energy());
+      if( yggdrasil_NLO::isGoodGenJet(genJet_b_quark_fromTopBar, jet_cut_pt, jet_cut_eta) ){
+	nevents_match_b_quark_fromTopBar++;
+	nevents_match_b_quark_fromTopBar_wgt+=eve->weight_;
+	eve->genJet_matchedTo_b_quark_fromTopBar_isSelected_ = 1;
+      } // end if good genJet
+      else{
+	eve->genJet_matchedTo_b_quark_fromTopBar_isSelected_ = 0;
+      }
+      
+      // Check if topBar is decaying hadronically
+      if(!topBarIsLeptonic){
+	
+	// wDaughter1 from topBar
+	eve->genJet_matchedTo_wDaughter1_fromTopBar_TLV_.push_back(genJet_wDaughter1_fromTopBar.px());
+	eve->genJet_matchedTo_wDaughter1_fromTopBar_TLV_.push_back(genJet_wDaughter1_fromTopBar.py());
+	eve->genJet_matchedTo_wDaughter1_fromTopBar_TLV_.push_back(genJet_wDaughter1_fromTopBar.pz());
+	eve->genJet_matchedTo_wDaughter1_fromTopBar_TLV_.push_back(genJet_wDaughter1_fromTopBar.energy());
+	if( yggdrasil_NLO::isGoodGenJet(genJet_wDaughter1_fromTopBar, jet_cut_pt, jet_cut_eta) ){
+	  nevents_match_wDaughter1_fromTopBar++;
+	  nevents_match_wDaughter1_fromTopBar_wgt+=eve->weight_;
+	  eve->genJet_matchedTo_wDaughter1_fromTopBar_isSelected_ = 1;
+	} // end if good genJet
+	else{
+	  eve->genJet_matchedTo_wDaughter1_fromTopBar_isSelected_ = 0;
+	}
+	
+	// wDaughter2 from topBar
+	eve->genJet_matchedTo_wDaughter2_fromTopBar_TLV_.push_back(genJet_wDaughter2_fromTopBar.px());
+	eve->genJet_matchedTo_wDaughter2_fromTopBar_TLV_.push_back(genJet_wDaughter2_fromTopBar.py());
+	eve->genJet_matchedTo_wDaughter2_fromTopBar_TLV_.push_back(genJet_wDaughter2_fromTopBar.pz());
+	eve->genJet_matchedTo_wDaughter2_fromTopBar_TLV_.push_back(genJet_wDaughter1_fromTopBar.energy());
+	if( yggdrasil_NLO::isGoodGenJet(genJet_wDaughter2_fromTopBar, jet_cut_pt, jet_cut_eta) ){
+	  nevents_match_wDaughter2_fromTopBar++;
+	  nevents_match_wDaughter2_fromTopBar_wgt+=eve->weight_;
+	  eve->genJet_matchedTo_wDaughter2_fromTopBar_isSelected_ = 1;
+	} // end if good genJet
+	else{
+	  eve->genJet_matchedTo_wDaughter2_fromTopBar_isSelected_ = 0;
+	}
+
+      } // end if topBar is decaying hadronically
+
+      
+      
+      
+      //
+      // Get information on extra b/c quarks in the event
+      //
+      for(int iExtraB=0; iExtraB<(int)extraBQuarks.size(); iExtraB++){
+	
+	std::vector< reco::GenParticle > allStates_thisB=extraBQuarks[iExtraB];
+	vvdouble allStates_thisB_TLV;
+	vdouble allStates_thisB_status;
+	vdouble allStates_thisB_pdgId;
+	vdouble allStates_thisB_mother_pdgId;
+	for(std::vector< reco::GenParticle >::const_iterator iGenParticle=allStates_thisB.begin(); iGenParticle != allStates_thisB.end(); iGenParticle++){
+	  vdouble gen_TLV;
+	  gen_TLV.push_back(iGenParticle->px());
+	  gen_TLV.push_back(iGenParticle->py());
+	  gen_TLV.push_back(iGenParticle->pz());
+	  gen_TLV.push_back(iGenParticle->energy());
+	  allStates_thisB_TLV.push_back(gen_TLV);
+	  
+	  allStates_thisB_status.push_back(iGenParticle->status());
+	  allStates_thisB_pdgId.push_back(iGenParticle->pdgId());
+	  allStates_thisB_mother_pdgId.push_back(iGenParticle->mother(0)->pdgId());
+	  	  
+	} // end loop over all states of this b quark
+
+	eve->genParticle_extraBQuark_TLV_.push_back( allStates_thisB_TLV );
+	eve->genParticle_extraBQuark_status_.push_back(allStates_thisB_status);
+	eve->genParticle_extraBQuark_pdgId_.push_back(allStates_thisB_pdgId);
+	eve->genParticle_extraBQuark_mother_pdgId_.push_back(allStates_thisB_mother_pdgId);
+
+      } // end loop over extra b quarks
+
+      
+      for(int iExtraC=0; iExtraC<(int)extraCQuarks.size(); iExtraC++){
+
+	std::vector< reco::GenParticle > allStates_thisC=extraCQuarks[iExtraC];
+	vvdouble allStates_thisC_TLV;
+	vdouble allStates_thisC_status;
+	vdouble allStates_thisC_pdgId;
+	vdouble allStates_thisC_mother_pdgId;
+	for(std::vector< reco::GenParticle >::const_iterator iGenParticle=allStates_thisC.begin(); iGenParticle != allStates_thisC.end(); iGenParticle++){
+	  vdouble gen_TLV;
+	  gen_TLV.push_back(iGenParticle->px());
+	  gen_TLV.push_back(iGenParticle->py());
+	  gen_TLV.push_back(iGenParticle->pz());
+	  gen_TLV.push_back(iGenParticle->energy());
+	  allStates_thisC_TLV.push_back(gen_TLV);
+	  
+	  allStates_thisC_status.push_back(iGenParticle->status());
+	  allStates_thisC_pdgId.push_back(iGenParticle->pdgId());
+	  allStates_thisC_mother_pdgId.push_back(iGenParticle->mother(0)->pdgId());
+	  	  	  	  
+	} // end loop over all states of this c quark
+
+	// For extra C quarks with non-gluon mother, check heritage
+	//  NOTE: parents seem to be pdgId==2212 (proton) status==4,
+	//  a stage of event gen inside pythia, so not from ttbar system decays
+	if(extraCQuarks[iExtraC][0].mother(0)->pdgId()!=21){
+	  //cout << "PRINTING NONGLUON MOTHER HERITAGE FOR EXTRA C QUARK:" << endl;
+	  //yggdrasil_NLO::printMothers(extraCQuarks[iExtraC].begin(), genParticles);
+	} // end if non-gluon mother
+	
+	eve->genParticle_extraCQuark_TLV_.push_back( allStates_thisC_TLV );
+	eve->genParticle_extraCQuark_status_.push_back(allStates_thisC_status);
+	eve->genParticle_extraCQuark_pdgId_.push_back(allStates_thisC_pdgId);
+	eve->genParticle_extraCQuark_mother_pdgId_.push_back(allStates_thisC_mother_pdgId);
+	
+
+      } // end loop over extra c quarks
+
+      
+      
+      //
+      // Get Information on genJets matched to extra b/c quarks
+      //
+      for(int iExtraB=0; iExtraB<(int)genJet_matchedToExtraBQuarks.size(); iExtraB++){
+	vdouble genTLV;
+	genTLV.push_back(genJet_matchedToExtraBQuarks[iExtraB].px());
+	genTLV.push_back(genJet_matchedToExtraBQuarks[iExtraB].py());
+	genTLV.push_back(genJet_matchedToExtraBQuarks[iExtraB].pz());
+	genTLV.push_back(genJet_matchedToExtraBQuarks[iExtraB].energy());
+	eve->genJet_matchedTo_extraBQuark_TLV_.push_back(genTLV);
+
+	if( yggdrasil_NLO::isGoodGenJet(genJet_matchedToExtraBQuarks[iExtraB], jet_cut_pt, jet_cut_eta) ){
+	  eve->genJet_matchedTo_extraBQuark_isSelected_.push_back(1);
+	} // end if good genJet
+	else{
+	  eve->genJet_matchedTo_extraBQuark_isSelected_.push_back(0);
+	}
+
+      } // end loop over genJets matched to extraBs
+
+      
+      for(int iExtraC=0; iExtraC<(int)genJet_matchedToExtraCQuarks.size(); iExtraC++){
+	vdouble genTLV;
+	genTLV.push_back(genJet_matchedToExtraCQuarks[iExtraC].px());
+	genTLV.push_back(genJet_matchedToExtraCQuarks[iExtraC].py());
+	genTLV.push_back(genJet_matchedToExtraCQuarks[iExtraC].pz());
+	genTLV.push_back(genJet_matchedToExtraCQuarks[iExtraC].energy());
+	eve->genJet_matchedTo_extraCQuark_TLV_.push_back(genTLV);
+
+	if( yggdrasil_NLO::isGoodGenJet(genJet_matchedToExtraCQuarks[iExtraC], jet_cut_pt, jet_cut_eta) ){
+	  eve->genJet_matchedTo_extraCQuark_isSelected_.push_back(1);
+	} // end if good genJet
+	else{
+	  eve->genJet_matchedTo_extraCQuark_isSelected_.push_back(0);
+	}
+
+      } // end loop over genJets matched to extraCs
+
+      
+      
+   
+      //
+      // Get Information on tightLepton that passed selection
+      //
+      vdouble tight_lep_tlv;
+      tight_lep_tlv.push_back(genParticle_leptons_tight[0].px());
+      tight_lep_tlv.push_back(genParticle_leptons_tight[0].py());
+      tight_lep_tlv.push_back(genParticle_leptons_tight[0].pz());
+      tight_lep_tlv.push_back(genParticle_leptons_tight[0].energy());
+      eve->genParticle_tightLepton_TLV_.push_back(tight_lep_tlv);
+      
+      eve->genParticle_tightLepton_status_.push_back(genParticle_leptons_tight[0].status());
+      eve->genParticle_tightLepton_pdgId_.push_back(genParticle_leptons_tight[0].pdgId());
+      eve->genParticle_tightLepton_mother_pdgId_.push_back(genParticle_leptons_tight[0].mother(0)->pdgId());
+      
+   
+      //
+      // Loop over genParticles
+      //
+      
+      for( std::vector< reco::GenParticle >::const_iterator iGenParticle = genParticles.begin(); iGenParticle != genParticles.end(); iGenParticle++){
+
+	// Store GenParicle Information
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenParticle->px());
+	gen_TLV.push_back(iGenParticle->py());
+	gen_TLV.push_back(iGenParticle->pz());
+	gen_TLV.push_back(iGenParticle->energy());
+	eve->genParticle_TLV_.push_back(gen_TLV);
+
+	eve->genParticle_pdgId_.push_back(iGenParticle->pdgId());
+
+	int nGenParticleMothers = (int)iGenParticle->numberOfMothers();
+	if(nGenParticleMothers>0){
+	  eve->genParticle_mother_pdgId_.push_back(iGenParticle->mother(0)->pdgId());
+	}
+	else{
+	  eve->genParticle_mother_pdgId_.push_back(-99);
+	}
+
+      } // end loop over genParticles
+      
+      
+
+      //
+      // Loop over genJets
+      //
+
       for( std::vector< reco::GenJet >::const_iterator iGenJet = genJets.begin(); iGenJet != genJets.end(); iGenJet++){
 
 	// Store GenJet Information
-	eve->genJet_pt_.push_back(iGenJet->pt());
-	eve->genJet_eta_.push_back(iGenJet->eta());
-	eve->genJet_phi_.push_back(iGenJet->phi());
-	eve->genJet_energy_.push_back(iGenJet->energy());
-	eve->genJet_pdgId_.push_back(iGenJet->pdgId());
+	vdouble gen_TLV;
+	gen_TLV.push_back(iGenJet->px());
+	gen_TLV.push_back(iGenJet->py());
+	gen_TLV.push_back(iGenJet->pz());
+	gen_TLV.push_back(iGenJet->energy());
+	eve->genJet_TLV_.push_back(gen_TLV);
 
 	if(yggdrasil_NLO::isGoodGenJet(*iGenJet, jet_cut_pt, jet_cut_eta)){
 	  eve->genJet_isSelected_.push_back(1);
@@ -1056,22 +1092,9 @@ void yggdrasil_NLO::makeTree(int sampleId, int maxNentries, int Njobs, int jobN)
 	  eve->genJet_isSelected_.push_back(0);
 	}
 
-	int nGenJetMothers = (int)iGenJet->numberOfMothers();
-	if(nGenJetMothers>0){
-	  eve->genJet_mother_pdgId_.push_back(iGenJet->mother()->pdgId());
-	}
-	else{
-	  eve->genJet_mother_pdgId_.push_back(-99);
-	}
-
-
-	// Increment int counter
-	counter_genJet++;
-      }
+      } // end loop over genJets
       
       
-      
-
       
 
       /////////
@@ -1611,6 +1634,216 @@ void yggdrasil_NLO::getAllStagesOfGenParticle(std::vector< reco::GenParticle >::
 
 //*****************************************************************************
 
+void yggdrasil_NLO::getGenTTbarSystem(std::vector< reco::GenParticle > genParticles, std::vector< reco::GenParticle > &top_quark, std::vector< reco::GenParticle > &b_quark_fromTop, std::vector< reco::GenParticle > &w_boson_fromTop, std::vector< reco::GenParticle > &wDaughter1_fromTop, std::vector< reco::GenParticle > &wDaughter2_fromTop, std::vector< reco::GenParticle > &topBar_quark, std::vector< reco::GenParticle > &b_quark_fromTopBar, std::vector< reco::GenParticle > &w_boson_fromTopBar, std::vector< reco::GenParticle > &wDaughter1_fromTopBar, std::vector< reco::GenParticle > &wDaughter2_fromTopBar){
+
+  
+  //
+  // Get ttbar system
+  //
+  
+  int pdgIdFirstWDaughterFromTop    = 0;
+  int pdgIdFirstWDaughterFromTopBar = 0;
+  
+  // Loop over genParticles
+  for( std::vector< reco::GenParticle >::const_iterator iGenParticle = genParticles.begin(); iGenParticle != genParticles.end(); iGenParticle++){
+
+    // Get pointer to top quark
+    if( iGenParticle->pdgId()==6             && 
+	iGenParticle->numberOfDaughters()==2    ){
+      if( ( iGenParticle->daughter(0)->pdgId()<=5  && 
+	    iGenParticle->daughter(0)->pdgId()>=1  && 
+	    iGenParticle->daughter(1)->pdgId()==24    ) || 
+	  ( iGenParticle->daughter(1)->pdgId()<=5  && 
+	    iGenParticle->daughter(1)->pdgId()>=1  && 
+	    iGenParticle->daughter(0)->pdgId()==24)        ){
+	yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, top_quark);
+      } // end if duaghters are b-qaurk and W
+    } // end if iGenParticle is top quark with 2 daughters
+	
+
+    // Get pointer to b quark from top
+    if( iGenParticle->pdgId()<=5           &&
+	iGenParticle->pdgId()>=1           &&
+	iGenParticle->numberOfMothers()==1    ){
+      if( iGenParticle->mother(0)->pdgId()==6 ){
+	yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, b_quark_fromTop);
+      } // end if mother is top quark
+    } // end if iGenParticle is a quark
+      
+
+    // Get pointer to W boson from top
+    if( iGenParticle->pdgId()==24          &&
+	iGenParticle->numberOfMothers()==1    ){
+      if( iGenParticle->mother(0)->pdgId()==6 ){
+	yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, w_boson_fromTop);
+      } // end if mother is top quark
+    } // end if iGenParticle is W boson
+	
+
+    // Get pointer to 1st daughter of W daughter from top 
+    if( pdgIdFirstWDaughterFromTop==0      &&
+	iGenParticle->numberOfMothers()==1   ){
+      if( iGenParticle->mother(0)->pdgId()==24            && 
+	  iGenParticle->mother(0)->numberOfDaughters()==2    ){
+	yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, wDaughter1_fromTop);
+	pdgIdFirstWDaughterFromTop = iGenParticle->pdgId();
+      } // end if mother is W boson that decays to daughters
+    } // end if not found wDaughter1 and this particle has 1 mother
+
+
+    // Get pointer to 2nd daughter of W daughter from top 
+    if( pdgIdFirstWDaughterFromTop!=0                     &&
+	iGenParticle->pdgId()!=pdgIdFirstWDaughterFromTop &&
+	iGenParticle->numberOfMothers()==1                   ){
+      if( iGenParticle->mother(0)->pdgId()==24            && 
+	  iGenParticle->mother(0)->numberOfDaughters()==2     ){
+	yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, wDaughter2_fromTop);
+      } // end if mother is W boson that decays to daughters
+    } // end if wDaughter1 is found and this particle has 1 mother 
+
+
+    // Get pointer to topBar quark
+    if( iGenParticle->pdgId()==-6            && 
+	iGenParticle->numberOfDaughters()==2    ){
+      if( ( iGenParticle->daughter(0)->pdgId()>=-5  && 
+	    iGenParticle->daughter(0)->pdgId()<=-1  && 
+	    iGenParticle->daughter(1)->pdgId()==-24    ) || 
+	  ( iGenParticle->daughter(1)->pdgId()>=-5  && 
+	    iGenParticle->daughter(1)->pdgId()<=-1  &&
+	    iGenParticle->daughter(0)->pdgId()==-24)        ){
+	yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, topBar_quark);
+      } // end if duaghters are b-qaurk and W
+    } // end if iGenParticle is topBar quark with 2 daughters
+
+
+    // Get pointer to b quark from topBar
+    if( iGenParticle->pdgId()>=-5          &&
+	iGenParticle->pdgId()<=-1          &&
+	iGenParticle->numberOfMothers()==1    ){
+      if( iGenParticle->mother(0)->pdgId()==-6  ){
+	yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, b_quark_fromTopBar);
+      } // end if mother is topBar
+    } // end if iGenParticle is a quark
+
+
+    // Get pointer to W boson from topBar
+    if( iGenParticle->pdgId()==-24         &&
+	iGenParticle->numberOfMothers()==1     ){
+      if( iGenParticle->mother(0)->pdgId()==-6 ){
+	yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, w_boson_fromTopBar);
+      } // end if mother is topBar
+    } // end if W- boson
+
+
+    // Get pointer to 1st daughter of W daughter from topBar 
+    if( pdgIdFirstWDaughterFromTopBar==0   &&
+	iGenParticle->numberOfMothers()==1    ){
+      if( iGenParticle->mother(0)->pdgId()==-24           && 
+	  iGenParticle->mother(0)->numberOfDaughters()==2     ){
+	yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, wDaughter1_fromTopBar);
+	pdgIdFirstWDaughterFromTopBar = iGenParticle->pdgId();
+      } // end if mother is W- boson that decays to 2 daughters
+    } // end if wDaughter1_fromTopBar not found, and iGenParticle has 1 mother
+
+
+    // Get pointer to 2nd daughter of W daughter from topBar 
+    if( pdgIdFirstWDaughterFromTopBar!=0                     &&
+	iGenParticle->pdgId()!=pdgIdFirstWDaughterFromTopBar &&
+	iGenParticle->numberOfMothers()==1                      ){
+      if( iGenParticle->mother(0)->pdgId()==-24           && 
+	  iGenParticle->mother(0)->numberOfDaughters()==2     ){
+	yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, wDaughter2_fromTopBar);
+      } // end if mother is W- boson that decays to 2 daughters
+    } // end if wDaughter2_fromTopBar is found, and iGenParticle has 1 mother
+ 
+ 
+  
+  } // end loop over genParticles
+      
+  
+  return;
+}
+
+
+//*****************************************************************************
+
+void yggdrasil_NLO::getGenExtraBCQuarks(std::vector< reco::GenParticle > genParticles, std::vector< reco::GenParticle > &vetoCandidates, std::vector< std::vector< reco::GenParticle > > &extraBQuarks, std::vector< std::vector< reco::GenParticle > > &extraCQuarks){
+
+  // Loop over genParticles, look for b, c quarks, check heritage
+  for( std::vector< reco::GenParticle >::const_iterator iGenParticle = genParticles.begin(); iGenParticle != genParticles.end(); iGenParticle++){
+
+    if(fabs(iGenParticle->pdgId())==5 ||
+       fabs(iGenParticle->pdgId())==4    ){
+      
+      // Check if this particle belongs to veto collection
+      bool isMatched=false;
+      for( std::vector< reco::GenParticle >::const_iterator jGenParticle = vetoCandidates.begin(); jGenParticle != vetoCandidates.end(); jGenParticle++){
+	
+	if( jGenParticle->pdgId()  == iGenParticle->pdgId() &&
+	    jGenParticle->pt()     == iGenParticle->pt()    &&
+	    jGenParticle->eta()    == iGenParticle->eta()   &&
+	    jGenParticle->phi()    == iGenParticle->phi()   &&
+	    jGenParticle->status() == iGenParticle->status()   ){
+	    
+	  isMatched=true;
+	} // end if matched
+	
+	// if matched, break loop over vetoCandidates
+	if(isMatched) break; 
+
+      } // end loop over vetoCandidates
+
+
+      // If not matched, add to correct collection
+      if(!isMatched){
+	
+	std::vector< reco::GenParticle > allStatesThisParticle;
+	yggdrasil_NLO::getAllStagesOfGenParticle(iGenParticle, genParticles, allStatesThisParticle);
+	
+	vetoCandidates.insert(vetoCandidates.end(), allStatesThisParticle.begin(), allStatesThisParticle.end());
+
+	// If particle is a b quark
+	if(fabs(iGenParticle->pdgId())==5) extraBQuarks.push_back(allStatesThisParticle);
+	  
+	// If particle is a charm quark
+	if(fabs(iGenParticle->pdgId())==4) extraCQuarks.push_back(allStatesThisParticle);
+	  
+      } // end if not matched to vetoCandidate	
+      
+    } // end if iGenParticle is b or c quark
+    
+  } // end loop over genParticles looking for b or c quark
+  
+  return;
+}
+
+
+//*****************************************************************************
+
+void yggdrasil_NLO::getGenQuarksIntitiatingHadronization( std::vector< reco::GenParticle > genParticles, std::vector< reco::GenParticle > &target ){
+
+  //
+  // Get quarks that intiate hadronizations
+  //
+  
+  for( std::vector< reco::GenParticle >::const_iterator iGenParticle = genParticles.begin(); iGenParticle != genParticles.end(); iGenParticle++){
+    
+    if( fabs(iGenParticle->pdgId())<=5        &&
+	iGenParticle->numberOfDaughters()>=2  && 
+	iGenParticle->status()>=71            &&
+	iGenParticle->status()<=79               ){
+      
+      target.push_back(*iGenParticle);
+   
+    } // end if particle is quark with >=2 daughters, and hadronization status code
+
+  } // end loop over genParticles
+  
+  return;
+}
+
+
+//*****************************************************************************
 
 bool yggdrasil_NLO::isGoodGenJet(reco::GenJet genJet, double cut_pt, double cut_eta){
 
@@ -1699,5 +1932,190 @@ void yggdrasil_NLO::getGoodGenLeptons(std::vector< reco::GenParticle > genPartic
   return;
 }
 
+
+//*****************************************************************************
+
+void yggdrasil_NLO::getGenJetsMatchedToTTbarSystem(std::vector< reco::GenParticle > ttbar_system_hadrons, std::vector< reco::GenJet > genJets, double deltaR_match, bool topIsLeptonic, reco::GenParticle b_quark_fromTop_hadrons, reco::GenParticle wDaughter1_fromTop_hadrons, reco::GenParticle wDaughter2_fromTop_hadrons, bool topBarIsLeptonic, reco::GenParticle b_quark_fromTopBar_hadrons, reco::GenParticle wDaughter1_fromTopBar_hadrons, reco::GenParticle wDaughter2_fromTopBar_hadrons, reco::GenJet &genJet_b_quark_fromTop, reco::GenJet &genJet_wDaughter1_fromTop, reco::GenJet &genJet_wDaughter2_fromTop, reco::GenJet &genJet_b_quark_fromTopBar, reco::GenJet &genJet_wDaughter1_fromTopBar, reco::GenJet &genJet_wDaughter2_fromTopBar){
+
+  
+  // Find minDr pairs between ttbar system daughters and genJets
+  std::vector< reco::GenParticle > ttbar_system_hadrons_temp = ttbar_system_hadrons;
+  std::vector< reco::GenJet >      genJets_temp              = genJets;
+  while( (int)genJets_temp.size()>0 && (int)ttbar_system_hadrons_temp.size()>0){
+    
+    std::vector< reco::GenParticle >::iterator matched_ttbarSystem = ttbar_system_hadrons_temp.begin();
+    std::vector< reco::GenJet >::iterator      matched_genJet      = genJets_temp.begin();
+
+    double deltaR     = 0.0;
+    double deltaR_min = 99.9;
+    for( std::vector< reco::GenJet >::iterator iGenJet = genJets_temp.begin(); iGenJet != genJets_temp.end(); iGenJet++){
+      for( std::vector< reco::GenParticle >::iterator iGenParticle = ttbar_system_hadrons_temp.begin(); iGenParticle != ttbar_system_hadrons_temp.end(); iGenParticle++){
+	    
+	deltaR = sqrt( pow( iGenJet->eta()-iGenParticle->eta(), 2) + pow( iGenJet->phi()-iGenParticle->phi(), 2) );
+	   
+	if( deltaR < deltaR_min ){
+	      
+	  deltaR_min          = deltaR;
+	  matched_ttbarSystem = iGenParticle;
+	  matched_genJet      = iGenJet;
+	      	      
+	} // end if this is the minDr pair
+	    
+      } // end loop over genParticles
+	  
+    } // end loop over genJets
+    
+
+    // If matched is b quark from top
+    if( deltaR_min <= deltaR_match                                                 &&
+	b_quark_fromTop_hadrons.pdgId()  == matched_ttbarSystem->pdgId()  &&
+	b_quark_fromTop_hadrons.status() == matched_ttbarSystem->status() &&
+	b_quark_fromTop_hadrons.pt()     == matched_ttbarSystem->pt()     &&
+	b_quark_fromTop_hadrons.eta()    == matched_ttbarSystem->eta()    &&
+	b_quark_fromTop_hadrons.phi()    == matched_ttbarSystem->phi()       ){
+      genJet_b_quark_fromTop = *matched_genJet;
+    } // end if b quark from top
+    
+	
+    if(!topIsLeptonic){
+      
+      // If matched is wDaughter1 from top
+      if( deltaR_min <= deltaR_match                                                    &&
+	  wDaughter1_fromTop_hadrons.pdgId()  == matched_ttbarSystem->pdgId()  &&
+	  wDaughter1_fromTop_hadrons.status() == matched_ttbarSystem->status() &&
+	  wDaughter1_fromTop_hadrons.pt()     == matched_ttbarSystem->pt()     &&
+	  wDaughter1_fromTop_hadrons.eta()    == matched_ttbarSystem->eta()    &&
+	  wDaughter1_fromTop_hadrons.phi()    == matched_ttbarSystem->phi()        ){
+	genJet_wDaughter1_fromTop = *matched_genJet;
+      } // end if wDaughter1 from top
+
+      // If matched is wDaughter2 from top
+      if( deltaR_min <= deltaR_match                                                    &&
+	  wDaughter2_fromTop_hadrons.pdgId()  == matched_ttbarSystem->pdgId()  &&
+	  wDaughter2_fromTop_hadrons.status() == matched_ttbarSystem->status() &&
+	  wDaughter2_fromTop_hadrons.pt()     == matched_ttbarSystem->pt()     &&
+	  wDaughter2_fromTop_hadrons.eta()    == matched_ttbarSystem->eta()    &&
+	  wDaughter2_fromTop_hadrons.phi()    == matched_ttbarSystem->phi()        ){
+	genJet_wDaughter2_fromTop = *matched_genJet;
+      } // end if wDaughter2 from top
+
+    } // end if top is hadronic
+
+    
+    // If matched is b quark from topbar
+    if( deltaR_min <= deltaR_match                                                    &&
+	b_quark_fromTopBar_hadrons.pdgId()  == matched_ttbarSystem->pdgId()  &&
+	b_quark_fromTopBar_hadrons.status() == matched_ttbarSystem->status() &&
+	b_quark_fromTopBar_hadrons.pt()     == matched_ttbarSystem->pt()     &&
+	b_quark_fromTopBar_hadrons.eta()    == matched_ttbarSystem->eta()    &&
+	b_quark_fromTopBar_hadrons.phi()    == matched_ttbarSystem->phi()        ){
+      genJet_b_quark_fromTopBar = *matched_genJet;
+    } // end if b quark from topBar
+	
+
+    if(!topBarIsLeptonic){
+      
+      // If matched is wDaughter1 from topbar
+      if( deltaR_min <= deltaR_match                                                       &&
+	  wDaughter1_fromTopBar_hadrons.pdgId()  == matched_ttbarSystem->pdgId()  &&
+	  wDaughter1_fromTopBar_hadrons.status() == matched_ttbarSystem->status() &&
+	  wDaughter1_fromTopBar_hadrons.pt()     == matched_ttbarSystem->pt()     &&
+	  wDaughter1_fromTopBar_hadrons.eta()    == matched_ttbarSystem->eta()    &&
+	  wDaughter1_fromTopBar_hadrons.phi()    == matched_ttbarSystem->phi()        ){
+	genJet_wDaughter1_fromTopBar = *matched_genJet;
+      } // end if wDaughter1 from topBar
+      
+      // If matched is wDaughter2 from topbar
+      if( deltaR_min <= deltaR_match                                                       &&
+	  wDaughter2_fromTopBar_hadrons.pdgId()  == matched_ttbarSystem->pdgId()  &&
+	  wDaughter2_fromTopBar_hadrons.status() == matched_ttbarSystem->status() &&
+	  wDaughter2_fromTopBar_hadrons.pt()     == matched_ttbarSystem->pt()     &&
+	  wDaughter2_fromTopBar_hadrons.eta()    == matched_ttbarSystem->eta()    &&
+	  wDaughter2_fromTopBar_hadrons.phi()    == matched_ttbarSystem->phi()        ){
+	genJet_wDaughter2_fromTopBar = *matched_genJet;
+      } // end if topBar is hadronic
+      
+    } // end if topBar is hadronic 
+
+    
+    // Erase pair from temporary collection
+    ttbar_system_hadrons_temp.erase(matched_ttbarSystem);
+    genJets_temp.erase(matched_genJet);
+      
+
+  } // end while loop
+
+  
+  return;
+
+}
+
+//*****************************************************************************
+
+void yggdrasil_NLO::getGenJetsMatchedToExtraQuarks(std::vector< reco::GenParticle > extraQuarks, std::vector< reco::GenJet > genJets, std::vector< reco::GenJet > genJet_matchedToTTbarSystem, double deltaR_match, std::vector< reco::GenJet > &genJet_matchedToExtraBQuarks, std::vector< reco::GenJet > &genJet_matchedToExtraCQuarks){
+
+  std::vector< reco::GenParticle > extraQuarks_temp = extraQuarks;
+  std::vector< reco::GenJet > genJets_temp;
+
+  // Only consider jets not matched to ttbar system 
+  for( std::vector< reco::GenJet >::const_iterator iGenJet = genJets.begin(); iGenJet != genJets.end(); iGenJet++){
+    bool alreadyMatched=false;
+    for( std::vector< reco::GenJet >::const_iterator jGenJet = genJet_matchedToTTbarSystem.begin(); jGenJet != genJet_matchedToTTbarSystem.end(); jGenJet++){
+      if( iGenJet->pt()  == jGenJet->pt()  &&
+	  iGenJet->eta() == jGenJet->eta() &&
+	  iGenJet->phi() == jGenJet->phi()    ) alreadyMatched=true;
+      if(alreadyMatched) break;
+    } // end loop over genJets already matched to ttbar system
+	
+    if(!alreadyMatched) genJets_temp.push_back(*iGenJet);
+
+  } // end loop over genJets
+      
+  // minDr match
+  while( (int)genJets_temp.size()>0 && (int)extraQuarks_temp.size()>0){
+	
+    std::vector< reco::GenParticle >::iterator matched_extraQuark = extraQuarks_temp.begin();
+    std::vector< reco::GenJet >::iterator      matched_genJet     = genJets_temp.begin();
+    
+    double deltaR     = 0.0;
+    double deltaR_min = 99.9;
+    for( std::vector< reco::GenJet >::iterator iGenJet = genJets_temp.begin(); iGenJet != genJets_temp.end(); iGenJet++){
+      for( std::vector< reco::GenParticle >::iterator iGenParticle = extraQuarks_temp.begin(); iGenParticle != extraQuarks_temp.end(); iGenParticle++){
+	
+	deltaR = sqrt( pow( iGenJet->eta()-iGenParticle->eta(), 2) + pow( iGenJet->phi()-iGenParticle->phi(), 2) );
+	
+	if( deltaR < deltaR_min ){
+	  
+	  deltaR_min         = deltaR;
+	  matched_extraQuark = iGenParticle;
+	  matched_genJet     = iGenJet;
+	  
+	} // end if this is the minDr pair
+	
+      } // end loop over genParticles
+	  
+    } // end loop over genJets
+      
+    if( deltaR_min <= deltaR_match           &&
+	fabs(matched_extraQuark->pdgId())==5    ){
+      genJet_matchedToExtraBQuarks.push_back(*matched_genJet);
+    }
+
+    if( deltaR_min <= deltaR_match           && 
+	fabs(matched_extraQuark->pdgId())==4    ){
+      genJet_matchedToExtraCQuarks.push_back(*matched_genJet);
+    }
+
+    // Erase pair from temporary collection
+    extraQuarks_temp.erase(matched_extraQuark);
+    genJets_temp.erase(matched_genJet);
+
+  } // end while loop
+
+
+
+ return;
+
+}
 
 //*****************************************************************************
