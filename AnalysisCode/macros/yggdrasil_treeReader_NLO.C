@@ -5,6 +5,7 @@
 #include "TH2.h"
 #include "TLorentzVector.h"
 
+#include <algorithm>
 #include <vector>
 #include <string>
 
@@ -17,9 +18,13 @@
 
 void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int jobN=1){
 
-  //
-  // Load files to read
-  //
+ 
+  ////////////////////////
+  ///
+  /// Load files to read
+  ///
+  ////////////////////////
+
   std::cout << "   ===> load the root files! " << std::endl;
 
   if(maxNentries==0){
@@ -71,11 +76,118 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
   //TString histFileName = "/uscms_data/d3/jgwood/ttH_ttbb_lepJets/2012_analysis/anaTrees_2012_53x_NLOMC_20140701/yggdrasil_treeReader_NLOMC_ttjets_test.root";
 
   TFile *histFile = new TFile(histFileName, "recreate");
+  
 
 
+  ///////////////////////////////////
+  ///
   //
-  // Declare Pointers to Histograms
-  //
+  /// Declare Pointers to Histograms
+  ///
+  ///////////////////////////////////
+
+
+  // Event Variables
+  TH1F *h_weight;
+
+  // GenJet variables
+  TH1F *h_genJet_nGenJets;
+  TH1F *h_genJet_pt;
+  TH1F *h_genJet_eta;
+  TH1F *h_genJet_phi;
+  
+  TH2F *h_genJet_pt_vs_eta;
+  TH2F *h_genJet_selected_pt_vs_eta;
+  TH2F *h_genJet_leading_pt_vs_eta;
+  
+  TH2F *h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta;
+  TH2F *h_genJet_matchedTo_b_quark_fromTop_pt_vs_eta;
+  TH2F *h_genJet_matchedTo_wDaughter1_fromTop_pt_vs_eta;
+  TH2F *h_genJet_matchedTo_wDaughter2_fromTop_pt_vs_eta;
+
+  TH2F *h_genJet_matchedTo_b_quark_fromTopBar_pt_vs_eta;
+  TH2F *h_genJet_matchedTo_wDaughter1_fromTopBar_pt_vs_eta;
+  TH2F *h_genJet_matchedTo_wDaughter2_fromTopBar_pt_vs_eta;
+
+  // GenParticle Variables
+  TH1F *h_genParticle_top_quark_pt;
+  TH1F *h_genParticle_top_quark_eta;
+  TH1F *h_genParticle_top_quark_mass;
+  TH2F *h_genParticle_top_quark_dPtRel_vs_dR_final_intial;
+
+  TH1F *h_genParticle_b_quark_fromTop_pt;
+  TH1F *h_genParticle_b_quark_fromTop_eta;
+  TH1F *h_genParticle_b_quark_fromTop_mass;
+  TH2F *h_genParticle_b_quark_fromTop_dPtRel_vs_dR_final_intial;
+
+  TH1F *h_genParticle_w_boson_fromTop_pt;
+  TH1F *h_genParticle_w_boson_fromTop_eta;
+  TH1F *h_genParticle_w_boson_fromTop_mass;
+  
+  TH1F *h_genParticle_wDaughter1_fromTop_pt;
+  TH1F *h_genParticle_wDaughter1_fromTop_eta;
+  TH2F *h_genParticle_wDaughter1_fromTop_motherPdgId_vs_pdgId;
+
+  TH1F *h_genParticle_wDaughter2_fromTop_pt;
+  TH1F *h_genParticle_wDaughter2_fromTop_eta;
+  TH2F *h_genParticle_wDaughter2_fromTop_motherPdgId_vs_pdgId;
+  
+  TH1F *h_genParticle_topBar_quark_pt;
+  TH1F *h_genParticle_topBar_quark_eta;
+  TH1F *h_genParticle_topBar_quark_mass;
+  TH2F *h_genParticle_topBar_quark_dPtRel_vs_dR_final_intial;
+
+  TH1F *h_genParticle_b_quark_fromTopBar_pt;
+  TH1F *h_genParticle_b_quark_fromTopBar_eta;
+  TH1F *h_genParticle_b_quark_fromTopBar_mass;
+  TH2F *h_genParticle_b_quark_fromTopBar_dPtRel_vs_dR_final_intial;
+
+  TH1F *h_genParticle_w_boson_fromTopBar_pt;
+  TH1F *h_genParticle_w_boson_fromTopBar_eta;
+  TH1F *h_genParticle_w_boson_fromTopBar_mass;
+  
+  TH1F *h_genParticle_wDaughter1_fromTopBar_pt;
+  TH1F *h_genParticle_wDaughter1_fromTopBar_eta;
+  TH2F *h_genParticle_wDaughter1_fromTopBar_motherPdgId_vs_pdgId;
+
+  TH1F *h_genParticle_wDaughter2_fromTopBar_pt;
+  TH1F *h_genParticle_wDaughter2_fromTopBar_eta;
+  TH2F *h_genParticle_wDaughter2_fromTopBar_motherPdgId_vs_pdgId;
+  
+   
+  TH2F *h_genParticle_nExtraCQuarks_vs_nExtraBQuarks;
+  TH2F *h_genParticle_nExtraCJets_vs_nExtraBJets;
+
+  TH1F *h_genParticle_extraBQuarks_pt;
+  TH1F *h_genParticle_extraBQuarks_maxPt;
+  TH1F *h_genParticle_extraBQuarks_minPt;
+  TH1F *h_genParticle_extraBQuarks_mother_pdgId;
+  
+  TH1F *h_genParticle_extraCQuarks_pt;
+  TH1F *h_genParticle_extraCQuarks_maxPt;
+  TH1F *h_genParticle_extraCQuarks_minPt;
+  TH1F *h_genParticle_extraCQuarks_mother_pdgId;
+ 
+  TH1F *h_genParticle_extraQuarks_pt;
+  TH1F *h_genParticle_extraQuarks_maxPt;
+  TH1F *h_genParticle_extraQuarks_minPt;
+  TH1F *h_genParticle_extraQuarks_mother_pdgId;
+  
+  
+  TH1F *h_genParticle_tightLepton_pt;
+  TH1F *h_genParticle_tightLepton_eta;
+  TH1F *h_genParticle_tightLepton_status;
+  TH2F *h_genParticle_tightLepton_motherPdgId_vs_pdgId;
+  
+
+
+  ///////////////////////////
+  ///
+  ///
+  /// Construct Histograms
+  ///
+  ///////////////////////////
+
   int nBins_pt  = 300;
   double min_pt = 0.0;
   double max_pt = 300;
@@ -87,6 +199,18 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
   int nBins_phi  = 100;
   double min_phi = -3.5;
   double max_phi = 3.5;
+
+  int nBins_topMass  = 300;
+  double min_topMass = 0.0;
+  double max_topMass = 300.0;
+
+  int nBins_wMass  = 200;
+  double min_wMass = 0.0;
+  double max_wMass = 160.0;
+
+  int nBins_bMass  = 100;
+  double min_bMass = 0.0;
+  double max_bMass = 50.0;
 
   int nBins_dR = 50;
   double min_dR = 0.0;
@@ -100,101 +224,135 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
   double min_pdgId = -100;
   double max_pdgId = 100;
 
-  int nBins_weight = 100;
-  double min_weight = -10;
-  double max_weight = 10;
-
-  TH1F *h_nGenJets;
-
-  TH1F *h_genJet_pt;
-  TH1F *h_genJet_eta;
-  TH1F *h_genJet_phi;
- 
-  TH1F *h_weight;
-
-  TH2F *h_genJet_pt_vs_eta;
-  TH2F *h_genJet_pdgId_vs_motherPdgId;
-
-  TH2F *h_genJet_selected_pt_vs_eta;
-  TH2F *h_genJet_selected_pdgId_vs_motherPdgId;
-
-  TH2F *h_dPtRel_vs_dR_final_intial_gen_top;
-  TH2F *h_dPtRel_vs_dR_final_intial_gen_topBar;
-  TH2F *h_dPtRel_vs_dR_final_intial_gen_b_fromTop;
-  TH2F *h_dPtRel_vs_dR_final_intial_gen_b_fromTopBar;  
-  
-  TH2F *h_matched_nonSelected_ttbar_genJet_pt_vs_eta;
-  
-  TH2F *h_nExtraCQuarks_vs_nExtraBQuarks;
-  TH1F *h_genParticle_extraBQuarks_pt;
-  TH1F *h_genParticle_extraCQuarks_pt;
-  TH1F *h_genParticle_extraBQuarks_mother_pdgId;
-  TH1F *h_genParticle_extraCQuarks_mother_pdgId;
- 
-  TH1F *h_maxPt_gen_extraBQuark;
-  TH1F *h_minPt_gen_extraBQuark;
-  
-  TH1F *h_maxPt_gen_extraCQuark;
-  TH1F *h_minPt_gen_extraCQuark;
-
-  TH1F *h_maxPt_gen_extraQuark;
-  TH1F *h_minPt_gen_extraQuark;
-
-  
+  int nBins_weight = 2000;
+  double min_weight = -1000;
+  double max_weight = 1000;
 
   //
-  // Construct Histograms
+  // Event Variables
   //
-
-  // nGenJets
-  h_nGenJets = new TH1F("h_nGenJets", "nGenJets, p_{T}>25, #eta<2.4", 8, 2.5, 10.5);
-
- 
-  // Gen Jet Kinematics
-  h_genJet_pt = new TH1F("h_genJet_pt", "GenJet p_{T}",  nBins_pt, min_pt, max_pt);
-  h_genJet_eta = new TH1F("h_genJet_eta", "GenJet #eta", nBins_eta, min_eta, max_eta);
-  h_genJet_phi = new TH1F("h_genJet_phi", "GenJet #phi", nBins_phi, min_phi, max_phi);
 
   // Event Weight
   h_weight = new TH1F("h_weight", "Event Weight", nBins_weight, min_weight, max_weight);
 
+
+  //
+  // GenJet Variables
+  //
+
+  // nGenJets
+  h_genJet_nGenJets = new TH1F("h_genJet_nGenJets", "N Selected GenJets, p_{T}>25, #eta<2.4;N GenJets", 8, 2.5, 10.5);
+
+  // Gen Jet Kinematics
+  h_genJet_pt = new TH1F("h_genJet_pt", "GenJet p_{T};p_{T} GeV",  nBins_pt, min_pt, max_pt);
+  h_genJet_eta = new TH1F("h_genJet_eta", "GenJet #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genJet_phi = new TH1F("h_genJet_phi", "GenJet #phi;#phi", nBins_phi, min_phi, max_phi);
+  
   // Gen Jet Kinematics, 2-D
-  h_genJet_pt_vs_eta = new TH2F("h_genJet_pt_vs_eta", "GenJet p_{T} vs #eta", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
-  h_genJet_pdgId_vs_motherPdgId = new TH2F("h_genJet_pdgId_vs_motherPdgId", "GenJet pdgId vs mother pdgId", nBins_pdgId, min_pdgId, max_pdgId, nBins_pdgId, min_pdgId, max_pdgId);
+  h_genJet_pt_vs_eta = new TH2F("h_genJet_pt_vs_eta", "GenJet p_{T} vs #eta;#eta;p_{T} GeV", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
+  h_genJet_selected_pt_vs_eta = new TH2F("h_genJet_selected_pt_vs_eta", "Selected GenJets p_{T} vs #eta;#eta;p_{T} GeV", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
+  h_genJet_leading_pt_vs_eta = new TH2F("h_genJet_leading_pt_vs_eta", "Leading GenJet p_{T} vs #eta;#eta;p_{T} GeV", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
 
-  h_genJet_selected_pt_vs_eta = new TH2F("h_genJet_selected_pt_vs_eta", "Selected GenJets p_{T} vs #eta", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
-  h_genJet_selected_pdgId_vs_motherPdgId = new TH2F("h_genJet_selected_pdgId_vs_motherPdgId", "Selected GenJets pdgId vs mother pdgId", nBins_pdgId, min_pdgId, max_pdgId, nBins_pdgId, min_pdgId, max_pdgId);
+  // GenJets Matched to ttbar system genPartons
+  h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta = new TH2F("h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta", "GenJet, matched to t#bar{t} system, failing selection, p_{T} vs #eta;#eta;p_{T} GeV", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
 
-  // Gen Particle information
-  h_dPtRel_vs_dR_final_intial_gen_top = new TH2F("h_dPtRel_vs_dR_final_intial_gen_top", "#DeltaP_{TRel} vs #DeltaR, gen t quark", nBins_dR, min_dR, max_dR, nBins_dPtRel, min_dPtRel, max_dPtRel);
-  h_dPtRel_vs_dR_final_intial_gen_topBar = new TH2F("h_dPtRel_vs_dR_final_intial_gen_topBar", "#DeltaP_{TRel} vs #DeltaR, gen #bar{t} quark", nBins_dR, min_dR, max_dR, nBins_dPtRel, min_dPtRel, max_dPtRel);
-  h_dPtRel_vs_dR_final_intial_gen_b_fromTop = new TH2F("h_dPtRel_vs_dR_final_intial_gen_b_fromTop", "#DeltaP_{TRel} vs #DeltaR, gen b quark from top", nBins_dR, min_dR, max_dR, nBins_dPtRel, min_dPtRel, max_dPtRel);
-  h_dPtRel_vs_dR_final_intial_gen_b_fromTopBar = new TH2F("h_dPtRel_vs_dR_final_intial_gen_b_fromTopBar", "#DeltaP_{TRel} vs #DeltaR, gen b quark from topBar", nBins_dR, min_dR, max_dR, nBins_dPtRel, min_dPtRel, max_dPtRel);
-  
-  h_matched_nonSelected_ttbar_genJet_pt_vs_eta = new TH2F("h_matched_nonSelected_ttbar_genJet_pt_vs_eta", "p_{T} vs #eta, non-selected genJets, matchded to ttbar system genPartons", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
+  h_genJet_matchedTo_b_quark_fromTop_pt_vs_eta = new TH2F("h_genJet_matchedTo_b_quark_fromTop_pt_vs_eta", "GenJet, matched to b-quark from t-quark, p_{T} vs #eta;#eta;p_{T} GeV", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
+  h_genJet_matchedTo_wDaughter1_fromTop_pt_vs_eta = new TH2F("h_genJet_matchedTo_wDaughter1_fromTop_pt_vs_eta", "GenJet, matched to wDaughter1 from t-quark, p_{T} vs #eta;#eta;p_{T} GeV", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
+  h_genJet_matchedTo_wDaughter2_fromTop_pt_vs_eta = new TH2F("h_genJet_matchedTo_wDaughter2_fromTop_pt_vs_eta", "GenJet, matched to wDaughter2 from t-quark, p_{T} vs #eta;#eta;p_{T} GeV", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
 
-  
-  // Extra b/c quark information
-  h_nExtraCQuarks_vs_nExtraBQuarks = new TH2F("h_nExtraCQuarks_vs_nExtraBQuarks", "nExtra C quarks vs nExtra B quarks", 8, -0.5, 7.5, 12, -0.5, 11.5); 
-  h_genParticle_extraBQuarks_pt = new TH1F("h_genParticle_extraBQuarks_pt", "p_{T}, extra b quarks", nBins_pt, min_pt, max_pt);
-  h_genParticle_extraCQuarks_pt = new TH1F("h_genParticle_extraCQuarks_pt", "p_{T}, extra c quarks", nBins_pt, min_pt, max_pt);
-  h_genParticle_extraBQuarks_mother_pdgId = new TH1F("h_genParticle_extraBQuarks_mother_pdgId", "pdgId, mother of extra b quarks", nBins_pt, min_pt, max_pt);
-  h_genParticle_extraCQuarks_mother_pdgId = new TH1F("h_genParticle_extraCQuarks_mother_pdgId", "pdgId, mother of extra c quarks", nBins_pt, min_pt, max_pt);
-  
-  h_maxPt_gen_extraBQuark = new TH1F("h_maxPt_gen_extraBQuarks_pt", "maximum p_{T}, extra b quarks", nBins_pt, min_pt, max_pt);
-  h_minPt_gen_extraBQuark = new TH1F("h_minPt_gen_extraBQuarks_pt", "minimum p_{T}, extra b quarks", nBins_pt, min_pt, max_pt);
-  
-  h_maxPt_gen_extraCQuark = new TH1F("h_maxPt_gen_extraCQuarks_pt", "maximum p_{T}, extra c quarks", nBins_pt, min_pt, max_pt);
-  h_minPt_gen_extraCQuark = new TH1F("h_minPt_gen_extraCQuarks_pt", "minimum p_{T}, extra c quarks", nBins_pt, min_pt, max_pt);
-  
-  h_maxPt_gen_extraQuark = new TH1F("h_maxPt_gen_extraQuarks_pt", "maximum p_{T}, extra quarks", nBins_pt, min_pt, max_pt);
-  h_minPt_gen_extraQuark = new TH1F("h_minPt_gen_extraQuarks_pt", "minimum p_{T}, extra quarks", nBins_pt, min_pt, max_pt);
-  
+  h_genJet_matchedTo_b_quark_fromTopBar_pt_vs_eta = new TH2F("h_genJet_matchedTo_b_quark_fromTopBar_pt_vs_eta", "GenJet, matched to b-quark from #bar{t}-quark, p_{T} vs #eta;#eta;p_{T} GeV", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
+  h_genJet_matchedTo_wDaughter1_fromTopBar_pt_vs_eta = new TH2F("h_genJet_matchedTo_wDaughter1_fromTopBar_pt_vs_eta", "GenJet, matched to wDaughter1 from #bar{t}-quark, p_{T} vs #eta;#eta;p_{T} GeV", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
+  h_genJet_matchedTo_wDaughter2_fromTopBar_pt_vs_eta = new TH2F("h_genJet_matchedTo_wDaughter2_fromTopBar_pt_vs_eta", "GenJet, matched to wDaughter2 from #bar{t}-quark, p_{T} vs #eta;#eta;p_{T} GeV", nBins_eta, min_eta, max_eta, nBins_pt, min_pt, max_pt);
 
   
   //
-  // Loop over events
+  // GenParticle Variables
   //
+
+  
+  // GenParticle ttbar system Variables
+  h_genParticle_top_quark_pt = new TH1F("h_genParticle_top_quark_pt", "GenParticle, t-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_top_quark_eta = new TH1F("h_genParticle_top_quark_eta", "GenParticle, t-quark, #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genParticle_top_quark_mass = new TH1F("h_genParticle_top_quark_mass", "GenParticle, t-quark, mass;GeV", nBins_topMass, min_topMass, max_topMass);
+  h_genParticle_top_quark_dPtRel_vs_dR_final_intial = new TH2F("h_genParticle_top_quark_dPtRel_vs_dR_final_intial", "GenParticle, t-quark, #Deltap_{T_{Rel}} vs #DeltaR for final vs intial states", nBins_dR, min_dR, max_dR, nBins_dPtRel, min_dPtRel, max_dPtRel);
+  
+  h_genParticle_b_quark_fromTop_pt = new TH1F("h_genParticle_b_quark_fromTop_pt", "GenParticle, b-quark from t-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_b_quark_fromTop_eta = new TH1F("h_genParticle_b_quark_fromTop_eta", "GenParticle, b-quark from t-quark, #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genParticle_b_quark_fromTop_mass = new TH1F("h_genParticle_b_quark_fromTop_mass", "GenParticle, b-quark from t-quark, mass;GeV", nBins_bMass, min_bMass, max_bMass);
+  h_genParticle_b_quark_fromTop_dPtRel_vs_dR_final_intial = new TH2F("h_genParticle_b_quark_fromTop_dPtRel_vs_dR_final_intial", "GenParticle, b-quark from t-quark, #Deltap_{T_{Rel}} vs #DeltaR for final vs intial states", nBins_dR, min_dR, max_dR, nBins_dPtRel, min_dPtRel, max_dPtRel);
+  
+  h_genParticle_w_boson_fromTop_pt = new TH1F("h_genParticle_w_boson_fromTop_pt", "GenParticle, W boson from t-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_w_boson_fromTop_eta = new TH1F("h_genParticle_w_boson_fromTop_eta", "GenParticle, W boson from t-quark, #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genParticle_w_boson_fromTop_mass = new TH1F("h_genParticle_w_boson_fromTop_mass", "GenParticle, W boson from t-quark, mass;GeV", nBins_wMass, min_wMass, max_wMass);
+ 
+  h_genParticle_wDaughter1_fromTop_pt = new TH1F("h_genParticle_wDaughter1_fromTop_pt", "GenParticle, Daughter 1 of W boson from t-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_wDaughter1_fromTop_eta = new TH1F("h_genParticle_wDaughter1_fromTop_eta", "GenParticle, Daughter 1 of W boson from t-quark, #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genParticle_wDaughter1_fromTop_motherPdgId_vs_pdgId = new TH2F("h_genParticle_wDaughter1_fromTop_motherPdgId_vs_pdgId", "GenParticle, Daughter 1 of W boson from t-quark, mother pdgId vs pdgId;pdgId;mother pdgId", nBins_pdgId, min_pdgId, max_pdgId, nBins_pdgId, min_pdgId, max_pdgId);
+ 
+  h_genParticle_wDaughter2_fromTop_pt = new TH1F("h_genParticle_wDaughter2_fromTop_pt", "GenParticle, Daughter 2 of W boson from t-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_wDaughter2_fromTop_eta = new TH1F("h_genParticle_wDaughter2_fromTop_eta", "GenParticle, Daughter 2 of W boson from t-quark, #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genParticle_wDaughter2_fromTop_motherPdgId_vs_pdgId = new TH2F("h_genParticle_wDaughter2_fromTop_motherPdgId_vs_pdgId", "GenParticle, Daughter 2 of W boson from t-quark, mother pdgId vs pdgId;pdgId;mother pdgId", nBins_pdgId, min_pdgId, max_pdgId, nBins_pdgId, min_pdgId, max_pdgId);
+  
+
+  h_genParticle_topBar_quark_pt = new TH1F("h_genParticle_topBar_quark_pt", "GenParticle, #bar{t}-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_topBar_quark_eta = new TH1F("h_genParticle_topBar_quark_eta", "GenParticle, #bar{t}-quark, #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genParticle_topBar_quark_mass = new TH1F("h_genParticle_topBar_quark_mass", "GenParticle, #bar{t}-quark, mass;GeV", nBins_topMass, min_topMass, max_topMass);
+  h_genParticle_topBar_quark_dPtRel_vs_dR_final_intial = new TH2F("h_genParticle_topBar_quark_dPtRel_vs_dR_final_intial", "GenParticle, #bar{t}-quark, #Deltap_{T_{Rel}} vs #DeltaR for final vs intial states", nBins_dR, min_dR, max_dR, nBins_dPtRel, min_dPtRel, max_dPtRel);
+  
+  h_genParticle_b_quark_fromTopBar_pt = new TH1F("h_genParticle_b_quark_fromTopBar_pt", "GenParticle, b-quark from #bar{t}-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_b_quark_fromTopBar_eta = new TH1F("h_genParticle_b_quark_fromTopBar_eta", "GenParticle, b-quark from #bar{t}-quark, #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genParticle_b_quark_fromTopBar_mass = new TH1F("h_genParticle_b_quark_fromTopBar_mass", "GenParticle, b-quark from #bar{t}-quark, mass;GeV", nBins_bMass, min_bMass, max_bMass);
+  h_genParticle_b_quark_fromTopBar_dPtRel_vs_dR_final_intial = new TH2F("h_genParticle_b_quark_fromTopBar_dPtRel_vs_dR_final_intial", "GenParticle, b-quark from #bar{t}-quark, #Deltap_{T_{Rel}} vs #DeltaR for final vs intial states", nBins_dR, min_dR, max_dR, nBins_dPtRel, min_dPtRel, max_dPtRel);
+  
+  h_genParticle_w_boson_fromTopBar_pt = new TH1F("h_genParticle_w_boson_fromTopBar_pt", "GenParticle, W boson from #bar{t}-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_w_boson_fromTopBar_eta = new TH1F("h_genParticle_w_boson_fromTopBar_eta", "GenParticle, W boson from #bar{t}-quark, #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genParticle_w_boson_fromTopBar_mass = new TH1F("h_genParticle_w_boson_fromTopBar_mass", "GenParticle, W boson from #bar{t}-quark, mass;GeV", nBins_wMass, min_wMass, max_wMass);
+ 
+  h_genParticle_wDaughter1_fromTopBar_pt = new TH1F("h_genParticle_wDaughter1_fromTopBar_pt", "GenParticle, Daughter 1 of W boson from #bar{t}-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_wDaughter1_fromTopBar_eta = new TH1F("h_genParticle_wDaughter1_fromTopBar_eta", "GenParticle, Daughter 1 of W boson from #bar{t}-quark, #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genParticle_wDaughter1_fromTopBar_motherPdgId_vs_pdgId = new TH2F("h_genParticle_wDaughter1_fromTopBar_motherPdgId_vs_pdgId", "GenParticle, Daughter 1 of W boson from #bar{t}-quark, mother pdgId vs pdgId;pdgId;mother pdgId", nBins_pdgId, min_pdgId, max_pdgId, nBins_pdgId, min_pdgId, max_pdgId);
+ 
+  h_genParticle_wDaughter2_fromTopBar_pt = new TH1F("h_genParticle_wDaughter2_fromTopBar_pt", "GenParticle, Daughter 2 of W boson from #bar{t}-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_wDaughter2_fromTopBar_eta = new TH1F("h_genParticle_wDaughter2_fromTopBar_eta", "GenParticle, Daughter 2 of W boson from #bar{t}-quark, #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genParticle_wDaughter2_fromTopBar_motherPdgId_vs_pdgId = new TH2F("h_genParticle_wDaughter2_fromTopBar_motherPdgId_vs_pdgId", "GenParticle, Daughter 2 of W boson from #bar{t}-quark, mother pdgId vs pdgId;pdgId;mother pdgId", nBins_pdgId, min_pdgId, max_pdgId, nBins_pdgId, min_pdgId, max_pdgId);
+ 
+ 
+  
+  // Gen Particles, extra b/c quarks in event
+  h_genParticle_nExtraCQuarks_vs_nExtraBQuarks = new TH2F("h_genParticle_nExtraCQuarks_vs_nExtraBQuarks", "GenParticle, nExtra c-quarks vs nExtra b-quarks;nExtra b-quarks;nExtra c-quarks", 7, -0.5, 6.5, 13, -0.5, 12.5);
+  h_genParticle_nExtraCJets_vs_nExtraBJets = new TH2F("h_genParticle_nExtraCJets_vs_nExtraBJets", "GenParticle, nExtra b/c-quarks matched to GenJets;nExtra b GenJets;nExtra c GenJets", 5, -0.5, 4.5, 5, -0.5, 4.5);
+
+  h_genParticle_extraBQuarks_pt = new TH1F("h_genParticle_extraBQuarks_pt", "GenParticle, extra b-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_extraBQuarks_maxPt = new TH1F("h_genParticle_extraBQuarks_maxPt", "GenParticle, extra b-quarks, leading quark p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_extraBQuarks_minPt = new TH1F("h_genParticle_extraBQuarks_minPt", "GenParticle, extra b-quarks, most trailing quark p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);;
+  h_genParticle_extraBQuarks_mother_pdgId = new TH1F("h_genParticle_extraBQuarks_mother_pdgId", "GenParticle, extra b-quarks, mother pdgId;mother pdgId", nBins_pdgId, min_pdgId, max_pdgId);
+
+  h_genParticle_extraCQuarks_pt = new TH1F("h_genParticle_extraCQuarks_pt", "GenParticle, extra c-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_extraCQuarks_maxPt = new TH1F("h_genParticle_extraCQuarks_maxPt", "GenParticle, extra c-quarks, leading quark p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_extraCQuarks_minPt = new TH1F("h_genParticle_extraCQuarks_minPt", "GenParticle, extra c-quarks, most trailing quark p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);;
+  h_genParticle_extraCQuarks_mother_pdgId = new TH1F("h_genParticle_extraCQuarks_mother_pdgId", "GenParticle, extra c-quarks, mother pdgId;mother pdgId", nBins_pdgId, min_pdgId, max_pdgId);
+  
+  h_genParticle_extraQuarks_pt = new TH1F("h_genParticle_extraQuarks_pt", "GenParticle, extra b/c-quark, p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_extraQuarks_maxPt = new TH1F("h_genParticle_extraQuarks_maxPt", "GenParticle, extra b/c-quarks, leading quark p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);
+  h_genParticle_extraQuarks_minPt = new TH1F("h_genParticle_extraQuarks_minPt", "GenParticle, extra b/c-quarks, most trailing quark p_{T};p_{T} GeV", nBins_pt, min_pt, max_pt);;
+  h_genParticle_extraQuarks_mother_pdgId = new TH1F("h_genParticle_extraQuarks_mother_pdgId", "GenParticle, extra b/c-quarks, mother pdgId;mother pdgId", nBins_pdgId, min_pdgId, max_pdgId);
+  
+ 
+  // Gen Particle, tight lepton passing selection
+  h_genParticle_tightLepton_pt = new TH1F("h_genParticle_tightLepton_pt", "GenParticle, tight lepton passing selection, p_{T};p_{T}", nBins_pt, min_pt, max_pt);
+  h_genParticle_tightLepton_eta = new TH1F("h_genParticle_tightLepton_eta", "GenParticle, tight lepton passing selection, #eta;#eta", nBins_eta, min_eta, max_eta);
+  h_genParticle_tightLepton_status = new TH1F("h_genParticle_tightLepton_status", "GenParticle, tight lepton passing selection, status;status", 100, 0, 100);
+  h_genParticle_tightLepton_motherPdgId_vs_pdgId = new TH2F("h_genParticle_tightLepton_motherPdgId_vs_pdgId", "GenParticle, tight lepton passing selection, mother pdgId vs pdgId;pdgId;mother pdgId", nBins_pdgId, min_pdgId, max_pdgId, nBins_pdgId, min_pdgId, max_pdgId);
+  
+
+
+  //////////////////////
+  ///
+  ///
+  /// Loop over events
+  ///
+  //////////////////////
+
   int nentries = chain->GetEntries();
   std::cout << "\n\t Number of entries = " << nentries << std::endl;
   std::cout << "\t Max number of entries = " << maxNentries << std::endl;
@@ -227,96 +385,404 @@ void yggdrasil_treeReader_NLO(int sampleId, int maxNentries=-1, int Njobs=1, int
     // Initialize Branch Address Objects
     eve->initialize(); 
 
+    TLorentzVector mydummyguy;
+    mydummyguy.SetPxPyPzE(0,0,0,0);
+
+
     // Get Entry
     chain->GetEntry(ievt);
     
     // Set  Weights
-    //double wgt = weight_;
+    //double wgt = eve->weight_;
     double wgt = 1.0;
+
+
+
+    
+    /////////////////////////
+    ///
+    /// Fill Histograms
+    ///
+    /////////////////////////
 
     h_weight->Fill(eve->weight_, 1.0);
 
-    
+
     //
-    // Fill Histograms
-    //
-
-    // gen Particle information
-       
-    // dPtRel vs dR for top, topbar, b, bbar between final, intial stages
-    h_dPtRel_vs_dR_final_intial_gen_top->Fill( eve->dR_final_intial_gen_top_, eve->dPtRel_final_intial_gen_top_, wgt );
-    h_dPtRel_vs_dR_final_intial_gen_topBar->Fill( eve->dR_final_intial_gen_topBar_, eve->dPtRel_final_intial_gen_topBar_, wgt );
-    h_dPtRel_vs_dR_final_intial_gen_b_fromTop->Fill( eve->dR_final_intial_gen_b_fromTop_, eve->dPtRel_final_intial_gen_b_fromTop_, wgt );
-    h_dPtRel_vs_dR_final_intial_gen_b_fromTopBar->Fill( eve->dR_final_intial_gen_b_fromTopBar_, eve->dPtRel_final_intial_gen_b_fromTopBar_, wgt );  
-
-
-    // GenJets Matched to ttbar system, not passing selection
-    for(int iGenJet=0; iGenJet<(int)eve->matched_nonSelected_ttbar_genJet_pt_.size(); iGenJet++){
-      h_matched_nonSelected_ttbar_genJet_pt_vs_eta->Fill(  eve->matched_nonSelected_ttbar_genJet_eta_[iGenJet],  eve->matched_nonSelected_ttbar_genJet_pt_[iGenJet], wgt );
-    }
-    
-    // N extra B/C Quarks
-    h_nExtraCQuarks_vs_nExtraBQuarks->Fill( eve->nExtraBQuarks_, eve->nExtraCQuarks_, wgt);
-
-    // Kinematics of extra B/C Quarks
-
-    // pt, B
-    for(int iExtraB=0; iExtraB<(int)eve->genParticle_extraBQuarks_pt_.size(); iExtraB++){
-      h_genParticle_extraBQuarks_pt->Fill( eve->genParticle_extraBQuarks_pt_[iExtraB], wgt );
-    }
-    
-    // pt, C
-    for(int iExtraC=0; iExtraC<(int)eve->genParticle_extraCQuarks_pt_.size(); iExtraC++){
-      h_genParticle_extraCQuarks_pt->Fill( eve->genParticle_extraCQuarks_pt_[iExtraC], wgt );
-    }
-    
-    // pdgId of B mother
-    for(int iExtraB=0; iExtraB<(int)eve->genParticle_extraBQuarks_mother_pdgId_.size(); iExtraB++){
-      h_genParticle_extraBQuarks_mother_pdgId->Fill( eve->genParticle_extraBQuarks_mother_pdgId_[iExtraB], wgt );
-    }
-
-    // pdgId of C mother
-    for(int iExtraC=0; iExtraC<(int)eve->genParticle_extraCQuarks_mother_pdgId_.size(); iExtraC++){
-      h_genParticle_extraCQuarks_mother_pdgId->Fill( eve->genParticle_extraCQuarks_mother_pdgId_[iExtraC], wgt );
-    }
-    
-    // Max/Min pT of extra B Quarks
-    if(eve->nExtraBQuarks_>0){
-      h_maxPt_gen_extraBQuark->Fill( eve->maxPt_gen_extraBQuark_, wgt );
-      h_minPt_gen_extraBQuark->Fill( eve->minPt_gen_extraBQuark_, wgt );
-      h_maxPt_gen_extraQuark->Fill( eve->maxPt_gen_extraBQuark_, wgt );
-      h_minPt_gen_extraQuark->Fill( eve->minPt_gen_extraBQuark_, wgt );
-    }
-
-    // Max/Min pT of extra C Quarks
-    if(eve->nExtraCQuarks_>0){
-      h_maxPt_gen_extraCQuark->Fill( eve->maxPt_gen_extraCQuark_, wgt );
-      h_minPt_gen_extraCQuark->Fill( eve->minPt_gen_extraCQuark_, wgt );
-      h_maxPt_gen_extraQuark->Fill( eve->maxPt_gen_extraCQuark_, wgt );
-      h_minPt_gen_extraQuark->Fill( eve->minPt_gen_extraCQuark_, wgt );
-    }
-    
-    
     // Loop over genJets
+    //
+
     int nSelectedGenJets=0;
-    for(int iGenJet=0; iGenJet<(int)eve->genJet_pt_.size(); iGenJet++){
-      h_genJet_pt->Fill(eve->genJet_pt_[iGenJet], wgt);
-      h_genJet_eta->Fill(fabs(eve->genJet_eta_[iGenJet]), wgt);
-      h_genJet_phi->Fill(eve->genJet_phi_[iGenJet], wgt);
+    double genJet_leading_jet_pt=0.0;
+    double genJet_leading_jet_eta=0.0;
+    for(int iGenJet=0; iGenJet<(int)eve->genJet_TLV_.size(); iGenJet++){
 
-      h_genJet_pt_vs_eta->Fill(fabs(eve->genJet_eta_[iGenJet]), eve->genJet_pt_[iGenJet], wgt);
-      h_genJet_pdgId_vs_motherPdgId->Fill(eve->genJet_pdgId_[iGenJet], eve->genJet_mother_pdgId_[iGenJet], wgt);
+      vdouble genJet_vect = eve->genJet_TLV_[iGenJet];
+      TLorentzVector genJet_TLV = mydummyguy;
+      genJet_TLV.SetPxPyPzE(genJet_vect[0], genJet_vect[1], genJet_vect[2], genJet_vect[3]);
 
+      h_genJet_pt->Fill(genJet_TLV.Pt(), wgt);
+      h_genJet_eta->Fill(fabs(genJet_TLV.Eta()), wgt);
+      h_genJet_phi->Fill(genJet_TLV.Phi(), wgt);
+
+      h_genJet_pt_vs_eta->Fill(fabs(genJet_TLV.Eta()), genJet_TLV.Pt(), wgt);
+     
       if( eve->genJet_isSelected_[iGenJet] ){
         nSelectedGenJets++;
-        h_genJet_selected_pt_vs_eta->Fill(fabs(eve->genJet_eta_[iGenJet]), eve->genJet_pt_[iGenJet], wgt);
-        h_genJet_selected_pdgId_vs_motherPdgId->Fill(eve->genJet_pdgId_[iGenJet], eve->genJet_mother_pdgId_[iGenJet], wgt);
-      }
+        h_genJet_selected_pt_vs_eta->Fill(fabs(genJet_TLV.Eta()), genJet_TLV.Pt(), wgt);
+      } // end if genJet is selected
+
+      // Search for max pT genJet
+      if(genJet_TLV.Pt()>genJet_leading_jet_pt){
+	genJet_leading_jet_pt  = genJet_TLV.Pt();
+	genJet_leading_jet_eta = genJet_TLV.Eta();
+      } 
 
     } // end loop over genJets
 
-    h_nGenJets->Fill( nSelectedGenJets, wgt );
+    h_genJet_nGenJets->Fill( nSelectedGenJets, wgt );
+    h_genJet_leading_pt_vs_eta->Fill(fabs(genJet_leading_jet_eta), genJet_leading_jet_pt, wgt);
 
+    
+    //
+    // GenJets matched to ttbar system
+    //
+    vdouble genJet_matchedTo_b_quark_fromTop_vect = eve->genJet_matchedTo_b_quark_fromTop_TLV_;
+    TLorentzVector genJet_matchedTo_b_quark_fromTop_TLV = mydummyguy;
+   
+    if( genJet_matchedTo_b_quark_fromTop_vect[0]!=0 &&
+	genJet_matchedTo_b_quark_fromTop_vect[1]!=0 &&
+	genJet_matchedTo_b_quark_fromTop_vect[2]!=0 &&
+	genJet_matchedTo_b_quark_fromTop_vect[3]!=0    ){
+      genJet_matchedTo_b_quark_fromTop_TLV.SetPxPyPzE(genJet_matchedTo_b_quark_fromTop_vect[0], genJet_matchedTo_b_quark_fromTop_vect[1], genJet_matchedTo_b_quark_fromTop_vect[2], genJet_matchedTo_b_quark_fromTop_vect[3]);
+      h_genJet_matchedTo_b_quark_fromTop_pt_vs_eta->Fill( fabs(genJet_matchedTo_b_quark_fromTop_TLV.Eta()), genJet_matchedTo_b_quark_fromTop_TLV.Pt(), wgt);
+      if(!eve->genJet_matchedTo_b_quark_fromTop_isSelected_){
+	h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta->Fill( fabs(genJet_matchedTo_b_quark_fromTop_TLV.Eta()), genJet_matchedTo_b_quark_fromTop_TLV.Pt(), wgt);
+      }
+    }
+    
+    vdouble genJet_matchedTo_wDaughter1_fromTop_vect = eve->genJet_matchedTo_wDaughter1_fromTop_TLV_;
+    TLorentzVector genJet_matchedTo_wDaughter1_fromTop_TLV = mydummyguy;
+    
+    vdouble genJet_matchedTo_wDaughter2_fromTop_vect = eve->genJet_matchedTo_wDaughter2_fromTop_TLV_;
+    TLorentzVector genJet_matchedTo_wDaughter2_fromTop_TLV = mydummyguy;
+    
+    if(!eve->genTopIsLeptonic_){
+      
+      if( genJet_matchedTo_wDaughter1_fromTop_vect[0]!=0 &&
+	  genJet_matchedTo_wDaughter1_fromTop_vect[1]!=0 &&
+	  genJet_matchedTo_wDaughter1_fromTop_vect[2]!=0 &&
+	  genJet_matchedTo_wDaughter1_fromTop_vect[3]!=0    ){
+	genJet_matchedTo_wDaughter1_fromTop_TLV.SetPxPyPzE(genJet_matchedTo_wDaughter1_fromTop_vect[0], genJet_matchedTo_wDaughter1_fromTop_vect[1], genJet_matchedTo_wDaughter1_fromTop_vect[2], genJet_matchedTo_wDaughter1_fromTop_vect[3]);
+	h_genJet_matchedTo_wDaughter1_fromTop_pt_vs_eta->Fill( fabs(genJet_matchedTo_wDaughter1_fromTop_TLV.Eta()), genJet_matchedTo_wDaughter1_fromTop_TLV.Pt(), wgt);
+	if(!eve->genJet_matchedTo_wDaughter1_fromTop_isSelected_){
+	  h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta->Fill( fabs(genJet_matchedTo_wDaughter1_fromTop_TLV.Eta()), genJet_matchedTo_wDaughter1_fromTop_TLV.Pt(), wgt);
+	}
+      }
+
+      if( genJet_matchedTo_wDaughter2_fromTop_vect[0]!=0 &&
+	  genJet_matchedTo_wDaughter2_fromTop_vect[1]!=0 &&
+	  genJet_matchedTo_wDaughter2_fromTop_vect[2]!=0 &&
+	  genJet_matchedTo_wDaughter2_fromTop_vect[3]!=0    ){
+	genJet_matchedTo_wDaughter2_fromTop_TLV.SetPxPyPzE(genJet_matchedTo_wDaughter2_fromTop_vect[0], genJet_matchedTo_wDaughter2_fromTop_vect[1], genJet_matchedTo_wDaughter2_fromTop_vect[2], genJet_matchedTo_wDaughter2_fromTop_vect[3]);
+	h_genJet_matchedTo_wDaughter2_fromTop_pt_vs_eta->Fill( fabs(genJet_matchedTo_wDaughter2_fromTop_TLV.Eta()), genJet_matchedTo_wDaughter2_fromTop_TLV.Pt(), wgt);
+	if(!eve->genJet_matchedTo_wDaughter2_fromTop_isSelected_){
+	  h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta->Fill( fabs(genJet_matchedTo_wDaughter2_fromTop_TLV.Eta()), genJet_matchedTo_wDaughter2_fromTop_TLV.Pt(), wgt);
+	}
+      }
+
+    }  // end if top is hadronic
+
+    
+    vdouble genJet_matchedTo_b_quark_fromTopBar_vect = eve->genJet_matchedTo_b_quark_fromTopBar_TLV_;
+    TLorentzVector genJet_matchedTo_b_quark_fromTopBar_TLV = mydummyguy;
+    if( genJet_matchedTo_b_quark_fromTopBar_vect[0]!=0 &&
+	genJet_matchedTo_b_quark_fromTopBar_vect[1]!=0 &&
+	genJet_matchedTo_b_quark_fromTopBar_vect[2]!=0 &&
+	genJet_matchedTo_b_quark_fromTopBar_vect[3]!=0    ){
+      genJet_matchedTo_b_quark_fromTopBar_TLV.SetPxPyPzE(genJet_matchedTo_b_quark_fromTopBar_vect[0], genJet_matchedTo_b_quark_fromTopBar_vect[1], genJet_matchedTo_b_quark_fromTopBar_vect[2], genJet_matchedTo_b_quark_fromTopBar_vect[3]);
+      h_genJet_matchedTo_b_quark_fromTopBar_pt_vs_eta->Fill( fabs(genJet_matchedTo_b_quark_fromTopBar_TLV.Eta()), genJet_matchedTo_b_quark_fromTopBar_TLV.Pt(), wgt);
+      if(!eve->genJet_matchedTo_b_quark_fromTopBar_isSelected_){
+	h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta->Fill( fabs(genJet_matchedTo_b_quark_fromTopBar_TLV.Eta()), genJet_matchedTo_b_quark_fromTopBar_TLV.Pt(), wgt);
+      }
+    }
+    
+    vdouble genJet_matchedTo_wDaughter1_fromTopBar_vect = eve->genJet_matchedTo_wDaughter1_fromTopBar_TLV_;
+    TLorentzVector genJet_matchedTo_wDaughter1_fromTopBar_TLV = mydummyguy;
+    
+    vdouble genJet_matchedTo_wDaughter2_fromTopBar_vect = eve->genJet_matchedTo_wDaughter2_fromTopBar_TLV_;
+    TLorentzVector genJet_matchedTo_wDaughter2_fromTopBar_TLV = mydummyguy;
+
+    if(!eve->genTopBarIsLeptonic_){
+
+      if( genJet_matchedTo_wDaughter1_fromTopBar_vect[0]!=0 &&
+	  genJet_matchedTo_wDaughter1_fromTopBar_vect[1]!=0 &&
+	  genJet_matchedTo_wDaughter1_fromTopBar_vect[2]!=0 &&
+	  genJet_matchedTo_wDaughter1_fromTopBar_vect[3]!=0    ){
+	genJet_matchedTo_wDaughter1_fromTopBar_TLV.SetPxPyPzE(genJet_matchedTo_wDaughter1_fromTopBar_vect[0], genJet_matchedTo_wDaughter1_fromTopBar_vect[1], genJet_matchedTo_wDaughter1_fromTopBar_vect[2], genJet_matchedTo_wDaughter1_fromTopBar_vect[3]);
+	h_genJet_matchedTo_wDaughter1_fromTopBar_pt_vs_eta->Fill( fabs(genJet_matchedTo_wDaughter1_fromTopBar_TLV.Eta()), genJet_matchedTo_wDaughter1_fromTopBar_TLV.Pt(), wgt);
+	if(!eve->genJet_matchedTo_wDaughter1_fromTopBar_isSelected_){
+	  h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta->Fill( fabs(genJet_matchedTo_wDaughter1_fromTopBar_TLV.Eta()), genJet_matchedTo_wDaughter1_fromTopBar_TLV.Pt(), wgt);
+	}
+      }
+
+      if( genJet_matchedTo_wDaughter2_fromTopBar_vect[0]!=0 &&
+	  genJet_matchedTo_wDaughter2_fromTopBar_vect[1]!=0 &&
+	  genJet_matchedTo_wDaughter2_fromTopBar_vect[2]!=0 &&
+	  genJet_matchedTo_wDaughter2_fromTopBar_vect[3]!=0    ){
+	genJet_matchedTo_wDaughter2_fromTopBar_TLV.SetPxPyPzE(genJet_matchedTo_wDaughter2_fromTopBar_vect[0], genJet_matchedTo_wDaughter2_fromTopBar_vect[1], genJet_matchedTo_wDaughter2_fromTopBar_vect[2], genJet_matchedTo_wDaughter2_fromTopBar_vect[3]);
+	h_genJet_matchedTo_wDaughter2_fromTopBar_pt_vs_eta->Fill( fabs(genJet_matchedTo_wDaughter2_fromTopBar_TLV.Eta()), genJet_matchedTo_wDaughter2_fromTopBar_TLV.Pt(), wgt);
+	if(!eve->genJet_matchedTo_wDaughter2_fromTopBar_isSelected_){
+	  h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta->Fill( fabs(genJet_matchedTo_wDaughter2_fromTopBar_TLV.Eta()), genJet_matchedTo_wDaughter2_fromTopBar_TLV.Pt(), wgt);
+	}
+      }
+
+    }  // end if topBar is hadronic
+
+
+    
+    //
+    // GenParticles, ttbar system
+    //
+
+    // top_quark
+    vvdouble genParticle_top_quark_vect = eve->genParticle_top_quark_TLV_;
+    vTLV genParticle_top_quark_TLV;
+    int nStates_top_quark = genParticle_top_quark_vect.size();
+    for(int i=0; i<nStates_top_quark; i++){
+      TLorentzVector iTLV = mydummyguy;
+      iTLV.SetPxPyPzE(genParticle_top_quark_vect[i][0], genParticle_top_quark_vect[i][1], genParticle_top_quark_vect[i][2], genParticle_top_quark_vect[i][3]);
+      genParticle_top_quark_TLV.push_back(iTLV);
+    }
+    h_genParticle_top_quark_pt->Fill(genParticle_top_quark_TLV[nStates_top_quark-1].Pt(), wgt);
+    h_genParticle_top_quark_eta->Fill(genParticle_top_quark_TLV[nStates_top_quark-1].Eta(), wgt);
+    h_genParticle_top_quark_mass->Fill(genParticle_top_quark_TLV[nStates_top_quark-1].M(), wgt);
+    h_genParticle_top_quark_dPtRel_vs_dR_final_intial->Fill( genParticle_top_quark_TLV[nStates_top_quark-1].DeltaR(genParticle_top_quark_TLV[0]), fabs(genParticle_top_quark_TLV[nStates_top_quark-1].Pt()-genParticle_top_quark_TLV[0].Pt())/genParticle_top_quark_TLV[0].Pt(), wgt);
+
+
+    // b_quark_fromTop
+    vvdouble genParticle_b_quark_fromTop_vect = eve->genParticle_b_quark_fromTop_TLV_;
+    vTLV genParticle_b_quark_fromTop_TLV;
+    int nStates_b_quark_fromTop = genParticle_b_quark_fromTop_vect.size();
+    for(int i=0; i<nStates_b_quark_fromTop; i++){
+      TLorentzVector iTLV = mydummyguy;
+      iTLV.SetPxPyPzE(genParticle_b_quark_fromTop_vect[i][0], genParticle_b_quark_fromTop_vect[i][1], genParticle_b_quark_fromTop_vect[i][2], genParticle_b_quark_fromTop_vect[i][3]);
+      genParticle_b_quark_fromTop_TLV.push_back(iTLV);
+    }
+    h_genParticle_b_quark_fromTop_pt->Fill(genParticle_b_quark_fromTop_TLV[nStates_b_quark_fromTop-1].Pt(), wgt);
+    h_genParticle_b_quark_fromTop_eta->Fill(genParticle_b_quark_fromTop_TLV[nStates_b_quark_fromTop-1].Eta(), wgt);
+    h_genParticle_b_quark_fromTop_mass->Fill(genParticle_b_quark_fromTop_TLV[nStates_b_quark_fromTop-1].M(), wgt);
+    h_genParticle_b_quark_fromTop_dPtRel_vs_dR_final_intial->Fill( genParticle_b_quark_fromTop_TLV[nStates_b_quark_fromTop-1].DeltaR(genParticle_b_quark_fromTop_TLV[0]), fabs(genParticle_b_quark_fromTop_TLV[nStates_b_quark_fromTop-1].Pt()-genParticle_b_quark_fromTop_TLV[0].Pt())/genParticle_b_quark_fromTop_TLV[0].Pt(), wgt);
+
+    
+    // w_boson_fromTop
+    vvdouble genParticle_w_boson_fromTop_vect = eve->genParticle_w_boson_fromTop_TLV_;
+    vTLV genParticle_w_boson_fromTop_TLV;
+    int nStates_w_boson_fromTop = genParticle_w_boson_fromTop_vect.size();
+    for(int i=0; i<nStates_w_boson_fromTop; i++){
+      TLorentzVector iTLV = mydummyguy;
+      iTLV.SetPxPyPzE(genParticle_w_boson_fromTop_vect[i][0], genParticle_w_boson_fromTop_vect[i][1], genParticle_w_boson_fromTop_vect[i][2], genParticle_w_boson_fromTop_vect[i][3]);
+      genParticle_w_boson_fromTop_TLV.push_back(iTLV);
+    }
+    h_genParticle_w_boson_fromTop_pt->Fill(genParticle_w_boson_fromTop_TLV[nStates_w_boson_fromTop-1].Pt(), wgt);
+    h_genParticle_w_boson_fromTop_eta->Fill(genParticle_w_boson_fromTop_TLV[nStates_w_boson_fromTop-1].Eta(), wgt);
+    h_genParticle_w_boson_fromTop_mass->Fill(genParticle_w_boson_fromTop_TLV[nStates_w_boson_fromTop-1].M(), wgt);
+    
+
+    // wDaughter1_fromTop
+    vvdouble genParticle_wDaughter1_fromTop_vect = eve->genParticle_wDaughter1_fromTop_TLV_;
+    vTLV genParticle_wDaughter1_fromTop_TLV;
+    int nStates_wDaughter1_fromTop = genParticle_wDaughter1_fromTop_vect.size();
+    for(int i=0; i<nStates_wDaughter1_fromTop; i++){
+      TLorentzVector iTLV = mydummyguy;
+      iTLV.SetPxPyPzE(genParticle_wDaughter1_fromTop_vect[i][0], genParticle_wDaughter1_fromTop_vect[i][1], genParticle_wDaughter1_fromTop_vect[i][2], genParticle_wDaughter1_fromTop_vect[i][3]);
+      genParticle_wDaughter1_fromTop_TLV.push_back(iTLV);
+    }
+    h_genParticle_wDaughter1_fromTop_pt->Fill(genParticle_wDaughter1_fromTop_TLV[nStates_wDaughter1_fromTop-1].Pt(), wgt);
+    h_genParticle_wDaughter1_fromTop_eta->Fill(genParticle_wDaughter1_fromTop_TLV[nStates_wDaughter1_fromTop-1].Eta(), wgt);
+    h_genParticle_wDaughter1_fromTop_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter1_fromTop_pdgId_[nStates_wDaughter1_fromTop-1], eve->genParticle_wDaughter1_fromTop_mother_pdgId_[nStates_wDaughter1_fromTop-1], wgt);
+    
+
+    // wDaughter2_fromTop
+    vvdouble genParticle_wDaughter2_fromTop_vect = eve->genParticle_wDaughter2_fromTop_TLV_;
+    vTLV genParticle_wDaughter2_fromTop_TLV;
+    int nStates_wDaughter2_fromTop = genParticle_wDaughter2_fromTop_vect.size();
+    for(int i=0; i<nStates_wDaughter2_fromTop; i++){
+      TLorentzVector iTLV = mydummyguy;
+      iTLV.SetPxPyPzE(genParticle_wDaughter2_fromTop_vect[i][0], genParticle_wDaughter2_fromTop_vect[i][1], genParticle_wDaughter2_fromTop_vect[i][2], genParticle_wDaughter2_fromTop_vect[i][3]);
+      genParticle_wDaughter2_fromTop_TLV.push_back(iTLV);
+    }
+    h_genParticle_wDaughter2_fromTop_pt->Fill(genParticle_wDaughter2_fromTop_TLV[nStates_wDaughter2_fromTop-1].Pt(), wgt);
+    h_genParticle_wDaughter2_fromTop_eta->Fill(genParticle_wDaughter2_fromTop_TLV[nStates_wDaughter2_fromTop-1].Eta(), wgt);
+    h_genParticle_wDaughter2_fromTop_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter2_fromTop_pdgId_[nStates_wDaughter2_fromTop-1], eve->genParticle_wDaughter2_fromTop_mother_pdgId_[nStates_wDaughter2_fromTop-1], wgt);
+    
+    
+    // topBar_quark
+    vvdouble genParticle_topBar_quark_vect = eve->genParticle_topBar_quark_TLV_;
+    vTLV genParticle_topBar_quark_TLV;
+    int nStates_topBar_quark = genParticle_topBar_quark_vect.size();
+    for(int i=0; i<nStates_topBar_quark; i++){
+      TLorentzVector iTLV = mydummyguy;
+      iTLV.SetPxPyPzE(genParticle_topBar_quark_vect[i][0], genParticle_topBar_quark_vect[i][1], genParticle_topBar_quark_vect[i][2], genParticle_topBar_quark_vect[i][3]);
+      genParticle_topBar_quark_TLV.push_back(iTLV);
+    }
+    h_genParticle_topBar_quark_pt->Fill(genParticle_topBar_quark_TLV[nStates_topBar_quark-1].Pt(), wgt);
+    h_genParticle_topBar_quark_eta->Fill(genParticle_topBar_quark_TLV[nStates_topBar_quark-1].Eta(), wgt);
+    h_genParticle_topBar_quark_mass->Fill(genParticle_topBar_quark_TLV[nStates_topBar_quark-1].M(), wgt);
+    h_genParticle_topBar_quark_dPtRel_vs_dR_final_intial->Fill( genParticle_topBar_quark_TLV[nStates_topBar_quark-1].DeltaR(genParticle_topBar_quark_TLV[0]), fabs(genParticle_topBar_quark_TLV[nStates_topBar_quark-1].Pt()-genParticle_topBar_quark_TLV[0].Pt())/genParticle_topBar_quark_TLV[0].Pt(), wgt);
+
+
+    // b_quark_fromTopBar
+    vvdouble genParticle_b_quark_fromTopBar_vect = eve->genParticle_b_quark_fromTopBar_TLV_;
+    vTLV genParticle_b_quark_fromTopBar_TLV;
+    int nStates_b_quark_fromTopBar = genParticle_b_quark_fromTopBar_vect.size();
+    for(int i=0; i<nStates_b_quark_fromTopBar; i++){
+      TLorentzVector iTLV = mydummyguy;
+      iTLV.SetPxPyPzE(genParticle_b_quark_fromTopBar_vect[i][0], genParticle_b_quark_fromTopBar_vect[i][1], genParticle_b_quark_fromTopBar_vect[i][2], genParticle_b_quark_fromTopBar_vect[i][3]);
+      genParticle_b_quark_fromTopBar_TLV.push_back(iTLV);
+    }
+    h_genParticle_b_quark_fromTopBar_pt->Fill(genParticle_b_quark_fromTopBar_TLV[nStates_b_quark_fromTopBar-1].Pt(), wgt);
+    h_genParticle_b_quark_fromTopBar_eta->Fill(genParticle_b_quark_fromTopBar_TLV[nStates_b_quark_fromTopBar-1].Eta(), wgt);
+    h_genParticle_b_quark_fromTopBar_mass->Fill(genParticle_b_quark_fromTopBar_TLV[nStates_b_quark_fromTopBar-1].M(), wgt);
+    h_genParticle_b_quark_fromTopBar_dPtRel_vs_dR_final_intial->Fill( genParticle_b_quark_fromTopBar_TLV[nStates_b_quark_fromTopBar-1].DeltaR(genParticle_b_quark_fromTopBar_TLV[0]), fabs(genParticle_b_quark_fromTopBar_TLV[nStates_b_quark_fromTopBar-1].Pt()-genParticle_b_quark_fromTopBar_TLV[0].Pt())/genParticle_b_quark_fromTopBar_TLV[0].Pt(), wgt);
+
+    
+    // w_boson_fromTopBar
+    vvdouble genParticle_w_boson_fromTopBar_vect = eve->genParticle_w_boson_fromTopBar_TLV_;
+    vTLV genParticle_w_boson_fromTopBar_TLV;
+    int nStates_w_boson_fromTopBar = genParticle_w_boson_fromTopBar_vect.size();
+    for(int i=0; i<nStates_w_boson_fromTopBar; i++){
+      TLorentzVector iTLV = mydummyguy;
+      iTLV.SetPxPyPzE(genParticle_w_boson_fromTopBar_vect[i][0], genParticle_w_boson_fromTopBar_vect[i][1], genParticle_w_boson_fromTopBar_vect[i][2], genParticle_w_boson_fromTopBar_vect[i][3]);
+      genParticle_w_boson_fromTopBar_TLV.push_back(iTLV);
+    }
+    h_genParticle_w_boson_fromTopBar_pt->Fill(genParticle_w_boson_fromTopBar_TLV[nStates_w_boson_fromTopBar-1].Pt(), wgt);
+    h_genParticle_w_boson_fromTopBar_eta->Fill(genParticle_w_boson_fromTopBar_TLV[nStates_w_boson_fromTopBar-1].Eta(), wgt);
+    h_genParticle_w_boson_fromTopBar_mass->Fill(genParticle_w_boson_fromTopBar_TLV[nStates_w_boson_fromTopBar-1].M(), wgt);
+    
+
+    // wDaughter1_fromTopBar
+    vvdouble genParticle_wDaughter1_fromTopBar_vect = eve->genParticle_wDaughter1_fromTopBar_TLV_;
+    vTLV genParticle_wDaughter1_fromTopBar_TLV;
+    int nStates_wDaughter1_fromTopBar = genParticle_wDaughter1_fromTopBar_vect.size();
+    for(int i=0; i<nStates_wDaughter1_fromTopBar; i++){
+      TLorentzVector iTLV = mydummyguy;
+      iTLV.SetPxPyPzE(genParticle_wDaughter1_fromTopBar_vect[i][0], genParticle_wDaughter1_fromTopBar_vect[i][1], genParticle_wDaughter1_fromTopBar_vect[i][2], genParticle_wDaughter1_fromTopBar_vect[i][3]);
+      genParticle_wDaughter1_fromTopBar_TLV.push_back(iTLV);
+    }
+    h_genParticle_wDaughter1_fromTopBar_pt->Fill(genParticle_wDaughter1_fromTopBar_TLV[nStates_wDaughter1_fromTopBar-1].Pt(), wgt);
+    h_genParticle_wDaughter1_fromTopBar_eta->Fill(genParticle_wDaughter1_fromTopBar_TLV[nStates_wDaughter1_fromTopBar-1].Eta(), wgt);
+    h_genParticle_wDaughter1_fromTopBar_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter1_fromTopBar_pdgId_[nStates_wDaughter1_fromTopBar-1], eve->genParticle_wDaughter1_fromTopBar_mother_pdgId_[nStates_wDaughter1_fromTopBar-1], wgt);
+    
+
+    // wDaughter2_fromTopBar
+    vvdouble genParticle_wDaughter2_fromTopBar_vect = eve->genParticle_wDaughter2_fromTopBar_TLV_;
+    vTLV genParticle_wDaughter2_fromTopBar_TLV;
+    int nStates_wDaughter2_fromTopBar = genParticle_wDaughter2_fromTopBar_vect.size();
+    for(int i=0; i<nStates_wDaughter2_fromTopBar; i++){
+      TLorentzVector iTLV = mydummyguy;
+      iTLV.SetPxPyPzE(genParticle_wDaughter2_fromTopBar_vect[i][0], genParticle_wDaughter2_fromTopBar_vect[i][1], genParticle_wDaughter2_fromTopBar_vect[i][2], genParticle_wDaughter2_fromTopBar_vect[i][3]);
+      genParticle_wDaughter2_fromTopBar_TLV.push_back(iTLV);
+    }
+    h_genParticle_wDaughter2_fromTopBar_pt->Fill(genParticle_wDaughter2_fromTopBar_TLV[nStates_wDaughter2_fromTopBar-1].Pt(), wgt);
+    h_genParticle_wDaughter2_fromTopBar_eta->Fill(genParticle_wDaughter2_fromTopBar_TLV[nStates_wDaughter2_fromTopBar-1].Eta(), wgt);
+    h_genParticle_wDaughter2_fromTopBar_motherPdgId_vs_pdgId->Fill(eve->genParticle_wDaughter2_fromTopBar_pdgId_[nStates_wDaughter2_fromTopBar-1], eve->genParticle_wDaughter2_fromTopBar_mother_pdgId_[nStates_wDaughter2_fromTopBar-1], wgt);
+    
+    
+    //
+    // GenParticles, extra b/c quarks
+    //
+   
+    h_genParticle_nExtraCQuarks_vs_nExtraBQuarks->Fill(eve->nExtraBQuarks_, eve->nExtraCQuarks_, wgt);
+    h_genParticle_nExtraCJets_vs_nExtraBJets->Fill(eve->nExtraBJets_, eve->nExtraCJets_, wgt);
+
+
+    vvvdouble genParticle_extraBQuark_vect = eve->genParticle_extraBQuark_TLV_;
+    vector< vTLV > genParticle_extraBQuark_TLV;
+    double extraBQuark_minPt=999.9;
+    double extraBQuark_maxPt=0.0;
+    int nExtraBQuarks = genParticle_extraBQuark_vect.size();
+    for(int i=0; i<nExtraBQuarks; i++){
+      vTLV allStates_thisBQuark_TLV;
+      int nStates_thisBQuark = genParticle_extraBQuark_vect[i].size();
+      for(int j=0; j<nStates_thisBQuark; j++){
+	TLorentzVector jTLV = mydummyguy;
+	jTLV.SetPxPyPzE( genParticle_extraBQuark_vect[i][j][0], genParticle_extraBQuark_vect[i][j][1], genParticle_extraBQuark_vect[i][j][2], genParticle_extraBQuark_vect[i][j][3]);
+	allStates_thisBQuark_TLV.push_back(jTLV);
+      } // end loop over all states of this b-quark
+
+      genParticle_extraBQuark_TLV.push_back(allStates_thisBQuark_TLV);
+
+      h_genParticle_extraBQuarks_pt->Fill(allStates_thisBQuark_TLV[nStates_thisBQuark-1].Pt(), wgt);
+      h_genParticle_extraBQuarks_mother_pdgId->Fill(eve->genParticle_extraBQuark_mother_pdgId_[i][nStates_thisBQuark-1]);
+      h_genParticle_extraQuarks_pt->Fill(allStates_thisBQuark_TLV[nStates_thisBQuark-1].Pt(), wgt);
+      h_genParticle_extraQuarks_mother_pdgId->Fill(eve->genParticle_extraBQuark_mother_pdgId_[i][nStates_thisBQuark-1]);
+      
+      extraBQuark_minPt = std::min( allStates_thisBQuark_TLV[nStates_thisBQuark-1].Pt(), extraBQuark_minPt );
+      extraBQuark_maxPt = std::max( allStates_thisBQuark_TLV[nStates_thisBQuark-1].Pt(), extraBQuark_maxPt );
+
+    } // end loop over b-quarks
+
+    if(nExtraBQuarks>0){
+      h_genParticle_extraBQuarks_maxPt->Fill( extraBQuark_maxPt, wgt);
+      h_genParticle_extraBQuarks_minPt->Fill( extraBQuark_minPt, wgt);
+    }
+
+    vvvdouble genParticle_extraCQuark_vect = eve->genParticle_extraCQuark_TLV_;
+    vector< vTLV > genParticle_extraCQuark_TLV;
+    double extraCQuark_minPt=999.9;
+    double extraCQuark_maxPt=0.0;
+    int nExtraCQuarks = genParticle_extraCQuark_vect.size();
+    for(int i=0; i<nExtraCQuarks; i++){
+      vTLV allStates_thisCQuark_TLV;
+      int nStates_thisCQuark = genParticle_extraCQuark_vect[i].size();
+      for(int j=0; j<nStates_thisCQuark; j++){
+	TLorentzVector jTLV = mydummyguy;
+	jTLV.SetPxPyPzE( genParticle_extraCQuark_vect[i][j][0], genParticle_extraCQuark_vect[i][j][1], genParticle_extraCQuark_vect[i][j][2], genParticle_extraCQuark_vect[i][j][3]);
+	allStates_thisCQuark_TLV.push_back(jTLV);
+      } // end loop over all states of this c-quark
+
+      genParticle_extraCQuark_TLV.push_back(allStates_thisCQuark_TLV);
+
+      h_genParticle_extraCQuarks_pt->Fill(allStates_thisCQuark_TLV[nStates_thisCQuark-1].Pt(), wgt);
+      h_genParticle_extraCQuarks_mother_pdgId->Fill(eve->genParticle_extraCQuark_mother_pdgId_[i][nStates_thisCQuark-1]);
+      h_genParticle_extraQuarks_pt->Fill(allStates_thisCQuark_TLV[nStates_thisCQuark-1].Pt(), wgt);
+      h_genParticle_extraQuarks_mother_pdgId->Fill(eve->genParticle_extraCQuark_mother_pdgId_[i][nStates_thisCQuark-1]);
+
+      extraCQuark_minPt = std::min( allStates_thisCQuark_TLV[nStates_thisCQuark-1].Pt(), extraCQuark_minPt );
+      extraCQuark_maxPt = std::max( allStates_thisCQuark_TLV[nStates_thisCQuark-1].Pt(), extraCQuark_maxPt );
+
+    } // end loop over c-quarks
+
+    if(nExtraCQuarks>0){
+      h_genParticle_extraCQuarks_maxPt->Fill( extraCQuark_maxPt, wgt);
+      h_genParticle_extraCQuarks_minPt->Fill( extraCQuark_minPt, wgt);
+    }
+
+    if(nExtraBQuarks>0 || nExtraCQuarks>0){
+      h_genParticle_extraQuarks_maxPt->Fill( std::max( extraBQuark_maxPt, extraCQuark_maxPt), wgt);
+      h_genParticle_extraQuarks_minPt->Fill( std::min( extraBQuark_minPt, extraCQuark_minPt), wgt);
+    }
+    
+  
+    //
+    // GenParticle, tight lepton that passed selection
+    //
+    vvdouble genParticle_tightLepton_vect = eve->genParticle_tightLepton_TLV_;
+    vTLV genParticle_tightLepton_TLV;
+    int nStates_tightLepton = genParticle_tightLepton_vect.size();
+    for(int i=0; i<nStates_tightLepton; i++){
+      TLorentzVector iTLV = mydummyguy;
+      iTLV.SetPxPyPzE(genParticle_tightLepton_vect[i][0], genParticle_tightLepton_vect[i][1], genParticle_tightLepton_vect[i][2], genParticle_tightLepton_vect[i][3]);
+      genParticle_tightLepton_TLV.push_back(iTLV);
+    }
+
+    h_genParticle_tightLepton_pt->Fill( genParticle_tightLepton_TLV[nStates_tightLepton-1].Pt(), wgt );
+    h_genParticle_tightLepton_eta->Fill( genParticle_tightLepton_TLV[nStates_tightLepton-1].Eta(), wgt );
+    h_genParticle_tightLepton_status->Fill( eve->genParticle_tightLepton_status_[nStates_tightLepton-1], wgt );
+    h_genParticle_tightLepton_motherPdgId_vs_pdgId->Fill( eve->genParticle_tightLepton_pdgId_[nStates_tightLepton-1], eve->genParticle_tightLepton_mother_pdgId_[nStates_tightLepton-1], wgt);
+
+  
 
 
 
