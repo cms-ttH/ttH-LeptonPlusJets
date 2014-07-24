@@ -125,6 +125,22 @@ void yggdrasil_drawQuick_NLO(){
   can->~TCanvas();
 
 
+  // ttjets+0j, matched not selected, pt vs eta
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_0j = (TH2F*)f_ttjets_0j->Get("h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta");
+  h2_ttjets_0j->Draw("colz norm");
+  can->SaveAs("ttjets_fxfx_madspin_plus0jets__genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta.pdf");
+  can->~TCanvas();
+
+  // ttjets+1j, matched not selected, pt vs eta
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_1j = (TH2F*)f_ttjets_1j->Get("h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta");
+  h2_ttjets_1j->Draw("colz norm");
+  can->SaveAs("ttjets_fxfx_madspin_plus1jets__genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta.pdf");
+  can->~TCanvas();
+
+
+
   // genParticle top_quark pT Comparison
   can = new TCanvas("can", "can", 10, 10, 1000, 1000);
   h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_top_quark_pt");
@@ -288,6 +304,325 @@ void yggdrasil_drawQuick_NLO(){
   can->~TCanvas();
 
 
+  // genParticle wDaughter1_fromTop pT Comparison
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_wDaughter1_fromTop_pt");
+  h1_ttjets_0j->SetLineColor(kBlue);
+  h1_ttjets_0j->Scale(1.0/h1_ttjets_0j->Integral());
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_wDaughter1_fromTop_pt");
+  h1_ttjets_1j->SetLineColor(kRed);
+  h1_ttjets_1j->Scale(1.0/h1_ttjets_1j->Integral());
+  leg = new TLegend( 0.70, 0.70, 0.90, 0.90);
+  leg->AddEntry(h1_ttjets_0j, "FxFx MadSpin ttjets+0j", "l");
+  leg->AddEntry(h1_ttjets_1j, "FxFx MadSpin ttjets+1j", "l");
+  max = std::max( h1_ttjets_0j->GetBinContent( h1_ttjets_0j->GetMaximumBin() ), h1_ttjets_1j->GetBinContent( h1_ttjets_1j->GetMaximumBin() ) );
+  max *= 1.1;
+  h1_ttjets_0j->SetMaximum(max);
+  h1_ttjets_0j->Draw("hist");
+  h1_ttjets_1j->Draw("hist same");
+  leg->Draw();
+  can->SaveAs("ttjets_fxfx_madspin_0jet_vs_1jet__genParticle_wDaughter1_fromTop_pt.pdf");
+  leg->~TLegend();
+  can->~TCanvas();
+
+
+  // ttjets+0j, genParticle, wDaughter1_fromTop, mother pdgId vs pdgId
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_0j = (TH2F*)f_ttjets_0j->Get("h_genParticle_wDaughter1_fromTop_motherPdgId_vs_pdgId");
+  h2_ttjets_0j->Scale(1.0/h2_ttjets_0j->Integral());
+  h2_ttjets_0j->Draw("colz");
+  can->SaveAs("ttjets_fxfx_madspin_plus0jets__genParticle_wDaughter1_fromTop_motherPdgId_vs_pdgId.pdf");
+  can->~TCanvas();
+  
+  // ttjets+1j genParticle, wDaughter1_fromTop, mother pdgId vs pdgId
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_1j = (TH2F*)f_ttjets_1j->Get("h_genParticle_wDaughter1_fromTop_motherPdgId_vs_pdgId");
+  h2_ttjets_1j->Scale(1.0/h2_ttjets_1j->Integral());
+  h2_ttjets_1j->Draw("colz");
+  can->SaveAs("ttjets_fxfx_madspin_plus1jets__genParticle_wDaughter1_fromTop_motherPdgId_vs_pdgId.pdf");
+  can->~TCanvas();
+
+
+  // genParticle wDaughter2_fromTop pT Comparison
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_wDaughter2_fromTop_pt");
+  h1_ttjets_0j->SetLineColor(kBlue);
+  h1_ttjets_0j->Scale(1.0/h1_ttjets_0j->Integral());
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_wDaughter2_fromTop_pt");
+  h1_ttjets_1j->SetLineColor(kRed);
+  h1_ttjets_1j->Scale(1.0/h1_ttjets_1j->Integral());
+  leg = new TLegend( 0.70, 0.70, 0.90, 0.90);
+  leg->AddEntry(h1_ttjets_0j, "FxFx MadSpin ttjets+0j", "l");
+  leg->AddEntry(h1_ttjets_1j, "FxFx MadSpin ttjets+1j", "l");
+  max = std::max( h1_ttjets_0j->GetBinContent( h1_ttjets_0j->GetMaximumBin() ), h1_ttjets_1j->GetBinContent( h1_ttjets_1j->GetMaximumBin() ) );
+  max *= 1.1;
+  h1_ttjets_0j->SetMaximum(max);
+  h1_ttjets_0j->Draw("hist");
+  h1_ttjets_1j->Draw("hist same");
+  leg->Draw();
+  can->SaveAs("ttjets_fxfx_madspin_0jet_vs_1jet__genParticle_wDaughter2_fromTop_pt.pdf");
+  leg->~TLegend();
+  can->~TCanvas();
+
+
+  // ttjets+0j, genParticle, wDaughter2_fromTop, mother pdgId vs pdgId
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_0j = (TH2F*)f_ttjets_0j->Get("h_genParticle_wDaughter2_fromTop_motherPdgId_vs_pdgId");
+  h2_ttjets_0j->Scale(1.0/h2_ttjets_0j->Integral());
+  h2_ttjets_0j->Draw("colz");
+  can->SaveAs("ttjets_fxfx_madspin_plus0jets__genParticle_wDaughter2_fromTop_motherPdgId_vs_pdgId.pdf");
+  can->~TCanvas();
+  
+  // ttjets+1j genParticle, wDaughter2_fromTop, mother pdgId vs pdgId
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_1j = (TH2F*)f_ttjets_1j->Get("h_genParticle_wDaughter2_fromTop_motherPdgId_vs_pdgId");
+  h2_ttjets_1j->Scale(1.0/h2_ttjets_1j->Integral());
+  h2_ttjets_1j->Draw("colz");
+  can->SaveAs("ttjets_fxfx_madspin_plus1jets__genParticle_wDaughter2_fromTop_motherPdgId_vs_pdgId.pdf");
+  can->~TCanvas();
+
+
+  
+  // genParticle topBar_quark pT Comparison
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_topBar_quark_pt");
+  h1_ttjets_0j->SetLineColor(kBlue);
+  h1_ttjets_0j->Scale(1.0/h1_ttjets_0j->Integral());
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_topBar_quark_pt");
+  h1_ttjets_1j->SetLineColor(kRed);
+  h1_ttjets_1j->Scale(1.0/h1_ttjets_1j->Integral());
+  leg = new TLegend( 0.70, 0.70, 0.90, 0.90);
+  leg->AddEntry(h1_ttjets_0j, "FxFx MadSpin ttjets+0j", "l");
+  leg->AddEntry(h1_ttjets_1j, "FxFx MadSpin ttjets+1j", "l");
+  max = std::max( h1_ttjets_0j->GetBinContent( h1_ttjets_0j->GetMaximumBin() ), h1_ttjets_1j->GetBinContent( h1_ttjets_1j->GetMaximumBin() ) );
+  max *= 1.1;
+  h1_ttjets_0j->SetMaximum(max);
+  h1_ttjets_0j->Draw("hist");
+  h1_ttjets_1j->Draw("hist same");
+  leg->Draw();
+  can->SaveAs("ttjets_fxfx_madspin_0jet_vs_1jet__genParticle_topBar_quark_pt.pdf");
+  leg->~TLegend();
+  can->~TCanvas();
+  
+
+  // genParticle topBar_quark mass Comparison
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_topBar_quark_mass");
+  h1_ttjets_0j->SetLineColor(kBlue);
+  h1_ttjets_0j->Scale(1.0/h1_ttjets_0j->Integral());
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_topBar_quark_mass");
+  h1_ttjets_1j->SetLineColor(kRed);
+  h1_ttjets_1j->Scale(1.0/h1_ttjets_1j->Integral());
+  leg = new TLegend( 0.70, 0.70, 0.90, 0.90);
+  leg->AddEntry(h1_ttjets_0j, "FxFx MadSpin ttjets+0j", "l");
+  leg->AddEntry(h1_ttjets_1j, "FxFx MadSpin ttjets+1j", "l");
+  max = std::max( h1_ttjets_0j->GetBinContent( h1_ttjets_0j->GetMaximumBin() ), h1_ttjets_1j->GetBinContent( h1_ttjets_1j->GetMaximumBin() ) );
+  max *= 1.1;
+  h1_ttjets_0j->SetMaximum(max);
+  h1_ttjets_0j->Draw("hist");
+  h1_ttjets_1j->Draw("hist same");
+  leg->Draw();
+  can->SaveAs("ttjets_fxfx_madspin_0jet_vs_1jet__genParticle_topBar_quark_mass.pdf");
+  leg->~TLegend();
+  can->~TCanvas();
+
+
+  // ttjets+0j dPtRel vs dR topBar
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_0j = (TH2F*)f_ttjets_0j->Get("h_genParticle_topBar_quark_dPtRel_vs_dR_final_intial");
+  h2_ttjets_0j->Draw("colz norm");
+  can->SaveAs("ttjets_fxfx_madspin_plus0jets__genParticle_topBar_quark_dPtRel_vs_dR_final_intial.pdf");
+  can->~TCanvas();
+
+  // ttjets+1j dPtRel vs dR topBar
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_1j = (TH2F*)f_ttjets_1j->Get("h_genParticle_topBar_quark_dPtRel_vs_dR_final_intial");
+  h2_ttjets_1j->Draw("colz norm");
+  can->SaveAs("ttjets_fxfx_madspin_plus1jets__genParticle_topBar_quark_dPtRel_vs_dR_final_intial.pdf");
+  can->~TCanvas();
+
+
+
+  // genParticle b_quark_fromTopBar pT Comparison
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_b_quark_fromTopBar_pt");
+  h1_ttjets_0j->SetLineColor(kBlue);
+  h1_ttjets_0j->Scale(1.0/h1_ttjets_0j->Integral());
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_b_quark_fromTopBar_pt");
+  h1_ttjets_1j->SetLineColor(kRed);
+  h1_ttjets_1j->Scale(1.0/h1_ttjets_1j->Integral());
+  leg = new TLegend( 0.70, 0.70, 0.90, 0.90);
+  leg->AddEntry(h1_ttjets_0j, "FxFx MadSpin ttjets+0j", "l");
+  leg->AddEntry(h1_ttjets_1j, "FxFx MadSpin ttjets+1j", "l");
+  max = std::max( h1_ttjets_0j->GetBinContent( h1_ttjets_0j->GetMaximumBin() ), h1_ttjets_1j->GetBinContent( h1_ttjets_1j->GetMaximumBin() ) );
+  max *= 1.1;
+  h1_ttjets_0j->SetMaximum(max);
+  h1_ttjets_0j->Draw("hist");
+  h1_ttjets_1j->Draw("hist same");
+  leg->Draw();
+  can->SaveAs("ttjets_fxfx_madspin_0jet_vs_1jet__genParticle_b_quark_fromTopBar_pt.pdf");
+  leg->~TLegend();
+  can->~TCanvas();
+  
+
+  // genParticle b_quark_fromTopBar mass Comparison
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_b_quark_fromTopBar_mass");
+  h1_ttjets_0j->SetLineColor(kBlue);
+  h1_ttjets_0j->Scale(1.0/h1_ttjets_0j->Integral());
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_b_quark_fromTopBar_mass");
+  h1_ttjets_1j->SetLineColor(kRed);
+  h1_ttjets_1j->Scale(1.0/h1_ttjets_1j->Integral());
+  leg = new TLegend( 0.70, 0.70, 0.90, 0.90);
+  leg->AddEntry(h1_ttjets_0j, "FxFx MadSpin ttjets+0j", "l");
+  leg->AddEntry(h1_ttjets_1j, "FxFx MadSpin ttjets+1j", "l");
+  max = std::max( h1_ttjets_0j->GetBinContent( h1_ttjets_0j->GetMaximumBin() ), h1_ttjets_1j->GetBinContent( h1_ttjets_1j->GetMaximumBin() ) );
+  max *= 1.1;
+  h1_ttjets_0j->SetMaximum(max);
+  h1_ttjets_0j->Draw("hist");
+  h1_ttjets_1j->Draw("hist same");
+  leg->Draw();
+  can->SaveAs("ttjets_fxfx_madspin_0jet_vs_1jet__genParticle_b_quark_fromTopBar_mass.pdf");
+  leg->~TLegend();
+  can->~TCanvas();
+
+
+  // ttjets+0j dPtRel vs dR b from topBar
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_0j = (TH2F*)f_ttjets_0j->Get("h_genParticle_b_quark_fromTopBar_dPtRel_vs_dR_final_intial");
+  h2_ttjets_0j->Draw("colz norm");
+  can->SaveAs("ttjets_fxfx_madspin_plus0jets__genParticle_b_quark_fromTopBar_dPtRel_vs_dR_final_intial.pdf");
+  can->~TCanvas();
+
+  // ttjets+1j dPtRel vs dR b from topBar
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_1j = (TH2F*)f_ttjets_1j->Get("h_genParticle_b_quark_fromTopBar_dPtRel_vs_dR_final_intial");
+  h2_ttjets_1j->Draw("colz norm");
+  can->SaveAs("ttjets_fxfx_madspin_plus1jets__genParticle_b_quark_fromTopBar_dPtRel_vs_dR_final_intial.pdf");
+  can->~TCanvas();
+
+
+  // genParticle w_boson_fromTopBar pT Comparison
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_w_boson_fromTopBar_pt");
+  h1_ttjets_0j->SetLineColor(kBlue);
+  h1_ttjets_0j->Scale(1.0/h1_ttjets_0j->Integral());
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_w_boson_fromTopBar_pt");
+  h1_ttjets_1j->SetLineColor(kRed);
+  h1_ttjets_1j->Scale(1.0/h1_ttjets_1j->Integral());
+  leg = new TLegend( 0.70, 0.70, 0.90, 0.90);
+  leg->AddEntry(h1_ttjets_0j, "FxFx MadSpin ttjets+0j", "l");
+  leg->AddEntry(h1_ttjets_1j, "FxFx MadSpin ttjets+1j", "l");
+  max = std::max( h1_ttjets_0j->GetBinContent( h1_ttjets_0j->GetMaximumBin() ), h1_ttjets_1j->GetBinContent( h1_ttjets_1j->GetMaximumBin() ) );
+  max *= 1.1;
+  h1_ttjets_0j->SetMaximum(max);
+  h1_ttjets_0j->Draw("hist");
+  h1_ttjets_1j->Draw("hist same");
+  leg->Draw();
+  can->SaveAs("ttjets_fxfx_madspin_0jet_vs_1jet__genParticle_w_boson_fromTopBar_pt.pdf");
+  leg->~TLegend();
+  can->~TCanvas();
+  
+
+  // genParticle w_boson_fromTopBar mass Comparison
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_w_boson_fromTopBar_mass");
+  h1_ttjets_0j->SetLineColor(kBlue);
+  h1_ttjets_0j->Scale(1.0/h1_ttjets_0j->Integral());
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_w_boson_fromTopBar_mass");
+  h1_ttjets_1j->SetLineColor(kRed);
+  h1_ttjets_1j->Scale(1.0/h1_ttjets_1j->Integral());
+  leg = new TLegend( 0.70, 0.70, 0.90, 0.90);
+  leg->AddEntry(h1_ttjets_0j, "FxFx MadSpin ttjets+0j", "l");
+  leg->AddEntry(h1_ttjets_1j, "FxFx MadSpin ttjets+1j", "l");
+  max = std::max( h1_ttjets_0j->GetBinContent( h1_ttjets_0j->GetMaximumBin() ), h1_ttjets_1j->GetBinContent( h1_ttjets_1j->GetMaximumBin() ) );
+  max *= 1.1;
+  h1_ttjets_0j->SetMaximum(max);
+  h1_ttjets_0j->Draw("hist");
+  h1_ttjets_1j->Draw("hist same");
+  leg->Draw();
+  can->SaveAs("ttjets_fxfx_madspin_0jet_vs_1jet__genParticle_w_boson_fromTopBar_mass.pdf");
+  leg->~TLegend();
+  can->~TCanvas();
+
+
+  // genParticle wDaughter1_fromTopBar pT Comparison
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_wDaughter1_fromTopBar_pt");
+  h1_ttjets_0j->SetLineColor(kBlue);
+  h1_ttjets_0j->Scale(1.0/h1_ttjets_0j->Integral());
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_wDaughter1_fromTopBar_pt");
+  h1_ttjets_1j->SetLineColor(kRed);
+  h1_ttjets_1j->Scale(1.0/h1_ttjets_1j->Integral());
+  leg = new TLegend( 0.70, 0.70, 0.90, 0.90);
+  leg->AddEntry(h1_ttjets_0j, "FxFx MadSpin ttjets+0j", "l");
+  leg->AddEntry(h1_ttjets_1j, "FxFx MadSpin ttjets+1j", "l");
+  max = std::max( h1_ttjets_0j->GetBinContent( h1_ttjets_0j->GetMaximumBin() ), h1_ttjets_1j->GetBinContent( h1_ttjets_1j->GetMaximumBin() ) );
+  max *= 1.1;
+  h1_ttjets_0j->SetMaximum(max);
+  h1_ttjets_0j->Draw("hist");
+  h1_ttjets_1j->Draw("hist same");
+  leg->Draw();
+  can->SaveAs("ttjets_fxfx_madspin_0jet_vs_1jet__genParticle_wDaughter1_fromTopBar_pt.pdf");
+  leg->~TLegend();
+  can->~TCanvas();
+
+
+  // ttjets+0j, genParticle, wDaughter1_fromTopBar, mother pdgId vs pdgId
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_0j = (TH2F*)f_ttjets_0j->Get("h_genParticle_wDaughter1_fromTopBar_motherPdgId_vs_pdgId");
+  h2_ttjets_0j->Scale(1.0/h2_ttjets_0j->Integral());
+  h2_ttjets_0j->Draw("colz");
+  can->SaveAs("ttjets_fxfx_madspin_plus0jets__genParticle_wDaughter1_fromTopBar_motherPdgId_vs_pdgId.pdf");
+  can->~TCanvas();
+  
+  // ttjets+1j genParticle, wDaughter1_fromTopBar, mother pdgId vs pdgId
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_1j = (TH2F*)f_ttjets_1j->Get("h_genParticle_wDaughter1_fromTopBar_motherPdgId_vs_pdgId");
+  h2_ttjets_1j->Scale(1.0/h2_ttjets_1j->Integral());
+  h2_ttjets_1j->Draw("colz");
+  can->SaveAs("ttjets_fxfx_madspin_plus1jets__genParticle_wDaughter1_fromTopBar_motherPdgId_vs_pdgId.pdf");
+  can->~TCanvas();
+
+  
+  // genParticle wDaughter2_fromTopBar pT Comparison
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_wDaughter2_fromTopBar_pt");
+  h1_ttjets_0j->SetLineColor(kBlue);
+  h1_ttjets_0j->Scale(1.0/h1_ttjets_0j->Integral());
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_wDaughter2_fromTopBar_pt");
+  h1_ttjets_1j->SetLineColor(kRed);
+  h1_ttjets_1j->Scale(1.0/h1_ttjets_1j->Integral());
+  leg = new TLegend( 0.70, 0.70, 0.90, 0.90);
+  leg->AddEntry(h1_ttjets_0j, "FxFx MadSpin ttjets+0j", "l");
+  leg->AddEntry(h1_ttjets_1j, "FxFx MadSpin ttjets+1j", "l");
+  max = std::max( h1_ttjets_0j->GetBinContent( h1_ttjets_0j->GetMaximumBin() ), h1_ttjets_1j->GetBinContent( h1_ttjets_1j->GetMaximumBin() ) );
+  max *= 1.1;
+  h1_ttjets_0j->SetMaximum(max);
+  h1_ttjets_0j->Draw("hist");
+  h1_ttjets_1j->Draw("hist same");
+  leg->Draw();
+  can->SaveAs("ttjets_fxfx_madspin_0jet_vs_1jet__genParticle_wDaughter2_fromTopBar_pt.pdf");
+  leg->~TLegend();
+  can->~TCanvas();
+  
+  // ttjets+0j, genParticle, wDaughter2_fromTopBar, mother pdgId vs pdgId
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_0j = (TH2F*)f_ttjets_0j->Get("h_genParticle_wDaughter2_fromTopBar_motherPdgId_vs_pdgId");
+  h2_ttjets_0j->Scale(1.0/h2_ttjets_0j->Integral());
+  h2_ttjets_0j->Draw("colz");
+  can->SaveAs("ttjets_fxfx_madspin_plus0jets__genParticle_wDaughter2_fromTopBar_motherPdgId_vs_pdgId.pdf");
+  can->~TCanvas();
+
+
+  // ttjets+1j genParticle, wDaughter2_fromTopBar, mother pdgId vs pdgId
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_1j = (TH2F*)f_ttjets_1j->Get("h_genParticle_wDaughter2_fromTopBar_motherPdgId_vs_pdgId");
+  h2_ttjets_1j->Scale(1.0/h2_ttjets_1j->Integral());
+  h2_ttjets_1j->Draw("colz");
+  can->SaveAs("ttjets_fxfx_madspin_plus1jets__genParticle_wDaughter2_fromTopBar_motherPdgId_vs_pdgId.pdf");
+  can->~TCanvas();
+
 
 
 
@@ -400,20 +735,65 @@ void yggdrasil_drawQuick_NLO(){
   can->~TCanvas();
 
 
-  // ttjets+0j, matched not selected, pt vs eta
+  // ttjets+0j, genParticle, extraBQuarks, mother pdgId vs pdgId
   can = new TCanvas("can", "can", 10, 10, 1000, 1000);
-  h2_ttjets_0j = (TH2F*)f_ttjets_0j->Get("h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta");
-  h2_ttjets_0j->Draw("colz norm");
-  can->SaveAs("ttjets_fxfx_madspin_plus0jets__genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta.pdf");
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_extraBQuarks_mother_pdgId");
+  h1_ttjets_0j->Scale(1.0/h2_ttjets_0j->Integral());
+  h1_ttjets_0j->Draw("hist");
+  can->SaveAs("ttjets_fxfx_madspin_plus0jets__genParticle_extraBQuarks_mother_pdgId.pdf");
   can->~TCanvas();
 
-  // ttjets+1j, matched not selected, pt vs eta
+
+  // ttjets+1j genParticle, extraBQuarks, mother pdgId 
   can = new TCanvas("can", "can", 10, 10, 1000, 1000);
-  h2_ttjets_1j = (TH2F*)f_ttjets_1j->Get("h_genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta");
-  h2_ttjets_1j->Draw("colz norm");
-  can->SaveAs("ttjets_fxfx_madspin_plus1jets__genJet_matchedTo_ttbarSystem_nonSelected_pt_vs_eta.pdf");
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_extraBQuarks_mother_pdgId");
+  h1_ttjets_1j->Scale(1.0/h2_ttjets_1j->Integral());
+  h1_ttjets_1j->Draw("hist");
+  can->SaveAs("ttjets_fxfx_madspin_plus1jets__genParticle_extraBQuarks_mother_pdgId.pdf");
   can->~TCanvas();
 
+
+
+  // genParticle tightLepton pT Comparison
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h1_ttjets_0j = (TH1F*)f_ttjets_0j->Get("h_genParticle_tightLepton_pt");
+  h1_ttjets_0j->SetLineColor(kBlue);
+  h1_ttjets_0j->Scale(1.0/h1_ttjets_0j->Integral());
+  h1_ttjets_1j = (TH1F*)f_ttjets_1j->Get("h_genParticle_tightLepton_pt");
+  h1_ttjets_1j->SetLineColor(kRed);
+  h1_ttjets_1j->Scale(1.0/h1_ttjets_1j->Integral());
+  leg = new TLegend( 0.70, 0.70, 0.90, 0.90);
+  leg->AddEntry(h1_ttjets_0j, "FxFx MadSpin ttjets+0j", "l");
+  leg->AddEntry(h1_ttjets_1j, "FxFx MadSpin ttjets+1j", "l");
+  max = std::max( h1_ttjets_0j->GetBinContent( h1_ttjets_0j->GetMaximumBin() ), h1_ttjets_1j->GetBinContent( h1_ttjets_1j->GetMaximumBin() ) );
+  max *= 1.1;
+  h1_ttjets_0j->SetMaximum(max);
+  h1_ttjets_0j->Draw("hist");
+  h1_ttjets_1j->Draw("hist same");
+  leg->Draw();
+  can->SaveAs("ttjets_fxfx_madspin_0jet_vs_1jet__genParticle_tightLepton_pt.pdf");
+  leg->~TLegend();
+  can->~TCanvas();
+  
+  // ttjets+0j, genParticle, tightLepton, mother pdgId vs pdgId
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_0j = (TH2F*)f_ttjets_0j->Get("h_genParticle_tightLepton_motherPdgId_vs_pdgId");
+  h2_ttjets_0j->Scale(1.0/h2_ttjets_0j->Integral());
+  h2_ttjets_0j->Draw("colz");
+  can->SaveAs("ttjets_fxfx_madspin_plus0jets__genParticle_tightLepton_motherPdgId_vs_pdgId.pdf");
+  can->~TCanvas();
+
+
+  // ttjets+1j genParticle, tightLepton, mother pdgId vs pdgId
+  can = new TCanvas("can", "can", 10, 10, 1000, 1000);
+  h2_ttjets_1j = (TH2F*)f_ttjets_1j->Get("h_genParticle_tightLepton_motherPdgId_vs_pdgId");
+  h2_ttjets_1j->Scale(1.0/h2_ttjets_1j->Integral());
+  h2_ttjets_1j->Draw("colz");
+  can->SaveAs("ttjets_fxfx_madspin_plus1jets__genParticle_tightLepton_motherPdgId_vs_pdgId.pdf");
+  can->~TCanvas();
+
+
+  
 
   // Clean up
   f_ttjets_0j->Close();
