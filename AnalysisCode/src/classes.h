@@ -2,6 +2,8 @@
 #include "DataFormats/Common/interface/Wrapper.h"
 #include "ttH-LeptonPlusJets/AnalysisCode/interface/BEANeventVars.h"
 #include "ttH-LeptonPlusJets/AnalysisCode/interface/BEANeventVars_NLO.h"
+#include "ttH-LeptonPlusJets/AnalysisCode/interface/YggdrasilEventVars.h"
+
 #include <vector>
 
 namespace {
@@ -17,6 +19,11 @@ namespace {
      std::vector<BEANeventVars_NLO> BEANeventVars_NLODummy1;  
      edm::Wrapper<BEANeventVars_NLO> BEANeventVars_NLODumm2;
      edm::Wrapper<std::vector<BEANeventVars_NLO> > BEANeventVars_NLODummy4;
+
+     yggdrasilEventVars yggdrasilEventVarsDummy0;
+     std::vector<yggdrasilEventVars> yggdrasilEventVarsDummy1;  
+     edm::Wrapper<yggdrasilEventVars> yggdrasilEventVarsDumm2;
+     edm::Wrapper<std::vector<yggdrasilEventVars> > yggdrasilEventVarsDummy4;
 
    };
 }
