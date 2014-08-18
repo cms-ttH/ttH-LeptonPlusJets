@@ -88,13 +88,24 @@ typedef std::vector< TLorentzVector >          vecTLorentzVector;
 double getBestHiggsMass(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, vdouble btag, double &minChi, double &dRbb, TLorentzVector &bjet1, TLorentzVector &bjet2, vecTLorentzVector loose_jets, vdouble loose_btag);
 
 
+void fillCSVhistos(TFile *fileHF, TFile *fileLF);
+double get_csv_wgt( vvdouble jets, vdouble jetCSV, vint jetFlavor, int iSys, double &csvWgtHF, double &csvWgtLF, double &csvWgtCF );
+
+// CSV reweighting
+TH1D* h_csv_wgt_hf[9][6];
+TH1D* c_csv_wgt_hf[9][6];
+TH1D* h_csv_wgt_lf[9][4][3];
+
 //*****************************************************************************
 
 
 
-void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1, int jobN=1 ) {
+void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, int Njobs=1, int jobN=1 ) {
 
+  TFile* f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_hf_IT.root").c_str());
+  TFile* f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_lf_IT.root").c_str());
 
+  fillCSVhistos(f_CSVwgt_HF, f_CSVwgt_LF);
   //////////////////////////////////////////////////////////////////////////
   ///  Load Files
   //////////////////////////////////////////////////////////////////////////
@@ -105,8 +116,30 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
   std::cout << "\n\n   ===> load the root files! "         << "\n\n";
 
   vstring fileNames;
-  fileNames.push_back("root://cmsxrootd.fnal.gov//store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/003E832C-8AFC-E311-B7AA-002590596490.root");
-  //fileNames.push_back("/uscms_data/d2/dpuigh/TTH/miniAOD/CMSSW_7_0_6_patch1/src/patFromMiniAOD.root");
+  if( insample==2500 ) fileNames.push_back("root://cmsxrootd.fnal.gov//store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/003E832C-8AFC-E311-B7AA-002590596490.root");
+
+  if( insample==2310 ) fileNames.push_back("root://cmsxrootd.fnal.gov//store/user/lwming/DYJetsToLL_M-50_13TeV-madgraph-pythia8/CSA14_miniAOD/79454fa019bb8a3da819d0686ef26e77/output_1_2_AQU.root");
+  if( insample==2510 ) fileNames.push_back("root://cmsxrootd.fnal.gov//store/user/lwming/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/CSA14_miniAOD/79454fa019bb8a3da819d0686ef26e77/output_9_1_yUH.root");
+
+
+
+
+  //https://twiki.cern.ch/twiki/bin/viewauth/CMS/StandardModelCrossSectionsat13TeV
+  double mySample_xSec_ = 1.;
+  double mySample_nGen_ = 1.;
+  std::string mySample_sampleName_ = "delete";
+  double intLumi_ = 10000;
+  if( insample==2500 || insample==2510 ){
+    mySample_xSec_ = 424.5;//LO = 424.5, NLO = 689.1 (HT) vs 809.1 (dynamic)
+    mySample_nGen_ = 25474122;
+    mySample_sampleName_ = "TTJets_MSDecaysCKM_central_Tune4C_13TeV_madgraph_PU20bx25_POSTLS170_V5_v1";
+  }
+  else if( insample==2300 || insample==2310 ){
+    mySample_xSec_ = 4746;// LO = 4746, NLO = 2008.4  
+    mySample_nGen_ = 2725222;
+    mySample_sampleName_ = "DYJetsToLL_M_50_13TeV_madgraph_pythia8_PU20bx25_POSTLS170_V5_v1";
+  }
+
 
 
   //creates a ChainEvent allowing files to be linked
@@ -125,9 +158,11 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
   std::string s_end = "_" + str_jobN + ".root";
   if( Njobs==1 ) s_end = ".root";
 
+  std::string str_analysisType = ( isLJ ) ? "LJ" : "OSDIL"; 
+  std::string str_data = ( insample<=0 ) ? "data" : "mc";
 
   // Open output file
-  std::string treefilename = "yggdrasil_treeMaker_mc_TTJets_MSDecaysCKM_central_Tune4C_13TeV_madgraph_PU20bx25_POSTLS170_V5_v1" + s_end;
+  std::string treefilename = "yggdrasil_treeMaker_" + str_analysisType + "_" + str_data + "_" + mySample_sampleName_ + s_end;
   TFile treefile(treefilename.c_str(),"recreate");
   treefile.cd();
 
@@ -150,31 +185,26 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 
   int nevents_clean=0;
   double nevents_clean_wgt=0;
-  int nevents_clean_ele=0;
-  double nevents_clean_ele_wgt=0;
-  int nevents_clean_mu=0;
-  double nevents_clean_mu_wgt=0;
 
-  int nevents_ll=0;
-  double nevents_ll_wgt=0;
-  int nevents_ll_ele=0;
-  double nevents_ll_ele_wgt=0;
-  int nevents_ll_mu=0;
-  double nevents_ll_mu_wgt=0;
+  int nevents_1l=0, nevents_1l_ele=0, nevents_1l_mu=0;
+  double nevents_1l_wgt=0, nevents_1l_ele_wgt=0, nevents_1l_mu_wgt=0;
 
-  int nevents_ll_nj=0;
-  double nevents_ll_nj_wgt=0;
-  int nevents_ll_nj_ele=0;
-  double nevents_ll_nj_ele_wgt=0;
-  int nevents_ll_nj_mu=0;
-  double nevents_ll_nj_mu_wgt=0;
+  int nevents_1l_4j=0, nevents_1l_4j_ele=0, nevents_1l_4j_mu=0;
+  double nevents_1l_4j_wgt=0, nevents_1l_4j_ele_wgt=0, nevents_1l_4j_mu_wgt=0;
 
-  int nevents_ll_nj_nt=0;
-  double nevents_ll_nj_nt_wgt=0;
-  int nevents_ll_nj_nt_ele=0;
-  double nevents_ll_nj_nt_ele_wgt=0;
-  int nevents_ll_nj_nt_mu=0;
-  double nevents_ll_nj_nt_mu_wgt=0;
+  int nevents_1l_4j_2t=0, nevents_1l_4j_2t_ele=0, nevents_1l_4j_2t_mu=0;
+  double nevents_1l_4j_2t_wgt=0, nevents_1l_4j_2t_ele_wgt=0, nevents_1l_4j_2t_mu_wgt=0;
+
+  int nevents_2l=0, nevents_2l_2e=0, nevents_2l_2m=0, nevents_2l_em=0;
+  double nevents_2l_wgt=0, nevents_2l_2e_wgt=0, nevents_2l_2m_wgt=0, nevents_2l_em_wgt=0;
+
+  int nevents_2l_2j=0, nevents_2l_2j_2e=0, nevents_2l_2j_2m=0, nevents_2l_2j_em=0;
+  double nevents_2l_2j_wgt=0, nevents_2l_2j_2e_wgt=0, nevents_2l_2j_2m_wgt=0, nevents_2l_2j_em_wgt=0;
+
+  int nevents_2l_2j_2t=0, nevents_2l_2j_2t_2e=0, nevents_2l_2j_2t_2m=0, nevents_2l_2j_2t_em=0;
+  double nevents_2l_2j_2t_wgt=0, nevents_2l_2j_2t_2e_wgt=0, nevents_2l_2j_2t_2m_wgt=0, nevents_2l_2j_2t_em_wgt=0;
+
+
 
 
   // Get number of entries in event chain
@@ -194,16 +224,15 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
   MiniAODHelper miniAODhelper;
 
   std::string era = "2012_53x";
-  insample = 9125;
   analysisType::analysisType iAnalysisType = analysisType::LJ;
-  bool isData = true;
+  bool isData = ( insample<0 );
 
   miniAODhelper.SetUp(era, insample, iAnalysisType, isData);
 
 
 
   std::cout << "FOR BEAN::SetUp " << std::endl;  
-  //cout << "  sample name = " << mySample.sampleName << std::endl;
+  std::cout << "  sample name = " << mySample_sampleName_ << std::endl;
   std::cout << "  era         = " << era << std::endl;
   std::cout << "  insample    = " << insample << std::endl;
   std::cout << "  analysisType= " << iAnalysisType << std::endl;
@@ -338,7 +367,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
       
 
       double wgt_lumi = 1.;
-      // if( insample>=0 ) wgt_lumi = mySample.xSec * intLumi *1./ mySample.nGen;
+      if( insample>=0 ) wgt_lumi = mySample_xSec_ * intLumi_ *1./ mySample_nGen_;
 
       int run  = 1;//event->run;
       int lumi = 1;//event->lumi;
@@ -347,37 +376,8 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
       
 
 
-
-      //bool electron_triggerFound = !false;
-      bool electron_triggerPass  = !false;
-      //bool muon_triggerFound = !false;
-      bool muon_triggerPass  = !false;
-      // for( TrigIter hltbit = hlt.begin(); hltbit != hlt.end(); ++hltbit ){
-      // 	std::string hlt_name = hltbit->name;
-      // 	if( (hlt_name.find(electron_hlt_trigger_name)!=std::string::npos) ){
-      // 	  if( hltbit->prescale!=1 ) continue;
-      // 	  electron_triggerFound = true;
-      // 	  electron_triggerPass = ( hltbit->pass==1 );
-      // 	}
-
-      // 	if( (hlt_name.find(muon_hlt_trigger_name)!=std::string::npos) ){
-      // 	  if( hltbit->prescale!=1 ) continue;
-      // 	  muon_triggerFound = true;
-      // 	  muon_triggerPass = ( hltbit->pass==1 );
-      // 	}
-
-      // 	if( electron_triggerPass && muon_triggerPass ) break;
-      // }
-
-      // // make sure trigger used to tag exists in the event
-      // if( (!electron_triggerFound || !muon_triggerFound) && false ){
-      // 	std::cout << "  error ===> Trigger not found!!!  Here are the available triggers: " << std::endl;
-      // 	for( TrigIter hltbit = hlt.begin(); hltbit != hlt.end(); ++hltbit ){
-      // 	  std::string hlt_name = hltbit->name;
-      // 	  std::cout << "\t\t " << hlt_name << "\t\t prescale = " << hltbit->prescale << "\t\t pass = " << hltbit->pass << std::endl;
-      // 	}
-      // 	break;
-      // }
+      bool electron_triggerPass  = true;
+      bool muon_triggerPass  = true;
 
 
       // Increment event counter
@@ -413,14 +413,6 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
       nevents_clean++;
       nevents_clean_wgt+=wgt_lumi;
 
-      if( electron_triggerPass ){
-	nevents_clean_ele++;
-	nevents_clean_ele_wgt+=wgt_lumi;
-      }
-      if( muon_triggerPass ){
-	nevents_clean_mu++;
-	nevents_clean_mu_wgt+=wgt_lumi;
-      }
 
 
       /////////
@@ -432,7 +424,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
       std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( *electrons, 10., electronID::electronLoose );
 
       int numTightElectrons = int(selectedElectrons_tight.size());
-      int numLooseElectrons = int(selectedElectrons_loose.size()) - numTightElectrons;
+      int numLooseElectrons = int(selectedElectrons_loose.size());// - numTightElectrons;
 
 
       /////////
@@ -444,54 +436,99 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
       std::vector<pat::Muon> selectedMuons_loose = miniAODhelper.GetSelectedMuons( *muons, 10., muonID::muonLoose );
 
       int numTightMuons = int(selectedMuons_tight.size());
-      int numLooseMuons = int(selectedMuons_loose.size()) - numTightMuons;
+      int numLooseMuons = int(selectedMuons_loose.size());// - numTightMuons;
 
 
       // Pass one tight lepton, zero loose lepton cuts
       bool passLJ = ( (numTightMuons+numTightElectrons)==1 &&
-      		      numLooseMuons==0 && numLooseElectrons==0 );
+      		      (numLooseMuons+numLooseElectrons)==1 );
 
-      if( !passLJ ) continue;
+      // Pass one tight lepton, exactly two leptons cuts
+      bool passDIL = ( (numTightMuons+numTightElectrons)>=1 &&
+		       (numLooseMuons+numLooseElectrons)==2 );
+
+
+      // Event must either be LJ or DIL, as requested
+      if( !((isLJ && passLJ) || (!isLJ && passDIL)) ) continue;
+
+      eve->PassLJ_ = ( passLJ ) ? 1 : 0;
+      eve->PassDIL_ = ( passDIL ) ? 1 : 0;
+
+      //// LJ subcategories
+      int OneMuon = 0, OneElectron = 0;
+      if( numTightMuons==1 && numLooseMuons==1 && numLooseElectrons == 0 )     OneMuon = 1;
+      if( numTightElectrons==1 && numLooseElectrons==1 && numLooseMuons == 0 ) OneElectron = 1;
+
+      eve->OneMuon_ = OneMuon;
+      eve->OneElectron_ = OneElectron;
+
+      //// DIL subcategories
+      int TwoMuon = 0, TwoElectron = 0, MuonElectron = 0; 
+      if ( numTightMuons>=1 && numLooseMuons==2 && numLooseElectrons==0 ) TwoMuon = 1;
+      if ( numTightElectrons>=1 && numLooseElectrons==2 && numLooseMuons==0 ) TwoElectron = 1;
+      if ( (numTightMuons + numTightElectrons)>=1 && numLooseMuons==1 && numLooseElectrons==1 ) MuonElectron = 1;
+
+      eve->TwoMuon_ = TwoMuon;
+      eve->TwoElectron_ = TwoElectron;
+      eve->MuonElectron_ = MuonElectron;
 
    
-      // Make sure tight lepton matches selection type
-      if( !( numTightMuons==1 || numTightElectrons==1) ) continue;
-      bool isMuon = ( numTightMuons==1 );
 
-
+      // Do jets stuff
       std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets(*pfjets);
       std::vector<pat::Jet> jetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons_loose, rawJets);
-      std::vector<pat::Jet> jetsNoEle = miniAODhelper.RemoveOverlaps(selectedMuons_loose, jetsNoMu);
+      std::vector<pat::Jet> jetsNoEle = miniAODhelper.RemoveOverlaps(selectedElectrons_loose, jetsNoMu);
       std::vector<pat::Jet> correctedJets_noSys = miniAODhelper.GetCorrectedJets(jetsNoEle);
       std::vector<pat::Jet> selectedJets_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 30., 2.4, jetID::jetLoose, '-' );
       std::vector<pat::Jet> selectedJets_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 30., 2.4, jetID::jetLoose, 'M' );
-      std::vector<pat::Jet> selectedJets_noSys_unsorted_loose = miniAODhelper.GetSelectedJets( correctedJets_noSys, 20., 2.4, jetID::jetLoose, '-' );
 
-      //
-      //double wgt_lumi = 1.;
-      double intLumi = 4970.;
-      if( era=="2012_53x" ){
-	intLumi = 19456;
-	if( !isMuon ) intLumi = 19444;
-      }
-      //if( insample>=0 ) wgt_lumi = mySample.xSec * intLumi *1./ mySample.nGen;
+      std::vector<pat::Jet> selectedJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 20., 2.4, jetID::jetLoose, '-' );
+      std::vector<pat::Jet> selectedJets_loose_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 20., 2.4, jetID::jetLoose, 'M' );
 
 
-      // Increment counter for passing lepton cuts
-      nevents_ll++;
-      nevents_ll_wgt += wgt_lumi;
-      if( isMuon ){
-	nevents_ll_mu++;
-	nevents_ll_mu_wgt += wgt_lumi;
+
+      // Increment counter for passing cuts
+      if( passLJ ){
+	nevents_1l++; nevents_1l_wgt += wgt_lumi;
+	if( OneMuon ){ nevents_1l_mu++; nevents_1l_mu_wgt += wgt_lumi; }
+	else if( OneElectron ){ nevents_1l_ele++; nevents_1l_ele_wgt += wgt_lumi; }
+
+	if( selectedJets_noSys_unsorted.size()>=4 ){
+	  nevents_1l_4j++; nevents_1l_4j_wgt += wgt_lumi;
+	  if( OneMuon ){ nevents_1l_4j_mu++; nevents_1l_4j_mu_wgt += wgt_lumi; }
+	  else if( OneElectron ){ nevents_1l_4j_ele++; nevents_1l_4j_ele_wgt += wgt_lumi; }
+
+	  if( selectedJets_tag_noSys_unsorted.size()>=2 ){
+	    nevents_1l_4j_2t++; nevents_1l_4j_2t_wgt += wgt_lumi;
+	    if( OneMuon ){ nevents_1l_4j_2t_mu++; nevents_1l_4j_2t_mu_wgt += wgt_lumi; }
+	    else if( OneElectron ){ nevents_1l_4j_2t_ele++; nevents_1l_4j_2t_ele_wgt += wgt_lumi; }
+	  }
+	}
       }
-      else{
-	nevents_ll_ele++;
-	nevents_ll_ele_wgt += wgt_lumi;
+      else if( passDIL ){
+	nevents_2l++; nevents_2l_wgt += wgt_lumi;
+	if( TwoMuon ){ nevents_2l_2m++; nevents_2l_2m_wgt += wgt_lumi; }
+	else if( TwoElectron ){ nevents_2l_2e++; nevents_2l_2e_wgt += wgt_lumi; }
+	else if( MuonElectron ){ nevents_2l_em++; nevents_2l_em_wgt += wgt_lumi; }
+
+	if( selectedJets_noSys_unsorted.size()>=2 ){
+	  nevents_2l_2j++; nevents_2l_2j_wgt += wgt_lumi;
+	  if( TwoMuon ){ nevents_2l_2j_2m++; nevents_2l_2j_2m_wgt += wgt_lumi; }
+	  else if( TwoElectron ){ nevents_2l_2j_2e++; nevents_2l_2j_2e_wgt += wgt_lumi; }
+	  else if( MuonElectron ){ nevents_2l_2j_em++; nevents_2l_2j_em_wgt += wgt_lumi; }
+
+	  if( selectedJets_tag_noSys_unsorted.size()>=2 ){
+	    nevents_2l_2j_2t++; nevents_2l_2j_2t_wgt += wgt_lumi;
+	    if( TwoMuon ){ nevents_2l_2j_2t_2m++; nevents_2l_2j_2t_2m_wgt += wgt_lumi; }
+	    else if( TwoElectron ){ nevents_2l_2j_2t_2e++; nevents_2l_2j_2t_2e_wgt += wgt_lumi; }
+	    else if( MuonElectron ){ nevents_2l_2j_2t_em++; nevents_2l_2j_2t_em_wgt += wgt_lumi; }
+	  }
+	}
       }
+
 
       eve->passElectronTrigger_ = ( electron_triggerPass ) ? 1 : 0;
       eve->passMuonTrigger_     = ( muon_triggerPass     ) ? 1 : 0;
-      eve->leptonType_  = ( isMuon ) ? 1 : 0;
 
       bool matchSingleMuTrigger = false;
       bool matchSingleElectronTrigger = false;
@@ -523,15 +560,20 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 
 
 
-      int lepton_genId=-99;
-      int lepton_genParentId=-99;
-      int lepton_genGrandParentId=-99;
+      int lep_genId=-99;
+      int lep_genParentId=-99;
+      int lep_genGrandParentId=-99;
 
       TLorentzVector leptonV;
+      double eps = 0.0001;
+      leptonV.SetPxPyPzE(eps, eps, eps, eps);
+
       vdouble vlepton;
       
       double lepton_relIso = -99;
-      if( isMuon ) {
+
+      vvdouble vvleptons;
+      if( OneMuon ) {
         leptonV.SetPxPyPzE( selectedMuons_tight.at(0).px(), selectedMuons_tight.at(0).py(), selectedMuons_tight.at(0).pz(), selectedMuons_tight.at(0).energy());
         vlepton.push_back(selectedMuons_tight.at(0).px());
         vlepton.push_back(selectedMuons_tight.at(0).py());
@@ -539,18 +581,18 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
         vlepton.push_back(selectedMuons_tight.at(0).energy());
 
 	if( (selectedMuons_tight.at(0).genLepton()) ){
-	  lepton_genId = selectedMuons_tight.at(0).genLepton()->pdgId();
+	  lep_genId = selectedMuons_tight.at(0).genLepton()->pdgId();
 
 	  if( selectedMuons_tight.at(0).genLepton()->numberOfMothers()>=1 ){
-	    lepton_genParentId = selectedMuons_tight.at(0).genLepton()->mother(0)->pdgId();
+	    lep_genParentId = selectedMuons_tight.at(0).genLepton()->mother(0)->pdgId();
 	    if( selectedMuons_tight.at(0).genLepton()->mother(0)->numberOfMothers()>=1 ) 
-	      lepton_genGrandParentId = selectedMuons_tight.at(0).genLepton()->mother(0)->mother(0)->pdgId();
+	      lep_genGrandParentId = selectedMuons_tight.at(0).genLepton()->mother(0)->mother(0)->pdgId();
 	  }
 	}
 
 	lepton_relIso = miniAODhelper.GetMuonRelIso(selectedMuons_tight.at(0));
       }
-      else {
+      else if( OneElectron ){
         leptonV.SetPxPyPzE( selectedElectrons_tight.at(0).px(), selectedElectrons_tight.at(0).py(), selectedElectrons_tight.at(0).pz(), selectedElectrons_tight.at(0).energy());
         vlepton.push_back(selectedElectrons_tight.at(0).px());
         vlepton.push_back(selectedElectrons_tight.at(0).py());
@@ -558,23 +600,146 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
         vlepton.push_back(selectedElectrons_tight.at(0).energy());
 
 	if( (selectedElectrons_tight.at(0).genLepton()) ){
-	  lepton_genId = selectedElectrons_tight.at(0).genLepton()->pdgId();
+	  lep_genId = selectedElectrons_tight.at(0).genLepton()->pdgId();
 
 	  if( selectedElectrons_tight.at(0).genLepton()->numberOfMothers()>=1 ){
-	    lepton_genParentId = selectedElectrons_tight.at(0).genLepton()->mother(0)->pdgId();
+	    lep_genParentId = selectedElectrons_tight.at(0).genLepton()->mother(0)->pdgId();
 	    if( selectedElectrons_tight.at(0).genLepton()->mother(0)->numberOfMothers()>=1 ) 
-	      lepton_genGrandParentId = selectedElectrons_tight.at(0).genLepton()->mother(0)->mother(0)->pdgId();
+	      lep_genGrandParentId = selectedElectrons_tight.at(0).genLepton()->mother(0)->mother(0)->pdgId();
 	  }
 	}
 
 	lepton_relIso = miniAODhelper.GetElectronRelIso(selectedElectrons_tight.at(0));
       }
 
-      eve->tight_lepton_pt_  = leptonV.Pt();
-      eve->tight_lepton_eta_ = leptonV.Eta();
-      eve->tight_lepton_phi_ = leptonV.Phi();
-      eve->tight_lepton_relIso_ = lepton_relIso;
+      if( OneMuon || OneElectron ){
+	eve->tight_lepton_pt_  = leptonV.Pt();
+	eve->tight_lepton_eta_ = leptonV.Eta();
+	eve->tight_lepton_phi_ = leptonV.Phi();
+	eve->tight_lepton_relIso_ = lepton_relIso;
+	eve->tight_lepton_isMuon_ = ( OneMuon ) ? 1 : 0;
 
+	eve->tight_lepton_genId_ = lep_genId;
+	eve->tight_lepton_genParentId_ = lep_genParentId;
+	eve->tight_lepton_genGrandParentId_ = lep_genGrandParentId;
+      }
+
+
+      vint lepton_genId, lepton_genParentId, lepton_genGrandParentId, lepton_trkCharge, lepton_isMuon, lepton_isTight;
+      std::vector<TLorentzVector> vec_TLV_lep;
+      TLorentzVector sum_lepton_vect;
+      sum_lepton_vect.SetPxPyPzE(0., 0., 0., 0.);
+
+      // Loop over loose muons
+      for( std::vector<pat::Muon>::const_iterator iMu = selectedMuons_loose.begin(); iMu != selectedMuons_loose.end(); iMu++ ){ 
+ 
+	int genId=-99, genParentId=-99, genGrandParentId=-99;
+	if( (iMu->genLepton()) ){
+	  genId = iMu->genLepton()->pdgId();
+	  if( iMu->genLepton()->numberOfMothers()>=1 ){
+	    genParentId = iMu->genLepton()->mother(0)->pdgId();
+	    if( iMu->genLepton()->mother(0)->numberOfMothers()>=1 ) genGrandParentId = iMu->genLepton()->mother(0)->mother(0)->pdgId();
+	  }
+	}
+
+	int trkCharge = -99;
+	if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
+
+	int isTight = ( miniAODhelper.isGoodMuon(*iMu, 30., muonID::muonTight) ) ? 1 : 0;
+
+	lepton_trkCharge.push_back(trkCharge);
+	lepton_isMuon.push_back(1);
+	lepton_isTight.push_back(isTight);
+	lepton_genId.push_back(genId);
+	lepton_genParentId.push_back(genParentId);
+	lepton_genGrandParentId.push_back(genGrandParentId);
+
+	// Get muon 4Vector and add to vecTLorentzVector for muons
+	TLorentzVector leptonP4;	  
+	leptonP4.SetPxPyPzE(iMu->px(),iMu->py(),iMu->pz(),iMu->energy());
+	vec_TLV_lep.push_back(leptonP4);
+
+	sum_lepton_vect += leptonP4;
+
+	// make vvdouble version of vecTLorentzVector
+	vdouble vleptons;
+	vleptons.push_back(iMu->px());
+	vleptons.push_back(iMu->py());
+	vleptons.push_back(iMu->pz());
+	vleptons.push_back(iMu->energy());
+	vvleptons.push_back(vleptons);
+      }
+
+      // Loop over loose muons
+      for( std::vector<pat::Electron>::const_iterator iEle = selectedElectrons_loose.begin(); iEle != selectedElectrons_loose.end(); iEle++ ){ 
+ 
+	int genId=-99, genParentId=-99, genGrandParentId=-99;
+	if( (iEle->genLepton()) ){
+	  genId = iEle->genLepton()->pdgId();
+	  if( iEle->genLepton()->numberOfMothers()>=1 ){
+	    genParentId = iEle->genLepton()->mother(0)->pdgId();
+	    if( iEle->genLepton()->mother(0)->numberOfMothers()>=1 ) genGrandParentId = iEle->genLepton()->mother(0)->mother(0)->pdgId();
+	  }
+	}
+
+	int trkCharge = -99;
+	if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
+
+	int isTight = ( miniAODhelper.isGoodElectron(*iEle, 30., electronID::electronTight) ) ? 1 : 0;
+
+	lepton_trkCharge.push_back(trkCharge);
+	lepton_isMuon.push_back(0);
+	lepton_isTight.push_back(isTight);
+	lepton_genId.push_back(genId);
+	lepton_genParentId.push_back(genParentId);
+	lepton_genGrandParentId.push_back(genGrandParentId);
+
+	// Get electron 4Vector and add to vecTLorentzVector for electrons
+	TLorentzVector leptonP4;	  
+	leptonP4.SetPxPyPzE(iEle->px(),iEle->py(),iEle->pz(),iEle->energy());
+	vec_TLV_lep.push_back(leptonP4);
+
+	sum_lepton_vect += leptonP4;
+
+	// make vvdouble version of vecTLorentzVector
+	vdouble vleptons;
+	vleptons.push_back(iEle->px());
+	vleptons.push_back(iEle->py());
+	vleptons.push_back(iEle->pz());
+	vleptons.push_back(iEle->energy());
+	vvleptons.push_back(vleptons);
+      }
+
+      eve->lepton_vect_TLV_         = vvleptons;
+      eve->lepton_trkCharge_        = lepton_trkCharge;
+      eve->lepton_isMuon_           = lepton_isMuon;
+      eve->lepton_isTight_          = lepton_isTight;
+      eve->lepton_genId_            = lepton_genId;
+      eve->lepton_genParentId_      = lepton_genParentId;
+      eve->lepton_genGrandParentId_ = lepton_genGrandParentId;
+
+
+      int oppositeLepCharge = -9;
+      if( lepton_trkCharge.size()==2 ){
+	int chg0 = lepton_trkCharge[0];
+	int chg1 = lepton_trkCharge[1];
+
+	if( (chg0 * chg1)==-1 )     oppositeLepCharge = 1;
+	else if( (chg0 * chg1)==1 ) oppositeLepCharge = 0;
+	else if( chg0==-99 )        oppositeLepCharge = -1;
+	else if( chg1==-99 )        oppositeLepCharge = -2;
+	else                        oppositeLepCharge = -3;
+      }
+      eve->oppositeLepCharge_ = oppositeLepCharge;
+
+
+
+      double mass_leplep = -99;
+      if( vec_TLV_lep.size()==2 ){
+	mass_leplep = sum_lepton_vect.M();
+	eve->mass_leplep_ = mass_leplep;
+	eve->dR_leplep_ = vec_TLV_lep[0].DeltaR(vec_TLV_lep[1]);
+      }
 
       // PU scale factor
       double wgtPU = 1, wgtPUup = 1, wgtPUdown = 1;
@@ -597,9 +762,9 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 
       eve->wgt_lepSF_  = leptonSF;
 
-      eve->wgt_lumi_  = intLumi;
-      eve->wgt_xs_    = 1;//mySample.xSec;
-      eve->wgt_nGen_  = 1;//mySample.nGen;
+      eve->wgt_lumi_  = intLumi_;
+      eve->wgt_xs_    = mySample_xSec_;//mySample.xSec;
+      eve->wgt_nGen_  = mySample_nGen_;//mySample.nGen;
 
 
       eve->wgt_topPt_ = wgt_topPtSF;
@@ -628,7 +793,6 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 
       // bool for passing jet/tag cuts, first is for tree filling, second is for event counting
       bool hasNumJetNumTag = false;
-      bool hasNumJetNumTag_noSys = false;
 
 
       double totalWgt = wgt_lumi;
@@ -701,32 +865,11 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 	///
 	////////
 
-	//std::vector<pat::Jet> correctedJets = miniAODhelper.GetCorrectedJets(jetsNoEle, iSysType);
-	// std::vector<pat::Jet> correctedJets = miniAODhelper.GetCorrectedJets(jetsNoEle);
-	// std::vector<pat::Jet> selectedJets_unsorted = miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::jetLoose, '-' );
-
 	std::vector<pat::Jet> correctedJets = ( !(iSys>=5 && iSys<=8) ) ? correctedJets_noSys : miniAODhelper.GetCorrectedJets(jetsNoEle);
 	std::vector<pat::Jet> selectedJets_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_noSys_unsorted : miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::jetLoose, '-' );
-	//blahd
 
-	//// Require at least 4 jets
-	//if( !(selectedJets_unsorted.size()>=4) ) continue;
-
-        if(iSys==0 && selectedJets_unsorted.size()>=4){
-          nevents_ll_nj++;
-          nevents_ll_nj_wgt += wgt_lumi;
-	  if( isMuon ){
-	    nevents_ll_nj_mu++;
-	    nevents_ll_nj_mu_wgt += wgt_lumi;
-	  }
-	  else{
-	    nevents_ll_nj_ele++;
-	    nevents_ll_nj_ele_wgt += wgt_lumi;
-	  }
-	}
 
         // Get CSVM tagged jet collection
-	//std::vector<pat::Jet> selectedJets_tag_unsorted   = miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, 'M' ); 
 	std::vector<pat::Jet> selectedJets_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, 'M' );
 
         // Get nontagged jet collection
@@ -738,10 +881,6 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 	// // Require at least 2 tags
 	// if( !(selectedJets_tag_unsorted.size()>=2) ) continue;
 
-	if( selectedJets_unsorted.size()>=4 && selectedJets_tag_unsorted.size()>=2 ){
-	  if(iSys==0) hasNumJetNumTag_noSys = true;
-	}
-	hasNumJetNumTag = true;
   
         // Sort jet collections by pT
 	std::vector<pat::Jet> selectedJets       = selectedJets_unsorted;//miniAODhelper.GetSortedByPt( selectedJets_unsorted );
@@ -755,14 +894,6 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 	//   eve->ttbb_algo_result_[iSys] = miniAODhelper.ttPlusBBClassifyEvent( mcparticles, selectedJets );
 	//   eve->ttcc_algo_result_[iSys] = miniAODhelper.ttPlusCCClassifyEvent( mcparticles, selectedJets );
 	// }
-
-	double csvWgt = 1;//miniAODhelper.GetCSVweight( selectedJets, iSysType );
-	//std::cout << "\t CSV weight = " << csvWgt << std::endl;
-
-	eve->wgt_csvSF_[iSys] = ( !isData ) ? csvWgt : 1.0;
-	eve->wgt_[iSys] *= csvWgt;
-
-	if( iSys==0 ) totalWgt *= csvWgt;
 
 
 	// Get numJets, numTags
@@ -838,8 +969,8 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 	  jet_genParentId_vect.push_back(genPartonMotherId);
 	  jet_genGrandParentId_vect.push_back(genPartonGrandMotherId);
 
-	  // DR(lepton, jet)
-	  double dR_lep_jet = reco::deltaR(leptonV.Eta(),leptonV.Phi(),iJet->eta(),iJet->phi());
+	  // DR(lepton system, jet)
+	  double dR_lep_jet = reco::deltaR(sum_lepton_vect.Eta(),sum_lepton_vect.Phi(),iJet->eta(),iJet->phi());
 	  if( dR_lep_jet<min_dR_lep_jet ) min_dR_lep_jet = dR_lep_jet;
 
 	  // Get jet 4Vector and add to vecTLorentzVector for jets
@@ -854,7 +985,6 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 	  vjets.push_back(iJet->pz());
 	  vjets.push_back(iJet->energy());
 	  vvjets.push_back(vjets);
-	  
 
           // Get CSV discriminant, check if passes Med WP 
 	  double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
@@ -920,9 +1050,11 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 
 
 	// Add loose jet container
-	//std::vector<pat::Jet> selectedJets_unsorted_loose  = miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::jetLoose, '-' ); 
-	std::vector<pat::Jet> selectedJets_unsorted_loose = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_noSys_unsorted_loose : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::jetLoose, '-' );
-	std::vector<pat::Jet> selectedJets_loose = selectedJets_unsorted_loose;//miniAODhelper.GetSortedByPt( selectedJets_unsorted_loose );
+	std::vector<pat::Jet> selectedJets_loose_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::jetLoose, '-' );
+	std::vector<pat::Jet> selectedJets_loose = selectedJets_loose_unsorted;//miniAODhelper.GetSortedByPt( selectedJets_unsorted_loose );
+
+	std::vector<pat::Jet> selectedJets_loose_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::jetLoose, 'M' );
+
 
 	vvdouble vvjets_loose;
 	std::vector<double> csvV_loose;
@@ -932,8 +1064,26 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 	int numJet_loose = 0;
 	int numTag_loose = 0;
 
+	vvdouble jet_all_vect_TLV;
+	vdouble  jet_all_CSV;
+	vint     jet_all_flavour;
+
         // Loop over selected jets
 	for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_loose.begin(); iJet != selectedJets_loose.end(); iJet++ ){ 
+
+	  vdouble vjets_loose;
+	  vjets_loose.push_back(iJet->px());
+	  vjets_loose.push_back(iJet->py());
+	  vjets_loose.push_back(iJet->pz());
+	  vjets_loose.push_back(iJet->energy());
+	  jet_all_vect_TLV.push_back(vjets_loose);
+
+	  double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
+	  jet_all_CSV.push_back(myCSV);
+
+	  jet_all_flavour.push_back(iJet->partonFlavour());
+
+
 	  if( iJet->pt()>=30. ) continue;
 
 	  numJet_loose++;
@@ -944,15 +1094,9 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 	  jetV_loose.push_back(jet0p4);
 
 	  // make vvdouble version of vecTLorentzVector
-	  vdouble vjets_loose;
-	  vjets_loose.push_back(iJet->px());
-	  vjets_loose.push_back(iJet->py());
-	  vjets_loose.push_back(iJet->pz());
-	  vjets_loose.push_back(iJet->energy());
 	  vvjets_loose.push_back(vjets_loose);
 
           // Get CSV discriminant, check if passes Med WP 
-	  double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
 	  csvV_loose.push_back(myCSV);
 	  if( myCSV>0.679 ) numTag_loose++;
 	}
@@ -960,8 +1104,17 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 
   
 	// Add lepton 4Vector quantities to MHT
-	mht_px += - leptonV.Px();
-	mht_py += - leptonV.Py();
+	mht_px += - sum_lepton_vect.Px();
+	mht_py += - sum_lepton_vect.Py();
+	double MHT = sqrt( mht_px*mht_px + mht_py*mht_py );
+
+	bool PassBigDiamondZmask = ( MuonElectron || 
+				     (mass_leplep < (65.5 + 3*MHT/8)) || 
+				     (mass_leplep > (108 - MHT/4)) || 
+				     (mass_leplep < (79 - 3*MHT/4)) || 
+				     (mass_leplep > (99 + MHT/2)) 
+				     );
+	eve->PassZmask_ = ( PassBigDiamondZmask ) ? 1 : 0;
 
 
         // Get sorted vector of bTags
@@ -1005,10 +1158,10 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 	  jet0p4.SetPxPyPzE(iJet->px(),iJet->py(),iJet->pz(),iJet->energy());
 
           // Min dR(lep, tag), M(lep, tag)
-	  double dR_lep_tag = jet0p4.DeltaR(leptonV);
+	  double dR_lep_tag = jet0p4.DeltaR(sum_lepton_vect);
 	  if( dR_lep_tag<min_dR_tag_lep ){
 	    min_dR_tag_lep = dR_lep_tag;
-	    TLorentzVector sum_lep_b = leptonV + jet0p4;
+	    TLorentzVector sum_lep_b = sum_lepton_vect + jet0p4;//leptonV + jet0p4;
 	    mlb_temp = sum_lep_b.M();
 	  }
 
@@ -1113,7 +1266,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 
    
         // Sum 4Vectors of all objects in event
-	TLorentzVector all_objects = leptonV + metV;
+	TLorentzVector all_objects = sum_lepton_vect + metV;//leptonV + metV;
 	
 	for( int j=0; j<int(jetV.size()); j++ ) all_objects += jetV[j];
 	  
@@ -1172,8 +1325,8 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 
 
 	// Multi-object Quantities
-	eve->all_sum_pt_[iSys]                   = eve->HT_[iSys]+leptonV.Pt();
-	eve->all_sum_pt_with_met_[iSys]          = eve->HT_[iSys]+leptonV.Pt()+correctedMET.pt();
+	eve->all_sum_pt_[iSys]                   = eve->HT_[iSys]+sum_lepton_vect.Pt();//leptonV.Pt();
+	eve->all_sum_pt_with_met_[iSys]          = eve->HT_[iSys]+sum_lepton_vect.Pt()+correctedMET.pt();;//leptonV.Pt()+correctedMET.pt();
 	eve->M3_[iSys]                           = max_m3;
 	eve->M3_1tag_[iSys]                      = max_m3_1tag;
 	eve->Mlb_[iSys]     = mlb_temp;
@@ -1214,11 +1367,6 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 	eve->minChi2_bjet2_pz_[iSys] = bjet2_tmp.Pz();
 	eve->minChi2_bjet2_E_[iSys]  = bjet2_tmp.E();
 
-        eve->lepton_TLV_[iSys]   = vlepton;
-        eve->lepton_genId_[iSys]            = lepton_genId;
-        eve->lepton_genParentId_[iSys]      = lepton_genParentId;
-        eve->lepton_genGrandParentId_[iSys] = lepton_genGrandParentId;
-
 	eve->jet_vect_TLV_[iSys] = vvjets;
 	eve->jet_CSV_[iSys]      = csvV;
 	eve->jet_flavour_[iSys]          = jet_flavour_vect;
@@ -1236,6 +1384,32 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
 	eve->jet_loose_CSV_[iSys]      = csvV_loose;
 	eve->jet_loose_flavour_[iSys]  = jet_flavour_vect_loose;
 
+
+
+	double csvWgtHF, csvWgtLF, csvWgtCF;
+	double csvWgt = get_csv_wgt(jet_all_vect_TLV, jet_all_CSV, jet_all_flavour, iSys, csvWgtHF, csvWgtLF, csvWgtCF);
+	if( isData ){
+	  csvWgt = 1.; csvWgtHF = 1.; csvWgtLF = 1.; csvWgtCF = 1.;
+	}
+
+	eve->wgt_csvSF_[iSys]    = csvWgt;
+	eve->wgt_csvSF_HF_[iSys] = csvWgtHF;
+	eve->wgt_csvSF_LF_[iSys] = csvWgtLF;
+	eve->wgt_csvSF_CF_[iSys] = csvWgtCF;
+
+
+	eve->wgt_[iSys] *= csvWgt;
+
+	if( iSys==0 ) totalWgt *= csvWgt;
+
+
+	unsigned int minNumLooseJet = ( isLJ ) ? 4 : 1;
+	unsigned int minNumLooseTag = ( isLJ ) ? 1 : 0;
+
+	if( selectedJets_loose_unsorted.size()>=minNumLooseJet && selectedJets_loose_tag_unsorted.size()>=minNumLooseTag ){
+	  hasNumJetNumTag = true;
+	}
+
       } // end loop over systematics
 
 
@@ -1244,19 +1418,6 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
       //
       if( hasNumJetNumTag ){
 	worldTree->Fill();
-
-	if( hasNumJetNumTag_noSys ){
-	  nevents_ll_nj_nt++;
-	  nevents_ll_nj_nt_wgt += totalWgt;
-	  if( isMuon ){
-	    nevents_ll_nj_nt_mu++;
-	    nevents_ll_nj_nt_mu_wgt += totalWgt;
-	  }
-	  else{
-	    nevents_ll_nj_nt_ele++;
-	    nevents_ll_nj_nt_ele_wgt += totalWgt;
-	  }
-	}
       }
  
     } // end loop over events
@@ -1274,16 +1435,38 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int maxNentries=-1, int Njobs=1,
   // Print Event Report
   //
   std::cout << " *********************************************************** " << std::endl;
+  if( isLJ ) std::cout << " ** Lepton + jets event selection ** " << std::endl;
+  else       std::cout << " ** Opposite sign dilepton event selection ** " << std::endl;
+  std::cout << " " << std::endl;
+  std::cout << "\t Event information: " << std::endl;
+  std::cout << "\t\t Sample = " << mySample_sampleName_ << std::endl;
+  std::cout << "\t\t Integrated lumi (pb^-1) = " << intLumi_ << std::endl;
+  std::cout << "\t\t Cross section (pb)      = " << mySample_xSec_ << std::endl;
+  std::cout << "\t\t Number generated        = " << mySample_nGen_ << std::endl;
+  std::cout << " " << std::endl;
   std::cout << "   Number of Events Processed  = " << nevents << std::endl;
   std::cout << "   Number of Events Processed (wgt) = " << nevents_wgt << std::endl;
-  std::cout << "   Number of Events Pass Trigger  = " << nevents_clean << " (ele = " << nevents_clean_ele << ", mu = " << nevents_clean_mu << ")" << std::endl;
-  std::cout << "   Number of Events Pass Trigger (wgt) = " << nevents_clean_wgt << " (ele = " << nevents_clean_ele_wgt << ", mu = " << nevents_clean_mu_wgt << ")" << std::endl;
-  std::cout << "   Number of Events with single lepton = " << nevents_ll << " (ele = " << nevents_ll_ele << ", mu = " << nevents_ll_mu << ")" << std::endl;
-  std::cout << "   Number of Events with single lepton (wgt) = " << nevents_ll_wgt << " (ele = " << nevents_ll_ele_wgt << ", mu = " << nevents_ll_mu_wgt << ")" << std::endl;
-  std::cout << "   Number of Events with single lepton, >=4 jets = " << nevents_ll_nj << " (ele = " << nevents_ll_nj_ele << ", mu = " << nevents_ll_nj_mu << ")" << std::endl;
-  std::cout << "   Number of Events with single lepton, >=4 jets (wgt) = " << nevents_ll_nj_wgt << " (ele = " << nevents_ll_nj_ele_wgt << ", mu = " << nevents_ll_nj_mu_wgt << ")" << std::endl;
-  std::cout << "   Number of Events with single lepton, >=4 jets, >=2 tags = " << nevents_ll_nj_nt << " (ele = " << nevents_ll_nj_nt_ele << ", mu = " << nevents_ll_nj_nt_mu << ")" << std::endl;
-  std::cout << "   Number of Events with single lepton, >=4 jets, >=2 tags (wgt) = " << nevents_ll_nj_nt_wgt << " (ele = " << nevents_ll_nj_nt_ele_wgt << ", mu = " << nevents_ll_nj_nt_mu_wgt << ")" << std::endl;
+
+  std::cout << "   Number of Events Pass Trigger  = " << nevents_clean << std::endl;
+  std::cout << "   Number of Events Pass Trigger (wgt) = " << nevents_clean_wgt << std::endl;
+
+  if( isLJ ){
+    std::cout << "   Number of Events with single lepton = " << nevents_1l << " (ele = " << nevents_1l_ele << ", mu = " << nevents_1l_mu << ")" << std::endl;
+    std::cout << "   Number of Events with single lepton (wgt) = " << nevents_1l_wgt << " (ele = " << nevents_1l_ele_wgt << ", mu = " << nevents_1l_mu_wgt << ")" << std::endl;
+    std::cout << "   Number of Events with single lepton, >=4 jets = " << nevents_1l_4j << " (ele = " << nevents_1l_4j_ele << ", mu = " << nevents_1l_4j_mu << ")" << std::endl;
+    std::cout << "   Number of Events with single lepton, >=4 jets (wgt) = " << nevents_1l_4j_wgt << " (ele = " << nevents_1l_4j_ele_wgt << ", mu = " << nevents_1l_4j_mu_wgt << ")" << std::endl;
+    std::cout << "   Number of Events with single lepton, >=4 jets, >=2 tags = " << nevents_1l_4j_2t << " (ele = " << nevents_1l_4j_2t_ele << ", mu = " << nevents_1l_4j_2t_mu << ")" << std::endl;
+    std::cout << "   Number of Events with single lepton, >=4 jets, >=2 tags (wgt) = " << nevents_1l_4j_2t_wgt << " (ele = " << nevents_1l_4j_2t_ele_wgt << ", mu = " << nevents_1l_4j_2t_mu_wgt << ")" << std::endl;
+  }
+  else {
+    std::cout << "   Number of Events with two leptons = " << nevents_2l << " (2e = " << nevents_2l_2e << ", 2m = " << nevents_2l_2m << ", em = " << nevents_2l_em << ")" << std::endl;
+    std::cout << "   Number of Events with two leptons (wgt) = " << nevents_2l_wgt << " (2e = " << nevents_2l_2e_wgt << ", 2m = " << nevents_2l_2m_wgt << ", em = " << nevents_2l_em_wgt << ")" << std::endl;
+    std::cout << "   Number of Events with two leptons, >=2 jets = " << nevents_2l_2j << " (2e = " << nevents_2l_2j_2e << ", 2m = " << nevents_2l_2j_2m << ", em = " << nevents_2l_2j_em << ")" << std::endl;
+    std::cout << "   Number of Events with two leptons, >=2 jets (wgt) = " << nevents_2l_2j_wgt << " (2e = " << nevents_2l_2j_2e_wgt << ", 2m = " << nevents_2l_2j_2m_wgt << ", em = " << nevents_2l_2j_em_wgt << ")" << std::endl;
+    std::cout << "   Number of Events with two leptons, >=2 jets, >=2 tags = " << nevents_2l_2j_2t << " (2e = " << nevents_2l_2j_2t_2e << ", 2m = " << nevents_2l_2j_2t_2m << ", em = " << nevents_2l_2j_2t_em << ")" << std::endl;
+    std::cout << "   Number of Events with two leptons, >=2 jets, >=2 tags (wgt) = " << nevents_2l_2j_2t_wgt << " (2e = " << nevents_2l_2j_2t_2e_wgt << ", 2m = " << nevents_2l_2j_2t_2m_wgt << ", em = " << nevents_2l_2j_2t_em_wgt << ")" << std::endl;
+  }
+
   std::cout << " *********************************************************** " << std::endl;
 
 
@@ -1460,3 +1643,177 @@ double getBestHiggsMass(TLorentzVector lepton, TLorentzVector met, vecTLorentzVe
   return higgs_mass_high_energy;
 }
 
+
+void fillCSVhistos(TFile* fileHF, TFile* fileLF){
+
+  for( int iSys=0; iSys<9; iSys++ ){
+    for( int iPt=0; iPt<5; iPt++ ) h_csv_wgt_hf[iSys][iPt] = NULL;
+    for( int iPt=0; iPt<3; iPt++ ){
+      for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = NULL;
+    }
+  }
+  for( int iSys=0; iSys<5; iSys++ ){
+    for( int iPt=0; iPt<5; iPt++ ) c_csv_wgt_hf[iSys][iPt] = NULL;
+  }
+
+  // CSV reweighting
+  for( int iSys=0; iSys<9; iSys++ ){
+    TString syst_csv_suffix_hf = "final";
+    TString syst_csv_suffix_c = "final";
+    TString syst_csv_suffix_lf = "final";
+    
+    switch( iSys ){
+    case 0:
+      // this is the nominal case
+      break;
+    case 1:
+      // JESUp
+      syst_csv_suffix_hf = "final_JESUp"; syst_csv_suffix_lf = "final_JESUp";
+      syst_csv_suffix_c  = "final_cErr1Up";
+      break;
+    case 2:
+      // JESDown
+      syst_csv_suffix_hf = "final_JESDown"; syst_csv_suffix_lf = "final_JESDown";
+      syst_csv_suffix_c  = "final_cErr1Down";
+      break;
+    case 3:
+      // purity up
+      syst_csv_suffix_hf = "final_LFUp"; syst_csv_suffix_lf = "final_HFUp";
+      syst_csv_suffix_c  = "final_cErr2Up";
+      break;
+    case 4:
+      // purity down
+      syst_csv_suffix_hf = "final_LFDown"; syst_csv_suffix_lf = "final_HFDown";
+      syst_csv_suffix_c  = "final_cErr2Down";
+      break;
+    case 5:
+      // stats1 up
+      syst_csv_suffix_hf = "final_Stats1Up"; syst_csv_suffix_lf = "final_Stats1Up";
+      break;
+    case 6:
+      // stats1 down
+      syst_csv_suffix_hf = "final_Stats1Down"; syst_csv_suffix_lf = "final_Stats1Down";
+      break;
+    case 7:
+      // stats2 up
+      syst_csv_suffix_hf = "final_Stats2Up"; syst_csv_suffix_lf = "final_Stats2Up";
+      break;
+    case 8:
+      // stats2 down
+      syst_csv_suffix_hf = "final_Stats2Down"; syst_csv_suffix_lf = "final_Stats2Down";
+      break;
+    }
+
+    for( int iPt=0; iPt<6; iPt++ ) h_csv_wgt_hf[iSys][iPt] = (TH1D*)fileHF->Get( Form("csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_hf.Data()) );
+
+    if( iSys<5 ){
+      for( int iPt=0; iPt<6; iPt++ ) c_csv_wgt_hf[iSys][iPt] = (TH1D*)fileHF->Get( Form("c_csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_c.Data()) );
+    }
+    
+    for( int iPt=0; iPt<4; iPt++ ){
+      for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = (TH1D*)fileLF->Get( Form("csv_ratio_Pt%i_Eta%i_%s",iPt,iEta,syst_csv_suffix_lf.Data()) );
+    }
+  }
+
+  return;
+}
+
+double get_csv_wgt( vvdouble jets, vdouble jetCSV, vint jetFlavor, int iSys, double &csvWgtHF, double &csvWgtLF, double &csvWgtCF ){
+
+  int iSysHF = 0;
+  switch(iSys){
+  case 11: iSysHF=1; break;
+  case 12: iSysHF=2; break;
+  case 17: iSysHF=3; break;
+  case 18: iSysHF=4; break;
+  case 21: iSysHF=5; break;
+  case 22: iSysHF=6; break;
+  case 25: iSysHF=7; break;
+  case 26: iSysHF=8; break;
+  default : iSysHF = 0; break;
+  }
+
+  int iSysC = 0;
+  switch(iSys){
+  case 29: iSysC=1; break;
+  case 30: iSysC=2; break;
+  case 31: iSysC=3; break;
+  case 32: iSysC=4; break;
+  default : iSysC = 0; break;
+  }
+
+  int iSysLF = 0;
+  switch(iSys){
+  case 11: iSysLF=1; break;
+  case 12: iSysLF=2; break;
+  case 19: iSysLF=3; break;
+  case 20: iSysLF=4; break;
+  case 23: iSysLF=5; break;
+  case 24: iSysLF=6; break;
+  case 27: iSysLF=7; break;
+  case 28: iSysLF=8; break;
+  default : iSysLF = 0; break;
+  }
+
+  double csvWgthf = 1.;
+  double csvWgtC  = 1.;
+  double csvWgtlf = 1.;
+
+
+  for( int iJet=0; iJet<int(jets.size()); iJet++ ){
+    TLorentzVector myJet;
+    myJet.SetPxPyPzE( jets[iJet][0], jets[iJet][1], jets[iJet][2], jets[iJet][3] );
+	  
+    double csv = jetCSV[iJet];
+    double jetPt = myJet.Pt();
+    double jetAbsEta = fabs( myJet.Eta() );
+    int flavor = jetFlavor[iJet];
+
+    int iPt = -1; int iEta = -1;
+    if (jetPt >=19.99 && jetPt<30) iPt = 0;
+    else if (jetPt >=30 && jetPt<40) iPt = 1;
+    else if (jetPt >=40 && jetPt<60) iPt = 2;
+    else if (jetPt >=60 && jetPt<100) iPt = 3;
+    else if (jetPt >=100 && jetPt<160) iPt = 4;
+    else if (jetPt >=160 && jetPt<10000) iPt = 5;
+
+    if (jetAbsEta >=0 &&  jetAbsEta<0.8 ) iEta = 0;
+    else if ( jetAbsEta>=0.8 && jetAbsEta<1.6 )  iEta = 1;
+    else if ( jetAbsEta>=1.6 && jetAbsEta<2.41 ) iEta = 2;
+
+    if (iPt < 0 || iEta < 0) std::cout << "Error, couldn't find Pt, Eta bins for this b-flavor jet, jetPt = " << jetPt << ", jetAbsEta = " << jetAbsEta << std::endl;
+
+    if (abs(flavor) == 5 ){
+      int useCSVBin = (csv>=0.) ? h_csv_wgt_hf[iSysHF][iPt]->FindBin(csv) : 1;
+      double iCSVWgtHF = h_csv_wgt_hf[iSysHF][iPt]->GetBinContent(useCSVBin);
+      if( iCSVWgtHF!=0 ) csvWgthf *= iCSVWgtHF;
+
+      // if( iSysHF==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtHF );
+    }
+    else if( abs(flavor) == 4 ){
+      int useCSVBin = (csv>=0.) ? c_csv_wgt_hf[iSysC][iPt]->FindBin(csv) : 1;
+      double iCSVWgtC = c_csv_wgt_hf[iSysC][iPt]->GetBinContent(useCSVBin);
+      if( iCSVWgtC!=0 ) csvWgtC *= iCSVWgtC;
+      // if( iSysC==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      //      flavor, jetPt, iJet->eta, csv, iCSVWgtC );
+    }
+    else {
+      if (iPt >=3) iPt=3;       /// [30-40], [40-60] and [60-10000] only 3 Pt bins for lf
+      int useCSVBin = (csv>=0.) ? h_csv_wgt_lf[iSysLF][iPt][iEta]->FindBin(csv) : 1;
+      double iCSVWgtLF = h_csv_wgt_lf[iSysLF][iPt][iEta]->GetBinContent(useCSVBin);
+      if( iCSVWgtLF!=0 ) csvWgtlf *= iCSVWgtLF;
+
+      // if( iSysLF==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtLF );
+    }
+  }
+
+  double csvWgtTotal = csvWgthf * csvWgtC * csvWgtlf;
+
+  csvWgtHF = csvWgthf;
+  csvWgtLF = csvWgtlf;
+  csvWgtCF = csvWgtC;
+
+  return csvWgtTotal;
+}

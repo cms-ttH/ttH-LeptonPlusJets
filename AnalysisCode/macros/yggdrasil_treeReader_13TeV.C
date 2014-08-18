@@ -52,11 +52,6 @@ typedef std::vector<int>                       vint;
 typedef std::vector<double>                    vdouble;
 typedef std::vector<std::vector<double> >      vvdouble;
 
-// CSV reweighting
-TH1D* h_csv_wgt_hf[9][6];
-TH1D* c_csv_wgt_hf[9][6];
-TH1D* h_csv_wgt_lf[9][4][3];
-
 int getTopSystem(TLorentzVector leptonV, TLorentzVector metV, vecTLorentzVector jetsV, vdouble btagV,
 		 double &minChi, TLorentzVector &hadW, TLorentzVector &lepW, TLorentzVector &hadB, TLorentzVector &lepB, TLorentzVector &hadT, TLorentzVector &lepT);
 
@@ -84,86 +79,26 @@ double get_jet_tag_etamax (vvdouble jets, vdouble jetCSV);
 double get_tag_tag_etamax (vvdouble jets, vdouble jetCSV);
 double get_median_bb_mass (vvdouble jets, vdouble jetCSV);
 
-// double get_csv_wgt(vvdouble jets, vdouble jetCSV, vint jetFlavor, int systematic);
+void fillCSVhistos(TFile *fileHF, TFile *fileLF);
+double get_csv_wgt( vvdouble jets, vdouble jetCSV, vint jetFlavor, int iSys, double &csvWgtHF, double &csvWgtLF, double &csvWgtCF );
+
+// CSV reweighting
+TH1D* h_csv_wgt_hf[9][6];
+TH1D* c_csv_wgt_hf[9][6];
+TH1D* h_csv_wgt_lf[9][4][3];
 
 //*****************************************************************************
 
 void yggdrasil_treeReader_13TeV(  int insample=1, int maxNentries=-1, int Njobs=1, int jobN=1 ) {
 
+  TFile* f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_hf_IT.root").c_str());
+  TFile* f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_lf_IT.root").c_str());
+
+  fillCSVhistos(f_CSVwgt_HF, f_CSVwgt_LF);
+
+
   int lepSel = 2;
   int hdecay = -1;
-  // for( int iSys=0; iSys<9; iSys++ ){
-  //   for( int iPt=0; iPt<5; iPt++ ) h_csv_wgt_hf[iSys][iPt] = NULL;
-  //   for( int iPt=0; iPt<3; iPt++ ){
-  //     for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = NULL;
-  //   }
-  // }
-  // for( int iSys=0; iSys<5; iSys++ ){
-  //   for( int iPt=0; iPt<5; iPt++ ) c_csv_wgt_hf[iSys][iPt] = NULL;
-  // }
-
-  // TFile* f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/csv_rwt_hf_IT_sean_2014_07_27.root").c_str());
-  // TFile* f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/BEAN/BEANmaker/data/csv_rwt_lf_IT_sean_2014_07_27.root").c_str());
-
-
-  // // CSV reweighting
-  // for( int iSys=0; iSys<9; iSys++ ){
-  //   TString syst_csv_suffix_hf = "final";
-  //   TString syst_csv_suffix_c = "final";
-  //   TString syst_csv_suffix_lf = "final";
-    
-  //   switch( iSys ){
-  //   case 0:
-  //     // this is the nominal case
-  //     break;
-  //   case 1:
-  //     // JESUp
-  //     syst_csv_suffix_hf = "final_JESUp"; syst_csv_suffix_lf = "final_JESUp";
-  //     syst_csv_suffix_c  = "final_cErr1Up";
-  //     break;
-  //   case 2:
-  //     // JESDown
-  //     syst_csv_suffix_hf = "final_JESDown"; syst_csv_suffix_lf = "final_JESDown";
-  //     syst_csv_suffix_c  = "final_cErr1Down";
-  //     break;
-  //   case 3:
-  //     // purity up
-  //     syst_csv_suffix_hf = "final_LFUp"; syst_csv_suffix_lf = "final_HFUp";
-  //     syst_csv_suffix_c  = "final_cErr2Up";
-  //     break;
-  //   case 4:
-  //     // purity down
-  //     syst_csv_suffix_hf = "final_LFDown"; syst_csv_suffix_lf = "final_HFDown";
-  //     syst_csv_suffix_c  = "final_cErr2Down";
-  //     break;
-  //   case 5:
-  //     // stats1 up
-  //     syst_csv_suffix_hf = "final_Stats1Up"; syst_csv_suffix_lf = "final_Stats1Up";
-  //     break;
-  //   case 6:
-  //     // stats1 down
-  //     syst_csv_suffix_hf = "final_Stats1Down"; syst_csv_suffix_lf = "final_Stats1Down";
-  //     break;
-  //   case 7:
-  //     // stats2 up
-  //     syst_csv_suffix_hf = "final_Stats2Up"; syst_csv_suffix_lf = "final_Stats2Up";
-  //     break;
-  //   case 8:
-  //     // stats2 down
-  //     syst_csv_suffix_hf = "final_Stats2Down"; syst_csv_suffix_lf = "final_Stats2Down";
-  //     break;
-  //   }
-
-  //   for( int iPt=0; iPt<6; iPt++ ) h_csv_wgt_hf[iSys][iPt] = (TH1D*)f_CSVwgt_HF->Get( Form("csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_hf.Data()) );
-
-  //   if( iSys<5 ){
-  //     for( int iPt=0; iPt<6; iPt++ ) c_csv_wgt_hf[iSys][iPt] = (TH1D*)f_CSVwgt_HF->Get( Form("c_csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_c.Data()) );
-  //   }
-    
-  //   for( int iPt=0; iPt<4; iPt++ ){
-  //     for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = (TH1D*)f_CSVwgt_LF->Get( Form("csv_ratio_Pt%i_Eta%i_%s",iPt,iEta,syst_csv_suffix_lf.Data()) );
-  //   }
-  // }
 
 
   std::cout << "   ===> load the root files! " << std::endl;
@@ -182,7 +117,7 @@ void yggdrasil_treeReader_13TeV(  int insample=1, int maxNentries=-1, int Njobs=
   else if( lepSel==2 ) leptonType = "lep_sel";
 
 
-  std::string treefilename = "/uscms_data/d2/dpuigh/TTH/miniAOD/CMSSW_7_0_7_patch1/src/ttH-LeptonPlusJets/AnalysisCode/yggdrasil_treeMaker_mc_TTJets_MSDecaysCKM_central_Tune4C_13TeV_madgraph_PU20bx25_POSTLS170_V5_v1.root";
+  std::string treefilename = "/uscms_data/d2/dpuigh/TTH/miniAOD/CMSSW_7_0_7_patch1/src/ttH-LeptonPlusJets/AnalysisCode/yggdrasil_treeMaker_LJ_mc_TTJets_MSDecaysCKM_central_Tune4C_13TeV_madgraph_PU20bx25_POSTLS170_V5_v1.root";
 
 
   std::string use_sampleName = sampleName;
@@ -263,7 +198,7 @@ void yggdrasil_treeReader_13TeV(  int insample=1, int maxNentries=-1, int Njobs=
   cat_labels.push_back("4j1t");
   cat_labels.push_back("5j1t");
   cat_labels.push_back("6j1t");
-  cat_labels.push_back("Incl");
+  //cat_labels.push_back("Incl");
 
   int NumCat = int(cat_labels.size());
 
@@ -1992,9 +1927,9 @@ void yggdrasil_treeReader_13TeV(  int insample=1, int maxNentries=-1, int Njobs=
     chain->GetEntry(ievt);
 
     bool passEvent = false;
-    if( lepSel==1 && eve->leptonType_==1 )       passEvent = ( eve->passMuonTrigger_==1 && eve->matchSingleMuTrigger_==1 );
-    else if( lepSel==0 && eve->leptonType_==0 )  passEvent = ( eve->passElectronTrigger_==1 && eve->matchSingleElectronTrigger_==1 );
-    else if( lepSel==2 )                         passEvent = ( ( eve->passMuonTrigger_==1 && eve->matchSingleMuTrigger_==1 ) || ( eve->passElectronTrigger_==1 && eve->matchSingleElectronTrigger_==1 ) );
+    if( lepSel==1 && eve->OneMuon_==1 )           passEvent = ( eve->passMuonTrigger_==1 && eve->matchSingleMuTrigger_==1 );
+    else if( lepSel==0 && eve->OneElectron_==0 )  passEvent = ( eve->passElectronTrigger_==1 && eve->matchSingleElectronTrigger_==1 );
+    else if( lepSel==2 && eve->PassLJ_==1 )       passEvent = ( ( eve->passMuonTrigger_==1 && eve->matchSingleMuTrigger_==1 ) || ( eve->passElectronTrigger_==1 && eve->matchSingleElectronTrigger_==1 ) );
 
 
     //if( !passEvent ) continue;
@@ -2128,7 +2063,7 @@ void yggdrasil_treeReader_13TeV(  int insample=1, int maxNentries=-1, int Njobs=
       if( numJets==4 && numTags==1) this_category=9;
       if( numJets==5 && numTags==1) this_category=10;
       if( numJets>=6 && numTags==1) this_category=11;	
-      if( numJets>=0 && numTags>=0) this_category=12;	
+      //if( numJets>=0 && numTags>=0) this_category=12;	
 
       // int this_BDT_category = this_category;
       // if( this_BDT_category>=9 ) this_BDT_category -= 9;
@@ -2150,8 +2085,10 @@ void yggdrasil_treeReader_13TeV(  int insample=1, int maxNentries=-1, int Njobs=
       double etamax_jt;
       double etamax_tt;		
 
+      vdouble lepton_vect = eve->lepton_vect_TLV_[0];
+
       if( this_category>-1 && this_category<9 ){   
-	bhm_v2 = study_tops_bb_syst(MET, MET_phi, newmet, eve->lepton_TLV_[treeSys], eve->jet_vect_TLV_[treeSys], 
+	bhm_v2 = study_tops_bb_syst(MET, MET_phi, newmet, lepton_vect, eve->jet_vect_TLV_[treeSys], 
 				    eve->jet_CSV_[treeSys], minChi, chi2lepW, chi2leptop, chi2hadW, chi2hadtop, mass_lepW, mass_leptop, mass_hadW, mass_hadtop, 
 				    drbb_dummy, bbleptopeta, bbhadtopeta, dphifn, bbeta, avgetatops, detafn, anglbbtops, b1, b2);		
 
@@ -2194,8 +2131,11 @@ void yggdrasil_treeReader_13TeV(  int insample=1, int maxNentries=-1, int Njobs=
       vdouble  jet_loose_CSV = eve->jet_loose_CSV_[treeSys];
       vint     jet_loose_flavour = eve->jet_loose_flavour_[treeSys];
 
-      double newCSVwgt = 1;//( insample<0 ) ? 1 : get_csv_wgt(jet_vect_TLV,jet_CSV,jet_flavour,treeSys);
-      double newCSVwgt_loose = 1;//( insample<0 ) ? 1 : get_csv_wgt(jet_loose_vect_TLV,jet_loose_CSV,jet_loose_flavour,treeSys);
+      double csvWgtHF, csvWgtLF, csvWgtCF;
+      double csvWgtHF_loose, csvWgtLF_loose, csvWgtCF_loose;
+
+      double newCSVwgt = ( insample<0 ) ? 1 : get_csv_wgt(jet_vect_TLV,jet_CSV,jet_flavour,treeSys, csvWgtHF, csvWgtLF, csvWgtCF);
+      double newCSVwgt_loose = ( insample<0 ) ? 1 : get_csv_wgt(jet_loose_vect_TLV,jet_loose_CSV,jet_loose_flavour,treeSys, csvWgtHF_loose, csvWgtLF_loose, csvWgtCF_loose);
 
       double wgt_newCSV = ( insample<0 ) ? 1 : wgt_noCSV*newCSVwgt;
       double wgt_looseNewCSV = ( insample<0 ) ? 1 : wgt_noCSV*newCSVwgt_loose;
@@ -2559,7 +2499,6 @@ void yggdrasil_treeReader_13TeV(  int insample=1, int maxNentries=-1, int Njobs=
 	TLorentzVector hadT = mydummyguy;
 	double minChi2_getTopSystem = 100000000;
 
-	vdouble lepton_vect = eve->lepton_TLV_[treeSys];
 	TLorentzVector leptonV;
 	leptonV.SetPxPyPzE( lepton_vect[0], lepton_vect[1], lepton_vect[2], lepton_vect[3] );
 
@@ -3692,8 +3631,81 @@ double get_median_bb_mass (vvdouble jets, vdouble jetCSV)
 }
 
 
-/*
-double get_csv_wgt( vvdouble jets, vdouble jetCSV, vint jetFlavor, int iSys ){
+void fillCSVhistos(TFile* fileHF, TFile* fileLF){
+
+  for( int iSys=0; iSys<9; iSys++ ){
+    for( int iPt=0; iPt<5; iPt++ ) h_csv_wgt_hf[iSys][iPt] = NULL;
+    for( int iPt=0; iPt<3; iPt++ ){
+      for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = NULL;
+    }
+  }
+  for( int iSys=0; iSys<5; iSys++ ){
+    for( int iPt=0; iPt<5; iPt++ ) c_csv_wgt_hf[iSys][iPt] = NULL;
+  }
+
+  // CSV reweighting
+  for( int iSys=0; iSys<9; iSys++ ){
+    TString syst_csv_suffix_hf = "final";
+    TString syst_csv_suffix_c = "final";
+    TString syst_csv_suffix_lf = "final";
+    
+    switch( iSys ){
+    case 0:
+      // this is the nominal case
+      break;
+    case 1:
+      // JESUp
+      syst_csv_suffix_hf = "final_JESUp"; syst_csv_suffix_lf = "final_JESUp";
+      syst_csv_suffix_c  = "final_cErr1Up";
+      break;
+    case 2:
+      // JESDown
+      syst_csv_suffix_hf = "final_JESDown"; syst_csv_suffix_lf = "final_JESDown";
+      syst_csv_suffix_c  = "final_cErr1Down";
+      break;
+    case 3:
+      // purity up
+      syst_csv_suffix_hf = "final_LFUp"; syst_csv_suffix_lf = "final_HFUp";
+      syst_csv_suffix_c  = "final_cErr2Up";
+      break;
+    case 4:
+      // purity down
+      syst_csv_suffix_hf = "final_LFDown"; syst_csv_suffix_lf = "final_HFDown";
+      syst_csv_suffix_c  = "final_cErr2Down";
+      break;
+    case 5:
+      // stats1 up
+      syst_csv_suffix_hf = "final_Stats1Up"; syst_csv_suffix_lf = "final_Stats1Up";
+      break;
+    case 6:
+      // stats1 down
+      syst_csv_suffix_hf = "final_Stats1Down"; syst_csv_suffix_lf = "final_Stats1Down";
+      break;
+    case 7:
+      // stats2 up
+      syst_csv_suffix_hf = "final_Stats2Up"; syst_csv_suffix_lf = "final_Stats2Up";
+      break;
+    case 8:
+      // stats2 down
+      syst_csv_suffix_hf = "final_Stats2Down"; syst_csv_suffix_lf = "final_Stats2Down";
+      break;
+    }
+
+    for( int iPt=0; iPt<6; iPt++ ) h_csv_wgt_hf[iSys][iPt] = (TH1D*)fileHF->Get( Form("csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_hf.Data()) );
+
+    if( iSys<5 ){
+      for( int iPt=0; iPt<6; iPt++ ) c_csv_wgt_hf[iSys][iPt] = (TH1D*)fileHF->Get( Form("c_csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_c.Data()) );
+    }
+    
+    for( int iPt=0; iPt<4; iPt++ ){
+      for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = (TH1D*)fileLF->Get( Form("csv_ratio_Pt%i_Eta%i_%s",iPt,iEta,syst_csv_suffix_lf.Data()) );
+    }
+  }
+
+  return;
+}
+
+double get_csv_wgt( vvdouble jets, vdouble jetCSV, vint jetFlavor, int iSys, double &csvWgtHF, double &csvWgtLF, double &csvWgtCF ){
 
   int iSysHF = 0;
   switch(iSys){
@@ -3786,6 +3798,9 @@ double get_csv_wgt( vvdouble jets, vdouble jetCSV, vint jetFlavor, int iSys ){
 
   double csvWgtTotal = csvWgthf * csvWgtC * csvWgtlf;
 
+  csvWgtHF = csvWgthf;
+  csvWgtLF = csvWgtlf;
+  csvWgtCF = csvWgtC;
+
   return csvWgtTotal;
 }
-*/

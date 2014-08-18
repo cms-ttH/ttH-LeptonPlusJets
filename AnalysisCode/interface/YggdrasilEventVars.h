@@ -45,6 +45,20 @@ struct yggdrasilEventVars{
   Int_t   leptonType_;
   Int_t   higgsDecayType_;
 
+  Int_t  PassLJ_;
+  Int_t  PassDIL_;
+
+  Int_t  OneMuon_;
+  Int_t  OneElectron_;
+  Int_t  TwoMuon_;
+  Int_t  TwoElectron_;
+  Int_t  MuonElectron_;
+  double mass_leplep_;
+  double dR_leplep_;
+  Int_t  oppositeLepCharge_;
+
+  Int_t  PassZmask_;
+
   Int_t   matchSingleMuTrigger_;
   Int_t   matchSingleElectronTrigger_;
 
@@ -65,12 +79,20 @@ struct yggdrasilEventVars{
   Float_t tight_lepton_eta_;
   Float_t tight_lepton_phi_;
   Float_t tight_lepton_relIso_;
+  Int_t   tight_lepton_isMuon_;
+  Int_t   tight_lepton_genId_;
+  Int_t   tight_lepton_genParentId_;
+  Int_t   tight_lepton_genGrandParentId_;
 
-  Float_t loose_lepton_pt_;
-  Float_t loose_lepton_eta_;
-  Float_t loose_lepton_phi_;
-  Float_t loose_lepton_relIso_;
-  Int_t   loose_lepton_isTight_;
+  
+  vvdouble lepton_vect_TLV_;
+  vint lepton_trkCharge_;
+  vint lepton_isMuon_;
+  vint lepton_isTight_;
+  vint lepton_genId_;
+  vint lepton_genParentId_;
+  vint lepton_genGrandParentId_;
+
 
   Float_t wgt_lumi_;
   Float_t wgt_xs_;
@@ -84,6 +106,10 @@ struct yggdrasilEventVars{
   Float_t wgt_topPtDown_;
   double  wgt_[rNumSys];
   double  wgt_csvSF_[rNumSys];  
+
+  double  wgt_csvSF_LF_[rNumSys];  
+  double  wgt_csvSF_HF_[rNumSys];  
+  double  wgt_csvSF_CF_[rNumSys];  
 
   int ttbb_algo_result_[rNumSys];  
   int ttcc_algo_result_[rNumSys];  
@@ -152,12 +178,6 @@ struct yggdrasilEventVars{
 
   double tagged_dijet_mass_closest_to_125_[rNumSys];
   
-  
-  vdouble lepton_TLV_[rNumSys];
-  int lepton_genId_[rNumSys];
-  int lepton_genParentId_[rNumSys];
-  int lepton_genGrandParentId_[rNumSys];
-
   vvdouble jet_vect_TLV_[rNumSys];
   vdouble jet_CSV_[rNumSys];
   vint jet_genId_[rNumSys];
@@ -193,6 +213,18 @@ void yggdrasilEventVars::initialize(){
   leptonType_          = 0;
   higgsDecayType_      = -1;
 
+
+  OneMuon_ = -99;
+  OneElectron_ = -99;
+  TwoMuon_ = -99;
+  TwoElectron_ = -99;
+  MuonElectron_ = -99;
+  mass_leplep_ = -99;
+  dR_leplep_ = -99;
+  oppositeLepCharge_ = -99;
+
+  PassZmask_ = -99;
+
   matchSingleMuTrigger_       = 0;
   matchSingleElectronTrigger_ = 0;
 
@@ -213,12 +245,20 @@ void yggdrasilEventVars::initialize(){
   tight_lepton_eta_ = -99.9;
   tight_lepton_phi_ = -99.9;
   tight_lepton_relIso_ = -99.9;
+  tight_lepton_isMuon_ = -99;
 
-  loose_lepton_pt_  = -99.9;
-  loose_lepton_eta_ = -99.9;
-  loose_lepton_phi_ = -99.9;
-  loose_lepton_relIso_ = -99.9;
-  loose_lepton_isTight_ = -99;
+  tight_lepton_genId_ = -99;
+  tight_lepton_genParentId_ = -99;
+  tight_lepton_genGrandParentId_ = -99;
+
+  lepton_vect_TLV_.clear();
+  lepton_trkCharge_.clear();
+  lepton_isMuon_.clear();
+  lepton_isTight_.clear();
+  lepton_genId_.clear();
+  lepton_genParentId_.clear();
+  lepton_genGrandParentId_.clear();
+
 
   wgt_lumi_             = -99.9;
   wgt_xs_               = -99.9;
@@ -235,6 +275,8 @@ void yggdrasilEventVars::initialize(){
 
     wgt_[iSys] = -99.9;  
     wgt_csvSF_[iSys] = -99.9;  
+    wgt_csvSF_LF_[iSys] = -99.9;  
+    wgt_csvSF_HF_[iSys] = -99.9;   
 
     ttbb_algo_result_[iSys] = -99;  
     ttcc_algo_result_[iSys] = -99;  
@@ -306,12 +348,6 @@ void yggdrasilEventVars::initialize(){
 
     tagged_dijet_mass_closest_to_125_[iSys] = -99.9;
   
-  
-    lepton_TLV_[iSys].clear();
-    lepton_genId_[iSys]             = -99;
-    lepton_genParentId_[iSys]       = -99;
-    lepton_genGrandParentId_[iSys]  = -99;
-
     jet_vect_TLV_[iSys].clear();
     jet_CSV_[iSys].clear();
     jet_flavour_[iSys].clear();
