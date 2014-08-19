@@ -102,6 +102,9 @@ TH1D* h_csv_wgt_lf[9][4][3];
 
 void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, int Njobs=1, int jobN=1 ) {
 
+  double minTightLeptonPt = ( isLJ ) ? 30. : 20.;
+
+
   TFile* f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_hf_IT.root").c_str());
   TFile* f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_lf_IT.root").c_str());
 
@@ -420,7 +423,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
       /// Electrons
       ///
       ////////
-      std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( *electrons, 30., electronID::electronTight );
+      std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( *electrons, minTightLeptonPt, electronID::electronTight );
       std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( *electrons, 10., electronID::electronLoose );
 
       int numTightElectrons = int(selectedElectrons_tight.size());
@@ -432,7 +435,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
       /// Muons
       ///
       ////////
-      std::vector<pat::Muon> selectedMuons_tight = miniAODhelper.GetSelectedMuons( *muons, 30., muonID::muonTight );
+      std::vector<pat::Muon> selectedMuons_tight = miniAODhelper.GetSelectedMuons( *muons, minTightLeptonPt, muonID::muonTight );
       std::vector<pat::Muon> selectedMuons_loose = miniAODhelper.GetSelectedMuons( *muons, 10., muonID::muonLoose );
 
       int numTightMuons = int(selectedMuons_tight.size());
@@ -645,7 +648,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 	int trkCharge = -99;
 	if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
 
-	int isTight = ( miniAODhelper.isGoodMuon(*iMu, 30., muonID::muonTight) ) ? 1 : 0;
+	int isTight = ( miniAODhelper.isGoodMuon(*iMu, minTightLeptonPt, muonID::muonTight) ) ? 1 : 0;
 
 	lepton_trkCharge.push_back(trkCharge);
 	lepton_isMuon.push_back(1);
@@ -685,7 +688,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 	int trkCharge = -99;
 	if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
 
-	int isTight = ( miniAODhelper.isGoodElectron(*iEle, 30., electronID::electronTight) ) ? 1 : 0;
+	int isTight = ( miniAODhelper.isGoodElectron(*iEle, minTightLeptonPt, electronID::electronTight) ) ? 1 : 0;
 
 	lepton_trkCharge.push_back(trkCharge);
 	lepton_isMuon.push_back(0);
