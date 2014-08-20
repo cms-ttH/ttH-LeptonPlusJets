@@ -67,6 +67,8 @@
 
 #include "JetMETCorrections/Objects/interface/JetCorrector.h"
 
+#include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
+
 #include "MiniAOD/MiniAODHelper/interface/MiniAODHelper.h"
 
 //#include "AnalysisCode/LeptonPlusJets/interface/BEANloader.h"
@@ -883,7 +885,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 	///
 	////////
 
-	std::vector<pat::Jet> correctedJets = ( !(iSys>=5 && iSys<=8) ) ? correctedJets_noSys : miniAODhelper.GetCorrectedJets(jetsNoEle);
+	std::vector<pat::Jet> correctedJets = ( !(iSys>=5 && iSys<=8) ) ? correctedJets_noSys : miniAODhelper.GetCorrectedJets(jetsNoEle, iSysType);
 	std::vector<pat::Jet> selectedJets_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_noSys_unsorted : miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::jetLoose, '-' );
 
 
@@ -901,9 +903,9 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 
   
         // Sort jet collections by pT
-	std::vector<pat::Jet> selectedJets       = selectedJets_unsorted;//miniAODhelper.GetSortedByPt( selectedJets_unsorted );
-	std::vector<pat::Jet> selectedJets_tag   = selectedJets_tag_unsorted;//miniAODhelper.GetSortedByPt( selectedJets_tag_unsorted );
-	std::vector<pat::Jet> selectedJets_untag = selectedJets_untag_unsorted;//miniAODhelper.GetSortedByPt( selectedJets_untag_unsorted );
+	std::vector<pat::Jet> selectedJets       = miniAODhelper.GetSortedByPt( selectedJets_unsorted );
+	std::vector<pat::Jet> selectedJets_tag   = miniAODhelper.GetSortedByPt( selectedJets_tag_unsorted );
+	std::vector<pat::Jet> selectedJets_untag = miniAODhelper.GetSortedByPt( selectedJets_untag_unsorted );
 
 	//if( mySample.isTTJets ) splitEvent = miniAODhelper.ttPlusHFKeepEvent( mcparticles, selectedJets );
 	//if( !splitEvent ) continue;
@@ -962,9 +964,10 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 	vint jet_genParentId_vect;
 	vint jet_genGrandParentId_vect;
 
+
         // Loop over selected jets
 	for( std::vector<pat::Jet>::const_iterator iJet = selectedJets.begin(); iJet != selectedJets.end(); iJet++ ){ 
- 
+
 	  jet_flavour_vect.push_back(iJet->partonFlavour());
 
 	  int genPartonId=-99, genPartonMotherId=-99, genPartonGrandMotherId=-99;
@@ -1064,7 +1067,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 
 	// Add loose jet container
 	std::vector<pat::Jet> selectedJets_loose_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::jetLoose, '-' );
-	std::vector<pat::Jet> selectedJets_loose = selectedJets_loose_unsorted;//miniAODhelper.GetSortedByPt( selectedJets_unsorted_loose );
+	std::vector<pat::Jet> selectedJets_loose = miniAODhelper.GetSortedByPt( selectedJets_loose_unsorted );
 
 	std::vector<pat::Jet> selectedJets_loose_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::jetLoose, 'M' );
 
@@ -1102,7 +1105,8 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 	  eve->HT_[iSys] += iJet->pt();
 
 
-	  if( iJet->pt()>=30. ) continue;
+	  // loose represents all jets with pT > 20
+	  //if( iJet->pt()>=30. ) continue;
 
 	  numJet_loose++;
 	  jet_flavour_vect_loose.push_back(iJet->partonFlavour());
