@@ -121,8 +121,23 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
   vstring fileNames;
   if( insample==2500 ) fileNames.push_back("root://cmsxrootd.fnal.gov//store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/003E832C-8AFC-E311-B7AA-002590596490.root");
 
-  if( insample==2310 ) fileNames.push_back("root://cmsxrootd.fnal.gov//store/user/lwming/DYJetsToLL_M-50_13TeV-madgraph-pythia8/CSA14_miniAOD/79454fa019bb8a3da819d0686ef26e77/output_1_2_AQU.root");
-  if( insample==2510 ) fileNames.push_back("root://cmsxrootd.fnal.gov//store/user/lwming/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/CSA14_miniAOD/79454fa019bb8a3da819d0686ef26e77/output_9_1_yUH.root");
+
+  if( insample==2310 || insample==2510 ){
+    std::string infile_name = "blank";
+    if( insample==2310 )      infile_name = string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/filelist_DYJetsToLL_M_50_13TeV_madgraph_pythia8_PU20bx25_POSTLS170_V5_v1.txt";
+    else if( insample==2510 ) infile_name = string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/filelist_TTJets_MSDecaysCKM_central_Tune4C_13TeV_madgraph_PU20bx25_POSTLS170_V5_v1.txt";
+
+    std::ifstream infile(infile_name);
+    std::string line;
+    while( std::getline(infile, line) ){
+      std::istringstream iss(line);
+      std::string file = iss.str();
+      fileNames.push_back(file);
+    }
+  }
+
+  // if( insample==2310 ) fileNames.push_back("root://cmsxrootd.fnal.gov//store/user/lwming/DYJetsToLL_M-50_13TeV-madgraph-pythia8/CSA14_miniAOD/79454fa019bb8a3da819d0686ef26e77/output_1_2_AQU.root");
+  // if( insample==2510 ) fileNames.push_back("root://cmsxrootd.fnal.gov//store/user/lwming/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/CSA14_miniAOD/79454fa019bb8a3da819d0686ef26e77/output_9_1_yUH.root");
 
 
 
@@ -232,6 +247,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 
   miniAODhelper.SetUp(era, insample, iAnalysisType, isData);
 
+  miniAODhelper.SetFactorizedJetCorrector();
 
 
   std::cout << "FOR BEAN::SetUp " << std::endl;  
@@ -324,7 +340,6 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 
 
       miniAODhelper.SetRho(rho);
-      miniAODhelper.SetFactorizedJetCorrector();
 
 
       // Primary Vertex Selection
@@ -1088,6 +1103,11 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 
 
 	  if( iJet->pt()>=30. ) continue;
+
+	  // MHT
+	  mht_px += - iJet->px();
+	  mht_py += - iJet->py();
+	  eve->HT_[iSys] += iJet->pt();
 
 	  numJet_loose++;
 	  jet_flavour_vect_loose.push_back(iJet->partonFlavour());
