@@ -965,11 +965,6 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
         // Loop over selected jets
 	for( std::vector<pat::Jet>::const_iterator iJet = selectedJets.begin(); iJet != selectedJets.end(); iJet++ ){ 
  
-          // MHT
-	  mht_px += - iJet->px();
-	  mht_py += - iJet->py();
-	  eve->HT_[iSys] += iJet->pt();
-
 	  jet_flavour_vect.push_back(iJet->partonFlavour());
 
 	  int genPartonId=-99, genPartonMotherId=-99, genPartonGrandMotherId=-99;
@@ -1101,13 +1096,13 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 
 	  jet_all_flavour.push_back(iJet->partonFlavour());
 
-
-	  if( iJet->pt()>=30. ) continue;
-
-	  // MHT
+          // MHT
 	  mht_px += - iJet->px();
 	  mht_py += - iJet->py();
 	  eve->HT_[iSys] += iJet->pt();
+
+
+	  if( iJet->pt()>=30. ) continue;
 
 	  numJet_loose++;
 	  jet_flavour_vect_loose.push_back(iJet->partonFlavour());
@@ -1138,6 +1133,16 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 				     (mass_leplep > (99 + MHT/2)) 
 				     );
 	eve->PassZmask_ = ( PassBigDiamondZmask ) ? 1 : 0;
+
+
+	double MET = correctedMET.pt();
+	bool PassBigDiamondZmaskMET = ( MuonElectron || 
+					(mass_leplep < (65.5 + 3*MET/8)) || 
+					(mass_leplep > (108 - MET/4)) || 
+					(mass_leplep < (79 - 3*MET/4)) || 
+					(mass_leplep > (99 + MET/2)) 
+					);
+	eve->PassZmaskMET_ = ( PassBigDiamondZmaskMET ) ? 1 : 0;
 
 
         // Get sorted vector of bTags

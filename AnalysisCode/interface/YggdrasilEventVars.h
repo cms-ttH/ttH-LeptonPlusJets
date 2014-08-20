@@ -59,6 +59,8 @@ struct yggdrasilEventVars{
 
   Int_t  PassZmask_;
 
+  Int_t  PassZmaskMET_;
+
   Int_t   matchSingleMuTrigger_;
   Int_t   matchSingleElectronTrigger_;
 
