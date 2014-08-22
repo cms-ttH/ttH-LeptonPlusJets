@@ -62,7 +62,7 @@ void fitHF_csvSF_13TeV( TString inputFileName  = "infile.root", int iterNum=0, T
   // double csvbins[] = {-0.04, 0.0, 0.122, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.7228, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01};
   // double csvbins_new[] = {-0.04, 0.0, 0.122, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.7228, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01};
   // Rebin
-  int ncsvbins = 13;
+  int ncsvbins = 14;
   double csvbins[] = {-10.0, 0.0, 0.244, 0.418, 0.592, 0.679, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01};
   double csvbins_new[] = {-0.04, 0.0, 0.244, 0.418, 0.592, 0.679, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01};
 
@@ -677,13 +677,13 @@ void fitHF_csvSF_13TeV( TString inputFileName  = "infile.root", int iterNum=0, T
     h_csv_ratio[iHist]->SetStats(0);
 
     double maxY = 0;
-    for( int iBin=1; iBin<h_csv_ratio_final[iHist]->GetNbinsX()-1; iBin++ ){
+    for( int iBin=1; iBin<h_csv_ratio[iHist]->GetNbinsX()-1; iBin++ ){
       double content = h_csv_ratio[iHist]->GetBinContent(iBin+1);
       double err     = h_csv_ratio[iHist]->GetBinError(iBin+1);
 
       if( maxY<(content+err) ) maxY = content + err;
     }
-    maxY *= 1.2;
+    maxY *= 1.3;
     //double maxY = 1.3 * h_csv_ratio[iHist]->GetMaximum();
     maxY = std::min( maxY, 5. );
 

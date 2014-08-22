@@ -590,7 +590,16 @@ void fitLF_csvSF_13TeV( TString inputFileName  = "infile.root", int iterNum=0, T
 
     h_csv_ratio_final[iHist]->SetStats(0);
 
-    double maxY = 1.3 * h_csv_ratio[iHist]->GetMaximum();
+
+    double maxY = 0;
+    for( int iBin=1; iBin<h_csv_ratio[iHist]->GetNbinsX()-1; iBin++ ){
+      double content = h_csv_ratio[iHist]->GetBinContent(iBin+1);
+      double err     = h_csv_ratio[iHist]->GetBinError(iBin+1);
+
+      if( maxY<(content+err) ) maxY = content + err;
+    }
+    maxY *= 1.3;
+    //double maxY = 1.3 * h_csv_ratio[iHist]->GetMaximum();
     //double maxY = 1.3 * h_csv_ratio[iHist]->GetBinContent( h_csv_ratio[iHist]->GetNbinsX()-1 );
     maxY = std::min( maxY, 5. );
 
