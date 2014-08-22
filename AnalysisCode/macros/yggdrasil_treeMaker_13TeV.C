@@ -150,12 +150,12 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
   std::string mySample_sampleName_ = "delete";
   double intLumi_ = 10000;
   if( insample==2500 || insample==2510 ){
-    mySample_xSec_ = 424.5;//LO = 424.5, NLO = 689.1 (HT) vs 809.1 (dynamic)
+    mySample_xSec_ = 689.1;//LO = 424.5, NLO = 689.1 (HT) vs 809.1 (dynamic)
     mySample_nGen_ = 25474122;
     mySample_sampleName_ = "TTJets_MSDecaysCKM_central_Tune4C_13TeV_madgraph_PU20bx25_POSTLS170_V5_v1";
   }
   else if( insample==2300 || insample==2310 ){
-    mySample_xSec_ = 4746;// LO = 4746, NLO = 2008.4  
+    mySample_xSec_ = 2008.4;// LO = 4746, NLO = 2008.4  
     mySample_nGen_ = 2725222;
     mySample_sampleName_ = "DYJetsToLL_M_50_13TeV_madgraph_pythia8_PU20bx25_POSTLS170_V5_v1";
   }
