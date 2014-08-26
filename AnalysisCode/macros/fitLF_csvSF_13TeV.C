@@ -32,7 +32,7 @@ void fitLF_csvSF_13TeV( TString inputFileName  = "infile.root", int iterNum=0, T
 
   TH1::SetDefaultSumw2();
 
-  TString dirprefix = "Images/Images_2014_08_22_fitLF_csvSF_13TeV" + dirPostFix + "/";
+  TString dirprefix = "Images/Images_2014_08_25_fitLF_csvSF_13TeV" + dirPostFix + "/";
 
   struct stat st;
   if( stat(dirprefix.Data(),&st) != 0 )  mkdir(dirprefix.Data(),0777);
@@ -59,13 +59,13 @@ void fitLF_csvSF_13TeV( TString inputFileName  = "infile.root", int iterNum=0, T
   // double csvbins[] = {-10.0, 0.0, 0.04, 0.08, 0.12, 0.16, 0.2, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.752, 0.825, 0.898, 0.915, 0.932, 0.949, 0.966, 0.983, 1.01};
   // double csvbins_new[] = {-0.04, 0.0, 0.04, 0.08, 0.12, 0.16, 0.2, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.752, 0.825, 0.898, 0.915, 0.932, 0.949, 0.966, 0.983, 1.01};
   // same as last round
-  // int ncsvbins = 17;//21;//17;
-  // double csvbins[] = {-10.0, 0.0, 0.04, 0.08, 0.12, 0.16, 0.2, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.752, 0.825, 0.898, 0.949, 1.01};
-  // double csvbins_new[] = {-0.04, 0.0, 0.04, 0.08, 0.12, 0.16, 0.2, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.752, 0.825, 0.898, 0.949, 1.01};
-
-  int ncsvbins = 15;//21;//17;
-  double csvbins[] = {-10.0, 0.0, 0.04, 0.08, 0.12, 0.16, 0.2, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.825, 0.949, 1.01};
-  double csvbins_new[] = {-0.04, 0.0, 0.04, 0.08, 0.12, 0.16, 0.2, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.825, 0.949, 1.01};
+  int ncsvbins = 17;//21;//17;
+  double csvbins[] = {-10.0, 0.0, 0.04, 0.08, 0.12, 0.16, 0.2, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.752, 0.825, 0.898, 0.949, 1.01};
+  double csvbins_new[] = {-0.04, 0.0, 0.04, 0.08, 0.12, 0.16, 0.2, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.752, 0.825, 0.898, 0.949, 1.01};
+  // // Rebin for stats
+  // int ncsvbins = 15;//21;//17;
+  // double csvbins[] = {-10.0, 0.0, 0.04, 0.08, 0.12, 0.16, 0.2, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.825, 0.949, 1.01};
+  // double csvbins_new[] = {-0.04, 0.0, 0.04, 0.08, 0.12, 0.16, 0.2, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.825, 0.949, 1.01};
 
   std::vector<TString> hist_name;
   std::vector<TString> data_hist_name;
@@ -592,7 +592,7 @@ void fitLF_csvSF_13TeV( TString inputFileName  = "infile.root", int iterNum=0, T
 
 
     double maxY = 0;
-    for( int iBin=1; iBin<h_csv_ratio[iHist]->GetNbinsX()-1; iBin++ ){
+    for( int iBin=1; iBin<h_csv_ratio[iHist]->GetNbinsX()-2; iBin++ ){
       double content = h_csv_ratio[iHist]->GetBinContent(iBin+1);
       double err     = h_csv_ratio[iHist]->GetBinError(iBin+1);
 

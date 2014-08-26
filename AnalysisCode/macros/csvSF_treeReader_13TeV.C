@@ -185,6 +185,7 @@ void csvSF_treeReader_13TeV( bool isHF=1, int verNum = 0, int insample=1, int ma
 
 
   //////
+  TH1D* h_Data_jet_csv[6][3];
   TH1D* h_MC_b_jet_csv[6][3];
   TH1D* h_MC_nonb_jet_csv[6][3];
 
@@ -201,14 +202,17 @@ void csvSF_treeReader_13TeV( bool isHF=1, int verNum = 0, int insample=1, int ma
   for ( int iPt=0; iPt<nPt; iPt++){
     for ( int iEta=0; iEta<nEta; iEta++){
 
+      TString h_Data_Name = Form("csv_Data_Pt%i_Eta%i",iPt,iEta);
       TString h_b_Name = Form("csv_MC_bjets_Pt%i_Eta%i",iPt,iEta);
       TString h_nonb_Name = Form("csv_MC_nonbjets_Pt%i_Eta%i",iPt,iEta);
       
       if ( isHF ){
+	h_Data_jet_csv[iPt][iEta] = new TH1D(h_Data_Name, h_Data_Name, nBins, xBins_hf); 
 	h_MC_b_jet_csv[iPt][iEta] = new TH1D(h_b_Name, h_b_Name, nBins, xBins_hf); 
 	h_MC_nonb_jet_csv[iPt][iEta] = new TH1D(h_nonb_Name, h_nonb_Name, nBins, xBins_hf); 
       }
       else { 
+	h_Data_jet_csv[iPt][iEta] = new TH1D(h_Data_Name, h_Data_Name, nBins, xBins_lf); 
 	h_MC_b_jet_csv[iPt][iEta] = new TH1D(h_b_Name, h_b_Name, nBins, xBins_lf); 
 	h_MC_nonb_jet_csv[iPt][iEta] = new TH1D(h_nonb_Name, h_nonb_Name, nBins, xBins_lf); 
       }   
@@ -416,6 +420,7 @@ void csvSF_treeReader_13TeV( bool isHF=1, int verNum = 0, int insample=1, int ma
 
     double csvWgtHF, csvWgtLF, csvWgtCF;
     double newCSVwgt = ( insample<0 ) ? 1 : get_csv_wgt(jet_vect_TLV, jet_CSV, jet_flavour,iSys, csvWgtHF, csvWgtLF, csvWgtCF);
+    double wgtfakeData = wgt*newCSVwgt;
     if( verbose ) std::cout << " HF/LF csv wgts are: " << csvWgtHF << "/"<< csvWgtLF << "\t new CSV wgt = " << newCSVwgt << std::endl; 
     ///// for iteration
     if (verNum !=0 ) {
@@ -454,6 +459,9 @@ void csvSF_treeReader_13TeV( bool isHF=1, int verNum = 0, int insample=1, int ma
       if (isHF && iEta>0) iEta=0;
       if (!isHF && iPt>3) iPt=3;
 
+      ///fake data
+      h_Data_jet_csv[iPt][iEta]->Fill(first_jet_csv, wgtfakeData); 
+
       if( firstjetb ){
 	h_MC_b_jet_csv[iPt][iEta]->Fill(first_jet_csv, wgt); 
       }
@@ -488,6 +496,9 @@ void csvSF_treeReader_13TeV( bool isHF=1, int verNum = 0, int insample=1, int ma
 
       if (isHF && iEta>0) iEta=0;
       if (!isHF && iPt>3) iPt=3;
+
+      ///fake data
+      h_Data_jet_csv[iPt][iEta]->Fill(second_jet_csv, wgtfakeData);       
 
       if( secondjetb ){
 	h_MC_b_jet_csv[iPt][iEta]->Fill(second_jet_csv, wgt); 

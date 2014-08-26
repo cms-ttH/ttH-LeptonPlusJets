@@ -34,7 +34,7 @@ void fitHF_csvSF_13TeV( TString inputFileName  = "infile.root", int iterNum=0, T
 
   TH1::SetDefaultSumw2();
 
-  TString dirprefix = "Images/Images_2014_08_22_fitHF_csvSF_13TeV" + dirPostFix + "/";
+  TString dirprefix = "Images/Images_2014_08_25_fitHF_csvSF_13TeV" + dirPostFix + "/";
 
   struct stat st;
   if( stat(dirprefix.Data(),&st) != 0 )  mkdir(dirprefix.Data(),0777);
@@ -61,10 +61,14 @@ void fitHF_csvSF_13TeV( TString inputFileName  = "infile.root", int iterNum=0, T
   // int ncsvbins = 18;
   // double csvbins[] = {-0.04, 0.0, 0.122, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.7228, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01};
   // double csvbins_new[] = {-0.04, 0.0, 0.122, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.7228, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01};
-  // Rebin
-  int ncsvbins = 14;
-  double csvbins[] = {-10.0, 0.0, 0.244, 0.418, 0.592, 0.679, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01};
-  double csvbins_new[] = {-0.04, 0.0, 0.244, 0.418, 0.592, 0.679, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01};
+  // // Rebin for stats
+  // int ncsvbins = 14;
+  // double csvbins[] = {-10.0, 0.0, 0.244, 0.418, 0.592, 0.679, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01};
+  // double csvbins_new[] = {-0.04, 0.0, 0.244, 0.418, 0.592, 0.679, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01};
+  // Compare to old SFs
+  int ncsvbins = 18;
+  double csvbins[] = { -10.0, 0.0, 0.122, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.7228, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01 };
+  double csvbins_new[] = { -0.04, 0.0, 0.122, 0.244, 0.331, 0.418, 0.505, 0.592, 0.679, 0.7228, 0.7666, 0.8104, 0.8542, 0.898, 0.9184, 0.9388, 0.9592, 0.9796, 1.01 };
 
 
   std::vector<TString> hist_name;
@@ -677,7 +681,7 @@ void fitHF_csvSF_13TeV( TString inputFileName  = "infile.root", int iterNum=0, T
     h_csv_ratio[iHist]->SetStats(0);
 
     double maxY = 0;
-    for( int iBin=1; iBin<h_csv_ratio[iHist]->GetNbinsX()-1; iBin++ ){
+    for( int iBin=1; iBin<h_csv_ratio[iHist]->GetNbinsX()-2; iBin++ ){
       double content = h_csv_ratio[iHist]->GetBinContent(iBin+1);
       double err     = h_csv_ratio[iHist]->GetBinError(iBin+1);
 
