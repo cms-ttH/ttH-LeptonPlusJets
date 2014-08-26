@@ -34,7 +34,7 @@ void makePlots_csvSF_13TeV( TString inputFileName  = "infile.root", bool isHF = 
   TFile *histFile = TFile::Open(inputFileName);
 
 
-  TString dirprefix = "Images/Images_2014_08_25_csvSF_13TeV" + dirPostFix + "/";
+  TString dirprefix = "Images/Images_2014_08_26_csvSF_13TeV" + dirPostFix + "/";
 
   struct stat st;
   if( stat(dirprefix.Data(),&st) != 0 )  mkdir(dirprefix.Data(),0777);
@@ -257,16 +257,55 @@ void makePlots_csvSF_13TeV( TString inputFileName  = "infile.root", bool isHF = 
 
       if( compareIterations ){
 
-	//TString iter_histo_name = Form("h_csv_ratio_%d",iHist);
-	TString iter_fit_histo_name = Form("csv_ratio_Pt%d_Eta%d_final",iPt,iEta);
-	TString iter_histo_name = Form("h_csv_ratio_%d",iHist);
-	TH1D* h_fit_iter0 = (TH1D*)fitFile_iter0->Get(iter_histo_name)->Clone(iter_fit_histo_name+"v0");
-	TH1D* h_fit_iter1 = (TH1D*)fitFile_iter1->Get(iter_histo_name)->Clone(iter_fit_histo_name+"v1");
-	TH1D* h_fit_iter2 = (TH1D*)fitFile_iter2->Get(iter_histo_name)->Clone(iter_fit_histo_name+"v2");
 
-	TH1D* h_iter0 = (TH1D*)fitFile_iter0->Get(iter_histo_name)->Clone(iter_histo_name+"v0");
-	TH1D* h_iter1 = (TH1D*)fitFile_iter1->Get(iter_histo_name)->Clone(iter_histo_name+"v1");
-	TH1D* h_iter2 = (TH1D*)fitFile_iter2->Get(iter_histo_name)->Clone(iter_histo_name+"v2");
+	TString h_iter_Data_Name = Form("h_csv_Data_Pt%i_Eta%i",iPt,iEta);
+	TString h_iter_b_Name = Form("h_csv_MC_bjets_Pt%i_Eta%i",iPt,iEta);
+	TString h_iter_nonb_Name = Form("h_csv_MC_nonbjets_Pt%i_Eta%i",iPt,iEta);
+	TString h_iter_csv_ratio_Name = Form("temp_csv_ratio_Pt%i_Eta%i",iPt,iEta);
+ 
+	TH1D* h_iter_Data_jet_csv_iter0 = (TH1D*)fitFile_iter0->Get(h_iter_Data_Name.Data())->Clone(h_iter_Data_Name+"v0");
+	TH1D* h_iter_MC_b_jet_csv_iter0 = (TH1D*)fitFile_iter0->Get(h_iter_b_Name.Data())->Clone(h_iter_b_Name+"v0");
+	TH1D* h_iter_MC_nonb_jet_csv_iter0 = (TH1D*)fitFile_iter0->Get(h_iter_nonb_Name.Data())->Clone(h_iter_nonb_Name+"v0");
+	
+	TH1D* h_iter_Data_jet_csv_iter1 = (TH1D*)fitFile_iter1->Get(h_iter_Data_Name.Data())->Clone(h_iter_Data_Name+"v1");
+	TH1D* h_iter_MC_b_jet_csv_iter1 = (TH1D*)fitFile_iter1->Get(h_iter_b_Name.Data())->Clone(h_iter_b_Name+"v1");
+	TH1D* h_iter_MC_nonb_jet_csv_iter1 = (TH1D*)fitFile_iter1->Get(h_iter_nonb_Name.Data())->Clone(h_iter_nonb_Name+"v1");
+
+	TH1D* h_iter_Data_jet_csv_iter2 = (TH1D*)fitFile_iter2->Get(h_iter_Data_Name.Data())->Clone(h_iter_Data_Name+"v2");
+	TH1D* h_iter_MC_b_jet_csv_iter2 = (TH1D*)fitFile_iter2->Get(h_iter_b_Name.Data())->Clone(h_iter_b_Name+"v2");
+	TH1D* h_iter_MC_nonb_jet_csv_iter2 = (TH1D*)fitFile_iter2->Get(h_iter_nonb_Name.Data())->Clone(h_iter_nonb_Name+"v2");
+
+	TH1D* h_iter0 = (TH1D*)h_iter_Data_jet_csv_iter0->Clone(h_iter_csv_ratio_Name+"v0");
+	TH1D* h_iter1 = (TH1D*)h_iter_Data_jet_csv_iter1->Clone(h_iter_csv_ratio_Name+"v1");
+	TH1D* h_iter2 = (TH1D*)h_iter_Data_jet_csv_iter2->Clone(h_iter_csv_ratio_Name+"v2");
+	if( isHF ){
+	  h_iter0->Add(h_iter_MC_nonb_jet_csv_iter0, -1);
+	  h_iter0->Divide(h_iter_MC_b_jet_csv_iter0);
+
+	  h_iter1->Add(h_iter_MC_nonb_jet_csv_iter1, -1);
+	  h_iter1->Divide(h_iter_MC_b_jet_csv_iter1);
+
+	  h_iter2->Add(h_iter_MC_nonb_jet_csv_iter2, -1);
+	  h_iter2->Divide(h_iter_MC_b_jet_csv_iter2);
+	}
+	else {
+	  h_iter0->Add(h_iter_MC_b_jet_csv_iter0, -1);
+	  h_iter0->Divide(h_iter_MC_nonb_jet_csv_iter0);
+
+	  h_iter1->Add(h_iter_MC_b_jet_csv_iter1, -1);
+	  h_iter1->Divide(h_iter_MC_nonb_jet_csv_iter1);
+
+	  h_iter2->Add(h_iter_MC_b_jet_csv_iter2, -1);
+	  h_iter2->Divide(h_iter_MC_nonb_jet_csv_iter2);
+	}
+
+
+	TString iter_fit_histo_name = Form("csv_ratio_Pt%d_Eta%d_final",iPt,iEta);
+
+	//TString iter_histo_name = Form("h_csv_ratio_%d",iHist);
+	TH1D* h_fit_iter0 = (TH1D*)fitFile_iter0->Get(iter_fit_histo_name)->Clone(iter_fit_histo_name+"v0");
+	TH1D* h_fit_iter1 = (TH1D*)fitFile_iter1->Get(iter_fit_histo_name)->Clone(iter_fit_histo_name+"v1");
+	TH1D* h_fit_iter2 = (TH1D*)fitFile_iter2->Get(iter_fit_histo_name)->Clone(iter_fit_histo_name+"v2");
 
 	h_fit_iter0->SetLineColor(kRed);
 	h_fit_iter1->SetLineColor(kGreen+1);
