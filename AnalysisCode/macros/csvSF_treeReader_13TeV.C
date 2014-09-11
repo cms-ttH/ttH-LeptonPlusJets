@@ -527,13 +527,13 @@ void csvSF_treeReader_13TeV( bool isHF=1, int verNum = 0, int insample=1, int ma
 void fillCSVhistos(TFile* fileHF, TFile* fileLF){
 
   for( int iSys=0; iSys<9; iSys++ ){
-    for( int iPt=0; iPt<5; iPt++ ) h_csv_wgt_hf[iSys][iPt] = NULL;
-    for( int iPt=0; iPt<3; iPt++ ){
+    for( int iPt=0; iPt<6; iPt++ ) h_csv_wgt_hf[iSys][iPt] = NULL;
+    for( int iPt=0; iPt<4; iPt++ ){
       for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = NULL;
     }
   }
   for( int iSys=0; iSys<5; iSys++ ){
-    for( int iPt=0; iPt<5; iPt++ ) c_csv_wgt_hf[iSys][iPt] = NULL;
+    for( int iPt=0; iPt<6; iPt++ ) c_csv_wgt_hf[iSys][iPt] = NULL;
   }
 
   // CSV reweighting /// only care about the nominal ones
