@@ -1,3 +1,4 @@
+#include "TStopwatch.h"
 #include "TFile.h"
 #include "TChain.h"
 #include "TH1.h"
@@ -121,7 +122,8 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
   std::cout << "\n\n   ===> load the root files! "         << "\n\n";
 
   vstring fileNames;
-  if( insample==2500 ) fileNames.push_back("root://cmsxrootd.fnal.gov//store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/003E832C-8AFC-E311-B7AA-002590596490.root");
+  // if( insample==2500 ) fileNames.push_back("root://cmsxrootd.fnal.gov//store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/003E832C-8AFC-E311-B7AA-002590596490.root");
+  if( insample==2500 ) fileNames.push_back("/uscms_data/d2/dpuigh/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola_MINIAODSIM_PU20bx25_POSTLS170_V5-v1_00000_003E832C-8AFC-E311-B7AA-002590596490.root");
 
 
   if( insample==2310 || insample==2510 ){
@@ -148,7 +150,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
   double mySample_xSec_ = 1.;
   double mySample_nGen_ = 1.;
   std::string mySample_sampleName_ = "delete";
-  double intLumi_ = 10000;
+  double intLumi_ = 20000;
   if( insample==2500 || insample==2510 ){
     mySample_xSec_ = 689.1;//LO = 424.5, NLO = 689.1 (HT) vs 809.1 (dynamic)
     mySample_nGen_ = 25474122;
@@ -200,6 +202,9 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 
   
   // Event Counters
+  int neventsFillTree[rNumSys];
+  for( int i=0; i<rNumSys; i++ ) neventsFillTree[i] = 0;
+
   int nevents=0;
   double nevents_wgt=0;
 
@@ -274,6 +279,8 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
   if( jobN==Njobs ) lastEvent = -1;
   
 
+  TStopwatch tw; tw.Start();
+
   std::cout << "========  Starting Event Loop  ========" << std::endl;
   int cnt = 0;
 
@@ -333,7 +340,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
       flt.getByLabel(ev,"PAT");
 
       fwlite::Handle<double> rhoHandle;
-      rhoHandle.getByLabel(ev,"fixedGridRhoAll");
+      rhoHandle.getByLabel(ev,"fixedGridRhoFastjetAll");//"fixedGridRhoAll");
       double rho = *rhoHandle;
 
       fwlite::Handle<std::vector< PileupSummaryInfo > > PupInfo;
@@ -936,6 +943,10 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 	double min_dR_lep_jet = 99.;
 	vecTLorentzVector jetV;
 	std::vector<double> csvV;
+	std::vector<double> jet_vtxMass;
+	std::vector<double> jet_vtxNtracks;
+	std::vector<double> jet_vtx3DVal;
+	std::vector<double> jet_vtx3DSig;
 
 	double numtag = 0, numuntag = 0;
 	double sum_btag_disc_btags = 0;
@@ -1001,6 +1012,11 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 	  vjets.push_back(iJet->pz());
 	  vjets.push_back(iJet->energy());
 	  vvjets.push_back(vjets);
+
+	  jet_vtxMass.push_back(iJet->userFloat("vtxMass"));
+	  jet_vtxNtracks.push_back(iJet->userFloat("vtxNtracks"));
+	  jet_vtx3DVal.push_back(iJet->userFloat("vtx3DVal"));
+	  jet_vtx3DSig.push_back(iJet->userFloat("vtx3DSig"));
 
           // Get CSV discriminant, check if passes Med WP 
 	  double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
@@ -1074,6 +1090,10 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 
 	vvdouble vvjets_loose;
 	std::vector<double> csvV_loose;
+	std::vector<double> jet_loose_vtxMass;
+	std::vector<double> jet_loose_vtxNtracks;
+	std::vector<double> jet_loose_vtx3DVal;
+	std::vector<double> jet_loose_vtx3DSig;
 	vint jet_flavour_vect_loose;
 	vecTLorentzVector jetV_loose;
 
@@ -1110,6 +1130,11 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 
 	  numJet_loose++;
 	  jet_flavour_vect_loose.push_back(iJet->partonFlavour());
+
+	  jet_loose_vtxMass.push_back(iJet->userFloat("vtxMass"));
+	  jet_loose_vtxNtracks.push_back(iJet->userFloat("vtxNtracks"));
+	  jet_loose_vtx3DVal.push_back(iJet->userFloat("vtx3DVal"));
+	  jet_loose_vtx3DSig.push_back(iJet->userFloat("vtx3DSig"));
 
 	  TLorentzVector jet0p4;	  
 	  jet0p4.SetPxPyPzE(iJet->px(),iJet->py(),iJet->pz(),iJet->energy());
@@ -1323,7 +1348,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 	TLorentzVector bjet2_tmp = mydummyguy;
 
         // Get Best Higgs Mass (X^2 method)
-	eve->best_higgs_mass_[iSys] = getBestHiggsMass(leptonV, metV, jetV, csvV, eve->minChi2_[iSys], eve->dRbb_[iSys], bjet1_tmp, bjet2_tmp, jetV_loose, csvV_loose);
+	eve->best_higgs_mass_[iSys] = 0.;//getBestHiggsMass(leptonV, metV, jetV, csvV, eve->minChi2_[iSys], eve->dRbb_[iSys], bjet1_tmp, bjet2_tmp, jetV_loose, csvV_loose);
 
         //double chiSq2=10000;
 
@@ -1399,8 +1424,12 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 	eve->minChi2_bjet2_pz_[iSys] = bjet2_tmp.Pz();
 	eve->minChi2_bjet2_E_[iSys]  = bjet2_tmp.E();
 
-	eve->jet_vect_TLV_[iSys] = vvjets;
-	eve->jet_CSV_[iSys]      = csvV;
+	eve->jet_vect_TLV_[iSys]   = vvjets;
+	eve->jet_CSV_[iSys]        = csvV;
+	eve->jet_vtxMass_[iSys]    = jet_vtxMass;
+	eve->jet_vtxNtracks_[iSys] = jet_vtxNtracks;
+	eve->jet_vtx3DVal_[iSys]   = jet_vtx3DVal;
+	eve->jet_vtx3DSig_[iSys]   = jet_vtx3DSig;
 	eve->jet_flavour_[iSys]          = jet_flavour_vect;
 	eve->jet_genId_[iSys]            = jet_genId_vect;
 	eve->jet_genParentId_[iSys]      = jet_genParentId_vect;
@@ -1414,12 +1443,16 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 
 	eve->jet_loose_vect_TLV_[iSys] = vvjets_loose;
 	eve->jet_loose_CSV_[iSys]      = csvV_loose;
+	eve->jet_loose_vtxMass_[iSys]    = jet_loose_vtxMass;
+	eve->jet_loose_vtxNtracks_[iSys] = jet_loose_vtxNtracks;
+	eve->jet_loose_vtx3DVal_[iSys]   = jet_loose_vtx3DVal;
+	eve->jet_loose_vtx3DSig_[iSys]   = jet_loose_vtx3DSig;
 	eve->jet_loose_flavour_[iSys]  = jet_flavour_vect_loose;
 
 
 
 	double csvWgtHF, csvWgtLF, csvWgtCF;
-	double csvWgt = get_csv_wgt(jet_all_vect_TLV, jet_all_CSV, jet_all_flavour, iSys, csvWgtHF, csvWgtLF, csvWgtCF);
+	double csvWgt = 1;//get_csv_wgt(jet_all_vect_TLV, jet_all_CSV, jet_all_flavour, iSys, csvWgtHF, csvWgtLF, csvWgtCF);
 	if( isData ){
 	  csvWgt = 1.; csvWgtHF = 1.; csvWgtLF = 1.; csvWgtCF = 1.;
 	}
@@ -1438,8 +1471,30 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
 	unsigned int minNumLooseJet = ( isLJ ) ? 4 : 1;
 	unsigned int minNumLooseTag = ( isLJ ) ? 1 : 0;
 
+	// if( iSys>=7 && iSys<=8 ){
+	//   for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_loose.begin(); iJet != selectedJets_loose.end(); iJet++ ){ 
+	//     printf("\t selectedJets_loose iSys = %d,\t jet %d: pt = %.2f,\t raw pt = %.2f,\t eta = %.2f,\t phi = %.2f \n", 
+	// 	   iSys, int(iJet - selectedJets_loose.begin()), iJet->pt(), iJet->correctedJet(0).pt(), iJet->eta(), iJet->phi() );
+	//   }
+	//   for( std::vector<pat::Jet>::const_iterator iJet = jetsNoEle.begin(); iJet != jetsNoEle.end(); iJet++ ){ 
+	//     if( !( iJet->pt()>20. && fabs(iJet->eta())<2.4 ) ) continue;
+	//     printf("\t jetsNoEle iSys = %d,\t jet %d: pt = %.2f,\t raw pt = %.2f,\t eta = %.2f,\t phi = %.2f \n", 
+	// 	   iSys, int(iJet - jetsNoEle.begin()), iJet->pt(), iJet->correctedJet(0).pt(), iJet->eta(), iJet->phi() );
+	//   }
+	//   for( std::vector<pat::Jet>::const_iterator iJet = correctedJets_noSys.begin(); iJet != correctedJets_noSys.end(); iJet++ ){ 
+	//     if( !( iJet->pt()>20. && fabs(iJet->eta())<2.4 ) ) continue;
+	//     printf("\t correctedJets_noSy iSys = %d,\t jet %d: pt = %.2f,\t raw pt = %.2f,\t eta = %.2f,\t phi = %.2f \n", 
+	// 	   iSys, int(iJet - correctedJets_noSys.begin()), iJet->pt(), iJet->correctedJet(0).pt(), iJet->eta(), iJet->phi() );
+	//   }
+	//   for( std::vector<pat::Jet>::const_iterator iJet = pfjets->begin(); iJet != pfjets->end(); iJet++ ){ 
+	//     if( !( iJet->pt()>20. && fabs(iJet->eta())<2.4 ) ) continue;
+	//     printf("\t pfjets iSys = %d,\t jet %d: pt = %.2f,\t raw pt = %.2f,\t eta = %.2f,\t phi = %.2f \n", 
+	// 	   iSys, int(iJet - pfjets->begin()), iJet->pt(), iJet->correctedJet(0).pt(), iJet->eta(), iJet->phi() );
+	//   }
+	// }
 	if( selectedJets_loose_unsorted.size()>=minNumLooseJet && selectedJets_loose_tag_unsorted.size()>=minNumLooseTag ){
 	  hasNumJetNumTag = true;
+	  neventsFillTree[iSys]++;
 	}
 
       } // end loop over systematics
@@ -1466,7 +1521,10 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
   //
   // Print Event Report
   //
+  tw.Stop(); // optional
   std::cout << " *********************************************************** " << std::endl;
+  std::cout << "\t\t CPU time = " << tw.CpuTime() << "\t CPU/evt = " << tw.CpuTime()/nevents << std::endl;
+  std::cout << "\t\t Real time = " << tw.RealTime() << "\t Real/evt = " << tw.RealTime()/nevents << std::endl;
   if( isLJ ) std::cout << " ** Lepton + jets event selection ** " << std::endl;
   else       std::cout << " ** Opposite sign dilepton event selection ** " << std::endl;
   std::cout << " " << std::endl;
@@ -1499,6 +1557,7 @@ void yggdrasil_treeMaker_13TeV( int insample=1, int isLJ=1, int maxNentries=-1, 
     std::cout << "   Number of Events with two leptons, >=2 jets, >=2 tags (wgt) = " << nevents_2l_2j_2t_wgt << " (2e = " << nevents_2l_2j_2t_2e_wgt << ", 2m = " << nevents_2l_2j_2t_2m_wgt << ", em = " << nevents_2l_2j_2t_em_wgt << ")" << std::endl;
   }
 
+  for( int i=0; i<rNumSys; i++ ) printf(" i = %d,\t Num Pass = %d \n", i, neventsFillTree[i] );
   std::cout << " *********************************************************** " << std::endl;
 
 

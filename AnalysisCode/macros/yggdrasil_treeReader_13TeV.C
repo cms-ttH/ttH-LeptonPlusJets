@@ -119,6 +119,9 @@ void yggdrasil_treeReader_13TeV(  int insample=1, int maxNentries=-1, int Njobs=
 
   std::string treefilename = "/uscms_data/d2/dpuigh/TTH/miniAOD/CMSSW_7_0_7_patch1/src/ttH-LeptonPlusJets/AnalysisCode/yggdrasil_treeMaker_LJ_mc_TTJets_MSDecaysCKM_central_Tune4C_13TeV_madgraph_PU20bx25_POSTLS170_V5_v1.root";
 
+  treefilename = "/uscms_data/d2/dpuigh/TTH/miniAOD/CMSSW_7_0_7_patch1/src/ttH-LeptonPlusJets/yggdrasil_treeMaker_LJ_mc_TTJets_MSDecaysCKM_central_Tune4C_13TeV_madgraph_PU20bx25_POSTLS170_V5_v1.root";
+  treefilename = "/uscms_data/d2/dpuigh/TTH/miniAOD/CMSSW_7_0_7_patch1/src/ttH-LeptonPlusJets/yggdrasil_treeMaker.root";
+
 
   std::string use_sampleName = sampleName;
   bool doFilterDecay = false;
@@ -159,7 +162,7 @@ void yggdrasil_treeReader_13TeV(  int insample=1, int maxNentries=-1, int Njobs=
   std::cout << "  treefilename  = " << treefilename.c_str() << std::endl;
   std::cout << "  histofilename = " << histofilename.c_str() << std::endl;
 
-  TChain *chain = new TChain("worldTree");
+  TChain *chain = new TChain("ttHTreeMaker/worldTree");
   chain->Add(treefilename.c_str());
 
 

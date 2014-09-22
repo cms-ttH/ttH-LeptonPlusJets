@@ -15,6 +15,13 @@ set p1_HF=$5
 set p0_LF=$6
 set p1_LF=$7
 
+if( $#argv>2 ) then
+    set lumi = $8
+else
+    set lumi = -1
+endif
+
+
 set dir="Images"
 if( ! -e $dir ) then
     mkdir $dir
@@ -22,11 +29,11 @@ endif
 
 ## Iterations (three seems to be sufficent)
 foreach iter ( 0 1 2 )
-    root -b -q macros/head13TeV.C macros/csvSF_treeReader_13TeV.C+'(1,'$iter',2510,-1)'
-    root -b -q macros/head13TeV.C macros/csvSF_treeReader_13TeV.C+'(1,'$iter',2310,-1)'
+    root -b -q macros/head13TeV.C macros/csvSF_treeReader_13TeV.C+'(1,'$iter',2510,-1,1,1,'$lumi')'
+    root -b -q macros/head13TeV.C macros/csvSF_treeReader_13TeV.C+'(1,'$iter',2310,-1,1,1,'$lumi')'
 
-    root -b -q macros/head13TeV.C macros/csvSF_treeReader_13TeV.C+'(0,'$iter',2510,-1)'
-    root -b -q macros/head13TeV.C macros/csvSF_treeReader_13TeV.C+'(0,'$iter',2310,-1)'
+    root -b -q macros/head13TeV.C macros/csvSF_treeReader_13TeV.C+'(0,'$iter',2510,-1,1,1,'$lumi')'
+    root -b -q macros/head13TeV.C macros/csvSF_treeReader_13TeV.C+'(0,'$iter',2310,-1,1,1,'$lumi')'
  
     ## hadd DYJets and TTJets
     hadd -f csv_rwt_hf_v{$iter}_mc_histo.root csv_rwt_hf_${dyname}_v0_histo.root csv_rwt_hf_${ttname}_v{$iter}_histo.root
