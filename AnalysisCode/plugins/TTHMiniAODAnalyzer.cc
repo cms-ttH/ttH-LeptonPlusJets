@@ -1373,7 +1373,7 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     h_muon_selection->Fill(0.5+ncut++, 1);
 
     if( (pfmu->genLepton()) ){
-      if( abs(pfmu->genLepton()->pdgId()==13) ) h_muon_selection->Fill(0.5+ncut++, 1);
+      if( abs(pfmu->genLepton()->pdgId())==13 ) h_muon_selection->Fill(0.5+ncut++, 1);
       else continue;
     }
     else continue;
@@ -1436,7 +1436,7 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     h_electron_selection->Fill(0.5+ncut++, 1);
 
     if( (pfele->genLepton()) ){
-      if( abs(pfele->genLepton()->pdgId()==11) ) h_electron_selection->Fill(0.5+ncut++, 1);
+      if( abs(pfele->genLepton()->pdgId())==11 ) h_electron_selection->Fill(0.5+ncut++, 1);
       else continue;
     }
     else continue;
@@ -1449,7 +1449,7 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     else continue;
 
     if( pfele->gsfTrack().isAvailable() ){
-      if( pfele->gsfTrack()->trackerExpectedHitsInner().numberOfHits()<=0 ) h_electron_selection->Fill(0.5+ncut++, 1);
+      if( pfele->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS)<=0 ) h_electron_selection->Fill(0.5+ncut++, 1);
       else continue;
     }
     else continue;
