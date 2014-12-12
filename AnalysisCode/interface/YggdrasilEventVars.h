@@ -106,6 +106,7 @@ struct yggdrasilEventVars{
   Float_t wgt_topPt_;
   Float_t wgt_topPtUp_;
   Float_t wgt_topPtDown_;
+  double  wgt_generator_;
   double  wgt_[rNumSys];
   double  wgt_csvSF_[rNumSys];  
 
@@ -182,6 +183,8 @@ struct yggdrasilEventVars{
   
   vvdouble jet_vect_TLV_[rNumSys];
   vdouble jet_CSV_[rNumSys];
+  vdouble jet_combinedMVABJetTags_[rNumSys];
+  vdouble jet_combinedInclusiveSecondaryVertexV2BJetTags_[rNumSys];
   vdouble jet_vtxMass_[rNumSys];
   vdouble jet_vtxNtracks_[rNumSys];
   vdouble jet_vtx3DVal_[rNumSys];
@@ -200,11 +203,18 @@ struct yggdrasilEventVars{
 
   vvdouble jet_loose_vect_TLV_[rNumSys];
   vdouble jet_loose_CSV_[rNumSys];
+  vdouble jet_loose_combinedMVABJetTags_[rNumSys];
+  vdouble jet_loose_combinedInclusiveSecondaryVertexV2BJetTags_[rNumSys];
   vdouble jet_loose_vtxMass_[rNumSys];
   vdouble jet_loose_vtxNtracks_[rNumSys];
   vdouble jet_loose_vtx3DVal_[rNumSys];
   vdouble jet_loose_vtx3DSig_[rNumSys];  
   vint jet_loose_flavour_[rNumSys];
+
+  // temp loose jets
+  vvdouble jet_temp_loose_vect_TLV_[rNumSys];
+  vdouble jet_temp_loose_CSV_[rNumSys];
+  vint jet_temp_loose_flavour_[rNumSys];
 
 
   void initialize();
@@ -270,6 +280,7 @@ void yggdrasilEventVars::initialize(){
   lepton_genGrandParentId_.clear();
 
 
+  wgt_generator_        = -99.9;
   wgt_lumi_             = -99.9;
   wgt_xs_               = -99.9;
   wgt_nGen_             = -99.9;
@@ -360,6 +371,8 @@ void yggdrasilEventVars::initialize(){
   
     jet_vect_TLV_[iSys].clear();
     jet_CSV_[iSys].clear();
+    jet_combinedMVABJetTags_[iSys].clear();
+    jet_combinedInclusiveSecondaryVertexV2BJetTags_[iSys].clear();
     jet_vtxMass_[iSys].clear();
     jet_vtxNtracks_[iSys].clear();
     jet_vtx3DVal_[iSys].clear();
@@ -371,11 +384,18 @@ void yggdrasilEventVars::initialize(){
 
     jet_loose_vect_TLV_[iSys].clear();
     jet_loose_CSV_[iSys].clear();
+    jet_loose_combinedMVABJetTags_[iSys].clear();
+    jet_loose_combinedInclusiveSecondaryVertexV2BJetTags_[iSys].clear();
     jet_loose_vtxMass_[iSys].clear();
     jet_loose_vtxNtracks_[iSys].clear();
     jet_loose_vtx3DVal_[iSys].clear();
     jet_loose_vtx3DSig_[iSys].clear();
     jet_loose_flavour_[iSys].clear();
+
+
+    jet_temp_loose_vect_TLV_[iSys].clear();
+    jet_temp_loose_CSV_[iSys].clear();
+    jet_temp_loose_flavour_[iSys].clear();
 
     IsTauTauLeptonEvent_[iSys] = -99;
   }

@@ -58,6 +58,7 @@
 #include "DataFormats/HLTReco/interface/TriggerTypeDefs.h"
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
@@ -107,6 +108,9 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   edm::EDGetTokenT <reco::GenParticleCollection> mcparicleToken;
   edm::EDGetTokenT <std::vector< PileupSummaryInfo > > puInfoToken;
 
+  edm::EDGetTokenT <GenEventInfoProduct> genInfoProductToken;
+
+  edm::EDGetTokenT <pat::JetCollection> tempjetToken;
 
   bool verbose_;
 
@@ -198,6 +202,10 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig)
   rhoToken = consumes <double> (edm::InputTag(std::string("fixedGridRhoAll")));
   mcparicleToken = consumes <reco::GenParticleCollection> (edm::InputTag(std::string("prunedGenParticles")));
   puInfoToken = consumes <std::vector< PileupSummaryInfo > > (edm::InputTag(std::string("addPileupInfo")));
+
+  genInfoProductToken = consumes <GenEventInfoProduct> (edm::InputTag(std::string("generator")));
+  
+  tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("patJetsAK4PFCHS")));
 
 
   edm::Service<TFileService> fs_;
@@ -307,6 +315,16 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   iEvent.getByToken(puInfoToken,PupInfo);
 
 
+  edm::Handle<GenEventInfoProduct> GenEventInfoHandle;
+  iEvent.getByToken(genInfoProductToken,GenEventInfoHandle);
+
+  double GenEventInfoWeight = GenEventInfoHandle.product()->weight();
+
+
+
+  edm::Handle<pat::JetCollection> pftempjets;
+  iEvent.getByToken(tempjetToken,pftempjets);
+
 
   math::XYZPoint beamSpotPosition;
   beamSpotPosition.SetCoordinates(0,0,0);
@@ -406,7 +424,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 
   // Event must either be LJ or DIL, as requested
-  if( !((isLJ_ && passLJ) || (!isLJ_ && passDIL)) ) return;
+  // remove for now
+  //if( !((isLJ_ && passLJ) || (!isLJ_ && passDIL)) ) return;
 
   eve->PassLJ_ = ( passLJ ) ? 1 : 0;
   eve->PassDIL_ = ( passDIL ) ? 1 : 0;
@@ -441,6 +460,13 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   std::vector<pat::Jet> selectedJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 20., 2.4, jetID::jetLoose, '-' );
   std::vector<pat::Jet> selectedJets_loose_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 20., 2.4, jetID::jetLoose, 'M' );
+
+
+  std::vector<pat::Jet> rawTempJets = miniAODhelper.GetUncorrectedJets(*pftempjets);
+  std::vector<pat::Jet> tempJetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons_loose, rawTempJets);
+  std::vector<pat::Jet> tempJetsNoEle = miniAODhelper.RemoveOverlaps(selectedElectrons_loose, tempJetsNoMu);
+  std::vector<pat::Jet> correctedTempJets_noSys = miniAODhelper.GetCorrectedJets(tempJetsNoEle, iEvent, iSetup);
+  std::vector<pat::Jet> selectedTempJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedTempJets_noSys, 20., 2.4, jetID::jetLoose, '-' );
 
 
 
@@ -723,6 +749,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->wgt_xs_    = mySample_xSec_;//mySample.xSec;
   eve->wgt_nGen_  = mySample_nGen_;//mySample.nGen;
 
+  eve->wgt_generator_ = GenEventInfoWeight;
 
   double wgt_topPtSF     = 1;//miniAODhelper.GetTopPtweight( mcparticles );
   double wgt_topPtSFUp   = 1;//miniAODhelper.GetTopPtweightUp( mcparticles );
@@ -877,6 +904,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     double min_dR_lep_jet = 99.;
     vecTLorentzVector jetV;
     std::vector<double> csvV;
+    std::vector<double> jet_combinedMVABJetTags;
+    std::vector<double> jet_combinedInclusiveSecondaryVertexV2BJetTags;
     std::vector<double> jet_vtxMass;
     std::vector<double> jet_vtxNtracks;
     std::vector<double> jet_vtx3DVal;
@@ -965,6 +994,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	sum_btag_disc_non_btags += myCSV;
       }
 
+      jet_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
+      jet_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") );
 
       // Second Loop over selected jets
       for( std::vector<pat::Jet>::const_iterator jJet = iJet; jJet != selectedJets.end(); jJet++ ){ 
@@ -1021,9 +1052,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
     std::vector<pat::Jet> selectedJets_loose_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::jetLoose, 'M' );
 
-
     vvdouble vvjets_loose;
     std::vector<double> csvV_loose;
+    std::vector<double> jet_loose_combinedMVABJetTags;
+    std::vector<double> jet_loose_combinedInclusiveSecondaryVertexV2BJetTags;
     std::vector<double> jet_loose_vtxMass;
     std::vector<double> jet_loose_vtxNtracks;
     std::vector<double> jet_loose_vtx3DVal;
@@ -1053,6 +1085,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
       jet_all_flavour.push_back(iJet->partonFlavour());
 
+      jet_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
+      jet_loose_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") );
+
       // MHT
       mht_px += - iJet->px();
       mht_py += - iJet->py();
@@ -1081,6 +1116,47 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       csvV_loose.push_back(myCSV);
       if( myCSV>0.679 ) numTag_loose++;
     }
+
+
+
+
+    // Add temp loose jet container
+    std::vector<pat::Jet> selectedTempJets_loose_unsorted = selectedTempJets_loose_noSys_unsorted;
+    std::vector<pat::Jet> selectedTempJets_loose = miniAODhelper.GetSortedByPt( selectedTempJets_loose_unsorted );
+
+    vvdouble vvjets_temp_loose;
+    std::vector<double> csvV_temp_loose;
+    vint jet_flavour_vect_temp_loose;
+    vecTLorentzVector jetV_temp_loose;
+
+    // Loop over selected jets
+    for( std::vector<pat::Jet>::const_iterator iJet = selectedTempJets_loose.begin(); iJet != selectedTempJets_loose.end(); iJet++ ){ 
+
+      vdouble vjets_temp_loose;
+      vjets_temp_loose.push_back(iJet->px());
+      vjets_temp_loose.push_back(iJet->py());
+      vjets_temp_loose.push_back(iJet->pz());
+      vjets_temp_loose.push_back(iJet->energy());
+      jet_all_vect_TLV.push_back(vjets_temp_loose);
+
+      double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
+      // jet_temp_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
+      // jet_temp_loose_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") );
+
+      jet_flavour_vect_temp_loose.push_back(iJet->partonFlavour());
+
+      TLorentzVector jet0p4;	  
+      jet0p4.SetPxPyPzE(iJet->px(),iJet->py(),iJet->pz(),iJet->energy());
+      jetV_temp_loose.push_back(jet0p4);
+
+      // make vvdouble version of vecTLorentzVector
+      vvjets_temp_loose.push_back(vjets_temp_loose);
+
+      // Get CSV discriminant
+      csvV_temp_loose.push_back(myCSV);
+    }
+
+
 
 
   
@@ -1360,6 +1436,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
     eve->jet_vect_TLV_[iSys]   = vvjets;
     eve->jet_CSV_[iSys]        = csvV;
+    eve->jet_combinedMVABJetTags_[iSys] = jet_combinedMVABJetTags;
+    eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[iSys] = jet_combinedInclusiveSecondaryVertexV2BJetTags;
+
     eve->jet_vtxMass_[iSys]    = jet_vtxMass;
     eve->jet_vtxNtracks_[iSys] = jet_vtxNtracks;
     eve->jet_vtx3DVal_[iSys]   = jet_vtx3DVal;
@@ -1377,11 +1456,19 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
     eve->jet_loose_vect_TLV_[iSys] = vvjets_loose;
     eve->jet_loose_CSV_[iSys]      = csvV_loose;
+    eve->jet_loose_combinedMVABJetTags_[iSys] = jet_loose_combinedMVABJetTags;
+    eve->jet_loose_combinedInclusiveSecondaryVertexV2BJetTags_[iSys] = jet_loose_combinedInclusiveSecondaryVertexV2BJetTags;
     eve->jet_loose_vtxMass_[iSys]    = jet_loose_vtxMass;
     eve->jet_loose_vtxNtracks_[iSys] = jet_loose_vtxNtracks;
     eve->jet_loose_vtx3DVal_[iSys]   = jet_loose_vtx3DVal;
     eve->jet_loose_vtx3DSig_[iSys]   = jet_loose_vtx3DSig;
     eve->jet_loose_flavour_[iSys]  = jet_flavour_vect_loose;
+
+
+    // temp jets
+    eve->jet_temp_loose_vect_TLV_[iSys] = vvjets_temp_loose;
+    eve->jet_temp_loose_CSV_[iSys]      = csvV_temp_loose;
+    eve->jet_temp_loose_flavour_[iSys]  = jet_flavour_vect_temp_loose;
 
 
 
@@ -1437,7 +1524,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   //
   // Fill tree if pass full selection
   //
-  if( hasNumJetNumTag ){
+  if( hasNumJetNumTag || true ){
     worldTree->Fill();
   }
 
