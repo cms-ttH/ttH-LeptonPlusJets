@@ -46,6 +46,8 @@
 #include "PhysicsTools/SelectorUtils/interface/JetIDSelectionFunctor.h"
 #include "PhysicsTools/SelectorUtils/interface/strbitset.h"
 
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
+
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 
@@ -54,6 +56,15 @@
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "DataFormats/HLTReco/interface/TriggerEventWithRefs.h"
 #include "DataFormats/HLTReco/interface/TriggerTypeDefs.h"
+
+#include "DataFormats/L1Trigger/interface/L1EmParticle.h"
+#include "DataFormats/L1Trigger/interface/L1JetParticle.h"
+#include "DataFormats/L1Trigger/interface/L1MuonParticle.h"
+#include "DataFormats/L1Trigger/interface/L1EtMissParticle.h"
+#include "DataFormats/L1Trigger/interface/L1ParticleMap.h"
+#include "DataFormats/L1Trigger/interface/L1ParticleMapFwd.h"
+#include "DataFormats/L1Trigger/interface/L1HFRings.h"
+#include "DataFormats/L1Trigger/interface/L1HFRingsFwd.h"
 
 #include "DataFormats/Candidate/interface/VertexCompositePtrCandidate.h"
 #include "DataFormats/Candidate/interface/VertexCompositePtrCandidateFwd.h"
@@ -107,9 +118,21 @@ class TTHMiniAODAnalyzer : public edm::EDAnalyzer {
   edm::EDGetTokenT <pat::PackedCandidateCollection> packedpfToken;
 
   edm::EDGetTokenT <reco::BeamSpot> beamspotToken;
-  edm::EDGetTokenT <double> rhoToken;
+  edm::EDGetTokenT <double> rhoToken_fixedGridRhoAll;
+  edm::EDGetTokenT <double> rhoToken_fixedGridRhoFastjetAll;
+  edm::EDGetTokenT <double> rhoToken_fixedGridRhoFastjetAllCalo;
+  edm::EDGetTokenT <double> rhoToken_fixedGridRhoFastjetCentralCalo;
+  edm::EDGetTokenT <double> rhoToken_fixedGridRhoFastjetCentralChargedPileUp;
+  edm::EDGetTokenT <double> rhoToken_fixedGridRhoFastjetCentralNeutral;
+
+  edm::EDGetTokenT <EcalRecHitCollection> reducedEBRecHitsToken;
+  edm::EDGetTokenT <EcalRecHitCollection> reducedEERecHitsToken;
+
+  edm::EDGetTokenT <pat::PackedCandidateCollection> lostTrackToken;
+
   edm::EDGetTokenT <reco::GenParticleCollection> mcparicleToken;
   edm::EDGetTokenT <std::vector< PileupSummaryInfo > > puInfoToken;
+
 
   HLTConfigProvider hlt_config_;
   HLTConfigProvider filter_config_;
@@ -165,10 +188,95 @@ class TTHMiniAODAnalyzer : public edm::EDAnalyzer {
   TH1D *h_hlt;
   TH1D *h_flt;
 
+  TH1D* h_rho_fixedGridRhoAll;
+  TH1D* h_rho_fixedGridRhoFastjetAll;
+  TH1D* h_rho_fixedGridRhoFastjetAllCalo;
+  TH1D* h_rho_fixedGridRhoFastjetCentralCalo;
+  TH1D* h_rho_fixedGridRhoFastjetCentralChargedPileUp;
+  TH1D* h_rho_fixedGridRhoFastjetCentralNeutral;
+
+  TH1D* h_pfcand_pseudoTrack_pt;
+  TH1D* h_pfcand_pseudoTrack_eta;
+  TH1D* h_pfcand_pseudoTrack_phi;
+  TH1D* h_pfcand_pseudoTrack_ndof;
+  TH1D* h_pfcand_pseudoTrack_chi2;
+  TH1D* h_pfcand_pseudoTrack_normChi2;
+  TH1D* h_pfcand_pseudoTrack_numberOfLostHits;
+  TH1D* h_pfcand_pseudoTrack_numberOfValidHits;
+  TH1D* h_pfcand_numberOfPixelHits;
+  TH1D* h_pfcand_numberOfHits;
+  TH1D* h_pfcand_pseudoTrack_hitPattern_numberOfValidHits;
+  TH1D* h_pfcand_pseudoTrack_hitPattern_numberOfValidTrackerHits;
+  TH1D* h_pfcand_pseudoTrack_hitPattern_numberOfValidPixelHits;
+
+  TH1D* h_lostTrack_pt;
+  TH1D* h_lostTrack_eta;
+  TH1D* h_lostTrack_phi;
+  TH1D* h_lostTrack_ndof;
+  TH1D* h_lostTrack_chi2;
+  TH1D* h_lostTrack_normChi2;
+  TH1D* h_lostTrack_numberOfLostHits;
+  TH1D* h_lostTrack_numberOfValidHits;
+  TH1D* h_lostTrack_hitPattern_numberOfValidHits;
+  TH1D* h_lostTrack_hitPattern_numberOfValidTrackerHits;
+  TH1D* h_lostTrack_hitPattern_numberOfValidPixelHits;
+
+
+  TH1D* h_ele_pt;
+  TH1D* h_ele_eta;
+  TH1D* h_ele_phi;
+  TH1D* h_ele_eSuperClusterOverP;
+  TH1D* h_ele_eSeedClusterOverP;
+  TH1D* h_ele_eSeedClusterOverPout;
+  TH1D* h_ele_eEleClusterOverPout;
+  TH1D* h_ele_sigmaEtaEta;
+  TH1D* h_ele_sigmaIetaIeta;
+  TH1D* h_ele_e1x5;
+  TH1D* h_ele_e2x5Max;
+  TH1D* h_ele_e5x5;
+  TH1D* h_ele_r9;
+  TH1D* h_ele_hcalOverEcal;
+  TH1D* h_ele_hadronicOverEm;
+  TH1D* h_ele_scSigmaEtaEta;
+  TH1D* h_ele_scSigmaIEtaIEta;
+  TH1D* h_ele_scE1x5;
+  TH1D* h_ele_scE2x5Max;
+  TH1D* h_ele_scE5x5;
+  TH1D* h_ele_ecalEnergy;
+  TH1D* h_ele_caloEnergy;
+
+  TH1D* h_ele_gsfTrack_pt;
+  TH1D* h_ele_gsfTrack_eta;
+  TH1D* h_ele_gsfTrack_phi;
+  TH1D* h_ele_gsfTrack_ndof;
+  TH1D* h_ele_gsfTrack_chi2;
+  TH1D* h_ele_gsfTrack_normChi2;
+  TH1D* h_ele_gsfTrack_numberOfLostHits;
+  TH1D* h_ele_gsfTrack_numberOfValidHits;
+  TH1D* h_ele_gsfTrack_trackerExpectedHitsInner_numberOfLostHits;
+  TH1D* h_ele_gsfTrack_trackerExpectedHitsInner_numberOfHits;
+  TH1D* h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelHits;
+  TH1D* h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelBarrelHits;
+  TH1D* h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelEndcapHits;
+  TH1D* h_ele_gsfTrack_hitPattern_numberOfValidHits;
+  TH1D* h_ele_gsfTrack_hitPattern_numberOfValidTrackerHits;
+  TH1D* h_ele_gsfTrack_hitPattern_numberOfValidPixelHits;
+
+  TH1D* h_ele_recHit_energy;
+
+  TH1D* h_EBRecHit_energy;
+  TH1D* h_EERecHit_energy;
+
   TH1D* h_numJet;
   TH1D* h_numTag;
+
+  TH1D* h_numTag_BtagWP65_CSV;
+  TH1D* h_numTag_BtagWP65_CMVA;
+  TH1D* h_numTag_BtagWP65_CSVv2IVF;
+
   TH1D* h_numPV;
   TH1D* h_numTruePV;
+  TH1D* h_numGenPV;
 
   TH1D* h_numSecVtx;
 
@@ -330,6 +438,34 @@ class TTHMiniAODAnalyzer : public edm::EDAnalyzer {
   TH1D* h_category_yield_1e_noiso;
   TH1D* h_category_yield_1m_noiso;
 
+  TH1D* h_category_yield_BtagWP65_CSV;
+  TH1D* h_category_yield_BtagWP65_CMVA;
+  TH1D* h_category_yield_BtagWP65_CSVv2IVF;
+
+  TH1D* h_category_yield_1l_BtagWP65_CSV;
+  TH1D* h_category_yield_1l_BtagWP65_CMVA;
+  TH1D* h_category_yield_1l_BtagWP65_CSVv2IVF;
+
+  TH1D* h_category_yield_1e_BtagWP65_CSV;
+  TH1D* h_category_yield_1e_BtagWP65_CMVA;
+  TH1D* h_category_yield_1e_BtagWP65_CSVv2IVF;
+
+  TH1D* h_category_yield_1m_BtagWP65_CSV;
+  TH1D* h_category_yield_1m_BtagWP65_CMVA;
+  TH1D* h_category_yield_1m_BtagWP65_CSVv2IVF;
+
+  TH1D* h_category_yield_1l_noiso_BtagWP65_CSV;
+  TH1D* h_category_yield_1l_noiso_BtagWP65_CMVA;
+  TH1D* h_category_yield_1l_noiso_BtagWP65_CSVv2IVF;
+
+  TH1D* h_category_yield_1e_noiso_BtagWP65_CSV;
+  TH1D* h_category_yield_1e_noiso_BtagWP65_CMVA;
+  TH1D* h_category_yield_1e_noiso_BtagWP65_CSVv2IVF;
+
+  TH1D* h_category_yield_1m_noiso_BtagWP65_CSV;
+  TH1D* h_category_yield_1m_noiso_BtagWP65_CMVA;
+  TH1D* h_category_yield_1m_noiso_BtagWP65_CSVv2IVF;
+
   TH1D* h_pfcand_energy;
   TH1D* h_pfcand_pt;
   TH1D* h_pfcand_eta;
@@ -431,7 +567,18 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
   packedpfToken = consumes <pat::PackedCandidateCollection> (edm::InputTag(std::string("packedPFCandidates")));
 
   beamspotToken = consumes <reco::BeamSpot> (edm::InputTag(std::string("offlineBeamSpot")));
-  rhoToken = consumes <double> (edm::InputTag(std::string("fixedGridRhoAll")));
+  rhoToken_fixedGridRhoAll = consumes <double> (edm::InputTag(std::string("fixedGridRhoAll")));
+  rhoToken_fixedGridRhoFastjetAll = consumes <double> (edm::InputTag(std::string("fixedGridRhoFastjetAll")));
+  rhoToken_fixedGridRhoFastjetAllCalo = consumes <double> (edm::InputTag(std::string("fixedGridRhoFastjetAllCalo")));
+  rhoToken_fixedGridRhoFastjetCentralCalo = consumes <double> (edm::InputTag(std::string("fixedGridRhoFastjetCentralCalo")));
+  rhoToken_fixedGridRhoFastjetCentralChargedPileUp = consumes <double> (edm::InputTag(std::string("fixedGridRhoFastjetCentralChargedPileUp")));
+  rhoToken_fixedGridRhoFastjetCentralNeutral = consumes <double> (edm::InputTag(std::string("fixedGridRhoFastjetCentralNeutral")));
+
+  reducedEBRecHitsToken = consumes <EcalRecHitCollection> (edm::InputTag(std::string("reducedEgamma"), std::string("reducedEBRecHits")));
+  reducedEERecHitsToken = consumes <EcalRecHitCollection> (edm::InputTag(std::string("reducedEgamma"), std::string("reducedEERecHits")));
+
+  lostTrackToken = consumes <pat::PackedCandidateCollection> (edm::InputTag(std::string("lostTracks")));
+
   mcparicleToken = consumes <reco::GenParticleCollection> (edm::InputTag(std::string("prunedGenParticles")));
   puInfoToken = consumes <std::vector< PileupSummaryInfo > > (edm::InputTag(std::string("addPileupInfo")));
 
@@ -457,9 +604,102 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
   h_numTag = fs_->make<TH1D>("h_numTag", ";Number of Tags", NtagBins, NtagMin-0.5, NtagMax+0.5 );
   h_numPV  = fs_->make<TH1D>("h_numPV", ";Number of Good Vertices", NpuBins, NpuMin-0.5, NpuMax+0.5 );
   h_numTruePV  = fs_->make<TH1D>("h_numTruePV", ";Number of True PU Vertices", NpuBins, NpuMin-0.5, NpuMax+0.5 );
+  h_numGenPV  = fs_->make<TH1D>("h_numGenPV", ";Number of Generated PU Vertices", NpuBins, NpuMin-0.5, NpuMax+0.5 );
+
+  h_numTag_BtagWP65_CSV = fs_->make<TH1D>("h_numTag_BtagWP65_CSV", ";Number of Tags (WP65, CSV)", NtagBins, NtagMin-0.5, NtagMax+0.5 );
+  h_numTag_BtagWP65_CMVA = fs_->make<TH1D>("h_numTag_BtagWP65_CMVA", ";Number of Tags (WP65, CMVA)", NtagBins, NtagMin-0.5, NtagMax+0.5 );
+  h_numTag_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_numTag_BtagWP65_CSVv2IVF", ";Number of Tags (WP65, CSVv2IVF)", NtagBins, NtagMin-0.5, NtagMax+0.5 );
 
   h_numSecVtx = fs_->make<TH1D>("h_numSecVtx", ";Number of Secondary Vertices", 6, 6-0.5, 6+0.5 );
 
+
+  int NumRhoBins = 60;
+  double rhoMin = 0.;
+  double rhoMax = 60.;
+  h_rho_fixedGridRhoAll = fs_->make<TH1D>("h_rho_fixedGridRhoAll", ";rho fixedGridRhoAll", NumRhoBins, rhoMin, rhoMax );
+  h_rho_fixedGridRhoFastjetAll = fs_->make<TH1D>("h_rho_fixedGridRhoFastjetAll", ";rho fixedGridRhoFastjetAll", NumRhoBins, rhoMin, rhoMax );
+  h_rho_fixedGridRhoFastjetAllCalo = fs_->make<TH1D>("h_rho_fixedGridRhoFastjetAllCalo", ";rho fixedGridRhoFastjetAllCalo", NumRhoBins, rhoMin, rhoMax );
+  h_rho_fixedGridRhoFastjetCentralCalo = fs_->make<TH1D>("h_rho_fixedGridRhoFastjetCentralCalo", ";rho fixedGridRhoFastjetCentralCalo", NumRhoBins, rhoMin, rhoMax );
+  h_rho_fixedGridRhoFastjetCentralChargedPileUp = fs_->make<TH1D>("h_rho_fixedGridRhoFastjetCentralChargedPileUp", ";rho fixedGridRhoFastjetCentralChargedPileUp", NumRhoBins, rhoMin, rhoMax );
+  h_rho_fixedGridRhoFastjetCentralNeutral = fs_->make<TH1D>("h_rho_fixedGridRhoFastjetCentralNeutral", ";rho fixedGridRhoFastjetCentralNeutral", NumRhoBins, rhoMin, rhoMax );
+
+
+
+  h_pfcand_pseudoTrack_pt = fs_->make<TH1D>("h_pfcand_pseudoTrack_pt", ";pfCand pseudoTrack p_{T}", 100, 0, 200 );
+  h_pfcand_pseudoTrack_eta = fs_->make<TH1D>("h_pfcand_pseudoTrack_eta", ";pfCand pseudoTrack #eta", 100, -2.8, 2.8 );
+  h_pfcand_pseudoTrack_phi = fs_->make<TH1D>("h_pfcand_pseudoTrack_phi", ";pfCand pseudoTrack #phi", 100, -3.15, 3.15 );
+  h_pfcand_pseudoTrack_ndof = fs_->make<TH1D>("h_pfcand_pseudoTrack_ndof", ";pfCand pseudoTrack ndof", 100, 0, 30 );
+  h_pfcand_pseudoTrack_chi2 = fs_->make<TH1D>("h_pfcand_pseudoTrack_chi2", ";pfCand pseudoTrack chi2", 100, 0, 100 );
+  h_pfcand_pseudoTrack_normChi2 = fs_->make<TH1D>("h_pfcand_pseudoTrack_normChi2", ";pfCand pseudoTrack normChi2", 100, 0, 200 );
+  h_pfcand_pseudoTrack_numberOfLostHits = fs_->make<TH1D>("h_pfcand_pseudoTrack_numberOfLostHits", ";pfCand pseudoTrack numberOfLostHits", 10, 0, 10 );
+  h_pfcand_pseudoTrack_numberOfValidHits = fs_->make<TH1D>("h_pfcand_pseudoTrack_numberOfValidHits", ";pfCand pseudoTrack numberOfValidHits", 40, 0, 40 );
+  h_pfcand_numberOfPixelHits = fs_->make<TH1D>("h_pfcand_numberOfPixelHits", ";pfCand numberOfPixelHits", 10, 0, 10 );
+  h_pfcand_numberOfHits = fs_->make<TH1D>("h_pfcand_numberOfHits", ";pfCand numberOfHits", 40, 0, 40 );
+  h_pfcand_pseudoTrack_hitPattern_numberOfValidHits = fs_->make<TH1D>("h_pfcand_pseudoTrack_hitPattern_numberOfValidHits", ";pfCand hitPattern numberOfValidHits", 40, 0, 40 );
+  h_pfcand_pseudoTrack_hitPattern_numberOfValidTrackerHits = fs_->make<TH1D>("h_pfcand_pseudoTrack_hitPattern_numberOfValidTrackerHits", ";pfCand hitPattern numberOfValidTrackerHits", 40, 0, 40 );
+  h_pfcand_pseudoTrack_hitPattern_numberOfValidPixelHits = fs_->make<TH1D>("h_pfcand_pseudoTrack_hitPattern_numberOfValidPixelHits", ";pfCand hitPattern numberOfValidPixelHits", 10, 0, 10 );
+
+
+
+  h_lostTrack_pt = fs_->make<TH1D>("h_lostTrack_pt", ";lostTrack p_{T}", 100, 0, 200 );
+  h_lostTrack_eta = fs_->make<TH1D>("h_lostTrack_eta", ";lostTrack #eta", 100, -2.8, 2.8 );
+  h_lostTrack_phi = fs_->make<TH1D>("h_lostTrack_phi", ";lostTrack #phi", 100, -3.15, 3.15 );
+  h_lostTrack_ndof = fs_->make<TH1D>("h_lostTrack_ndof", ";lostTrack ndof", 100, 0, 30 );
+  h_lostTrack_chi2 = fs_->make<TH1D>("h_lostTrack_chi2", ";lostTrack chi2", 100, 0, 100 );
+  h_lostTrack_normChi2 = fs_->make<TH1D>("h_lostTrack_normChi2", ";lostTrack normChi2", 40, 0, 40 );
+  h_lostTrack_numberOfLostHits = fs_->make<TH1D>("h_lostTrack_numberOfLostHits", ";lostTrack numberOfLostHits", 10, 0, 10 );
+  h_lostTrack_numberOfValidHits = fs_->make<TH1D>("h_lostTrack_numberOfValidHits", ";lostTrack numberOfValidHits", 40, 0, 40 );
+  h_lostTrack_hitPattern_numberOfValidHits = fs_->make<TH1D>("h_lostTrack_hitPattern_numberOfValidHits", ";lostTrack hitPattern numberOfValidHits", 40, 0, 40 );
+  h_lostTrack_hitPattern_numberOfValidTrackerHits = fs_->make<TH1D>("h_lostTrack_hitPattern_numberOfValidTrackerHits", ";lostTrack hitPattern numberOfValidTrackerHits", 40, 0, 40 );
+  h_lostTrack_hitPattern_numberOfValidPixelHits = fs_->make<TH1D>("h_lostTrack_hitPattern_numberOfValidPixelHits", ";lostTrack hitPattern numberOfValidPixelHits", 10, 0, 10 );
+
+
+
+  h_ele_pt = fs_->make<TH1D>("h_ele_pt", ";electron p_{T}", 100, 0, 200 );
+  h_ele_eta = fs_->make<TH1D>("h_ele_eta", ";electron #eta", 100, -2.8, 2.8 );
+  h_ele_phi = fs_->make<TH1D>("h_ele_phi", ";electron #phi", 100, -3.15, 3.15 );
+  h_ele_eSuperClusterOverP = fs_->make<TH1D>("h_ele_eSuperClusterOverP", ";electron eSuperClusterOverP", 100, 0, 10 );
+  h_ele_eSeedClusterOverP = fs_->make<TH1D>("h_ele_eSeedClusterOverP", ";electron eSeedClusterOverP", 100, 0, 10 );
+  h_ele_eSeedClusterOverPout = fs_->make<TH1D>("h_ele_eSeedClusterOverPout", ";electron eSeedClusterOverPout", 100, 0, 10 );
+  h_ele_eEleClusterOverPout = fs_->make<TH1D>("h_ele_eEleClusterOverPout", ";electron eEleClusterOverPout", 100, 0, 10 );
+  h_ele_sigmaEtaEta = fs_->make<TH1D>("h_ele_sigmaEtaEta", ";electron sigmaEtaEta", 100, 0, 0.06 );
+  h_ele_sigmaIetaIeta = fs_->make<TH1D>("h_ele_sigmaIetaIeta", ";electron sigmaIetaIeta", 100, 0, 0.06 );
+  h_ele_e1x5 = fs_->make<TH1D>("h_ele_e1x5", ";electron e1x5", 100, 0, 200 );
+  h_ele_e2x5Max = fs_->make<TH1D>("h_ele_e2x5Max", ";electron e2x5Max", 100, 0, 200 );
+  h_ele_e5x5 = fs_->make<TH1D>("h_ele_e5x5", ";electron e5x5", 100, 0, 200 );
+  h_ele_r9 = fs_->make<TH1D>("h_ele_r9", ";electron r9", 100, 0, 1.1 );
+  h_ele_hcalOverEcal = fs_->make<TH1D>("h_ele_hcalOverEcal", ";electron hcalOverEcal", 100, 0, 10 );
+  h_ele_hadronicOverEm = fs_->make<TH1D>("h_ele_hadronicOverEm", ";electron hadronicOverEm", 100, 0, 10 );
+  h_ele_scSigmaEtaEta = fs_->make<TH1D>("h_ele_scSigmaEtaEta", ";electron scSigmaEtaEta", 100, 0, 0.06 );
+  h_ele_scSigmaIEtaIEta = fs_->make<TH1D>("h_ele_scSigmaIEtaIEta", ";electron scSigmaIEtaIEta", 100, 0, 0.06 );
+  h_ele_scE1x5 = fs_->make<TH1D>("h_ele_scE1x5", ";electron scE1x5", 100, 0, 200 );
+  h_ele_scE2x5Max = fs_->make<TH1D>("h_ele_scE2x5Max", ";electron scE2x5Max", 100, 0, 200 );
+  h_ele_scE5x5 = fs_->make<TH1D>("h_ele_scE5x5", ";electron scE5x5", 100, 0, 200 );
+  h_ele_ecalEnergy = fs_->make<TH1D>("h_ele_ecalEnergy", ";electron ecalEnergy", 100, 0, 400 );
+  h_ele_caloEnergy = fs_->make<TH1D>("h_ele_caloEnergy", ";electron caloEnergy", 100, 0, 400 );
+
+  h_ele_gsfTrack_pt = fs_->make<TH1D>("h_ele_gsfTrack_pt", ";electron gsfTrack p_{T}", 100, 0, 200 );
+  h_ele_gsfTrack_eta = fs_->make<TH1D>("h_ele_gsfTrack_eta", ";electron gsfTrack #eta", 100, -2.8, 2.8 );
+  h_ele_gsfTrack_phi = fs_->make<TH1D>("h_ele_gsfTrack_phi", ";electron gsfTrack #phi", 100, -3.15, 3.15 );
+  h_ele_gsfTrack_ndof = fs_->make<TH1D>("h_ele_gsfTrack_ndof", ";electron gsfTrack ndof", 100, 0, 30 );
+  h_ele_gsfTrack_chi2 = fs_->make<TH1D>("h_ele_gsfTrack_chi2", ";electron gsfTrack chi2", 100, 0, 100 );
+  h_ele_gsfTrack_normChi2 = fs_->make<TH1D>("h_ele_gsfTrack_normChi2", ";electron gsfTrack normChi2", 100, 0, 200 );
+  h_ele_gsfTrack_numberOfLostHits = fs_->make<TH1D>("h_ele_gsfTrack_numberOfLostHits", ";electron gsfTrack numberOfLostHits", 10, 0, 10 );
+  h_ele_gsfTrack_numberOfValidHits = fs_->make<TH1D>("h_ele_gsfTrack_numberOfValidHits", ";electron gsfTrack numberOfValidHits", 30, 0, 30 );
+  h_ele_gsfTrack_trackerExpectedHitsInner_numberOfLostHits = fs_->make<TH1D>("h_ele_gsfTrack_trackerExpectedHitsInner_numberOfLostHits", ";electron gsfTrack numberOfLostHits", 10, 0, 10 );
+  h_ele_gsfTrack_trackerExpectedHitsInner_numberOfHits = fs_->make<TH1D>("h_ele_gsfTrack_trackerExpectedHitsInner_numberOfHits", ";electron gsfTrack numberOfHits", 10, 0, 10 );
+  h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelHits = fs_->make<TH1D>("h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelHits", ";electron gsfTrack numberOfValidPixelHits", 10, 0, 10 );
+  h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelBarrelHits = fs_->make<TH1D>("h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelBarrelHits", ";electron gsfTrack numberOfValidPixelBarrelHits", 10, 0, 10 );
+  h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelEndcapHits = fs_->make<TH1D>("h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelEndcapHits", ";electron gsfTrack numberOfValidPixelEndcapHits", 10, 0, 10 );
+  h_ele_gsfTrack_hitPattern_numberOfValidHits = fs_->make<TH1D>("h_ele_gsfTrack_hitPattern_numberOfValidHits", ";electron gsfTrack hitPattern numberOfValidHits", 40, 0, 40 );
+  h_ele_gsfTrack_hitPattern_numberOfValidTrackerHits = fs_->make<TH1D>("h_ele_gsfTrack_hitPattern_numberOfValidTrackerHits", ";electron gsfTrack hitPattern numberOfValidTrackerHits", 40, 0, 40 );
+  h_ele_gsfTrack_hitPattern_numberOfValidPixelHits = fs_->make<TH1D>("h_ele_gsfTrack_hitPattern_numberOfValidPixelHits", ";electron gsfTrack hitPattern numberOfValidPixelHits", 10, 0, 10 );
+
+  h_ele_recHit_energy = fs_->make<TH1D>("h_ele_recHit_energy", ";electron recHit E", 100, 0, 200 );
+
+  h_EBRecHit_energy = fs_->make<TH1D>("h_EBRecHit_energy", ";EB recHit energy", 100, 0, 200 );
+  h_EERecHit_energy = fs_->make<TH1D>("h_EERecHit_energy", ";EE recHit energy", 100, 0, 200 );
+  
 
   h_jet_pt = fs_->make<TH1D>("h_jet_pt",";jet p_{T}", NjetptBins, 0, jetptmax );
   h_jet_eta = fs_->make<TH1D>("h_jet_eta",";jet #eta", 25, -2.5, 2.5 );
@@ -711,6 +951,35 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
   h_category_yield_1e_noiso = fs_->make<TH1D>("h_category_yield_1e_noiso", ";category", NumCat, 0, NumCat );
   h_category_yield_1m_noiso = fs_->make<TH1D>("h_category_yield_1m_noiso", ";category", NumCat, 0, NumCat );
 
+  h_category_yield_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
+  h_category_yield_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
+  h_category_yield_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+
+  h_category_yield_1l_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1l_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
+  h_category_yield_1l_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1l_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
+  h_category_yield_1l_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1l_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+
+  h_category_yield_1e_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1e_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
+  h_category_yield_1e_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1e_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
+  h_category_yield_1e_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1e_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+
+  h_category_yield_1m_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1m_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
+  h_category_yield_1m_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1m_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
+  h_category_yield_1m_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1m_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+
+  h_category_yield_1l_noiso_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1l_noiso_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
+  h_category_yield_1l_noiso_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1l_noiso_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
+  h_category_yield_1l_noiso_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1l_noiso_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+
+  h_category_yield_1e_noiso_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1e_noiso_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
+  h_category_yield_1e_noiso_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1e_noiso_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
+  h_category_yield_1e_noiso_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1e_noiso_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+
+  h_category_yield_1m_noiso_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1m_noiso_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
+  h_category_yield_1m_noiso_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1m_noiso_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
+  h_category_yield_1m_noiso_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1m_noiso_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+
+
   for( int iCat=0; iCat<NumCat; iCat++ ){
     h_category_yield->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1l->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
@@ -719,6 +988,34 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
     h_category_yield_1l_noiso->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1e_noiso->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1m_noiso->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+
+    h_category_yield_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+
+    h_category_yield_1l_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1l_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1l_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+
+    h_category_yield_1e_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1e_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1e_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+
+    h_category_yield_1m_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1m_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1m_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+
+    h_category_yield_1l_noiso_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1l_noiso_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1l_noiso_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+
+    h_category_yield_1e_noiso_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1e_noiso_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1e_noiso_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+
+    h_category_yield_1m_noiso_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1m_noiso_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1m_noiso_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
   }
 
 
@@ -802,7 +1099,7 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
 
   mySample_xSec_ = 689.1;
   mySample_nGen_ = 25474122;
-  intLumi_ = 20000;
+  intLumi_ = 10000;
 
   analysisType::analysisType iAnalysisType = analysisType::LJ;
   bool isData = true;
@@ -832,6 +1129,13 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   using namespace edm;
 
   numEvents_++;
+
+  double wgt = 1;
+
+  double xSec = mySample_xSec_;
+  double nGen = mySample_nGen_;
+
+  wgt = intLumi_ * xSec / nGen;
 
 
   double minTightLeptonPt = 30.;
@@ -932,6 +1236,9 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   edm::Handle<pat::PackedCandidateCollection> packedPFcands;
   iEvent.getByToken(packedpfToken,packedPFcands);
 
+  edm::Handle<pat::PackedCandidateCollection> lostTracks;
+  iEvent.getByToken(lostTrackToken,lostTracks);
+
 
   edm::Handle<reco::BeamSpot> bsHandle;
   iEvent.getByToken(beamspotToken,bsHandle);
@@ -939,13 +1246,54 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   edm::Handle<reco::GenParticleCollection> mcparticles;
   iEvent.getByToken(mcparicleToken,mcparticles);
 
-  edm::Handle<double> rhoHandle;
-  iEvent.getByToken(rhoToken,rhoHandle);
-  //double rho = *rhoHandle;
+  edm::Handle<double> rhoHandle_fixedGridRhoAll;
+  iEvent.getByToken(rhoToken_fixedGridRhoAll,rhoHandle_fixedGridRhoAll);
+  double rho_fixedGridRhoAll = *rhoHandle_fixedGridRhoAll;
+  h_rho_fixedGridRhoAll->Fill(rho_fixedGridRhoAll,wgt);
+
+  edm::Handle<double> rhoHandle_fixedGridRhoFastjetAll;
+  iEvent.getByToken(rhoToken_fixedGridRhoFastjetAll,rhoHandle_fixedGridRhoFastjetAll);
+  double rho_fixedGridRhoFastjetAll = *rhoHandle_fixedGridRhoFastjetAll;
+  h_rho_fixedGridRhoFastjetAll->Fill(rho_fixedGridRhoFastjetAll,wgt);
+
+  edm::Handle<double> rhoHandle_fixedGridRhoFastjetAllCalo;
+  iEvent.getByToken(rhoToken_fixedGridRhoFastjetAllCalo,rhoHandle_fixedGridRhoFastjetAllCalo);
+  double rho_fixedGridRhoFastjetAllCalo = *rhoHandle_fixedGridRhoFastjetAllCalo;
+  h_rho_fixedGridRhoFastjetAllCalo->Fill(rho_fixedGridRhoFastjetAllCalo,wgt);
+
+  edm::Handle<double> rhoHandle_fixedGridRhoFastjetCentralCalo;
+  iEvent.getByToken(rhoToken_fixedGridRhoFastjetCentralCalo,rhoHandle_fixedGridRhoFastjetCentralCalo);
+  double rho_fixedGridRhoFastjetCentralCalo = *rhoHandle_fixedGridRhoFastjetCentralCalo;
+  h_rho_fixedGridRhoFastjetCentralCalo->Fill(rho_fixedGridRhoFastjetCentralCalo,wgt);
+
+  edm::Handle<double> rhoHandle_fixedGridRhoFastjetCentralChargedPileUp;
+  iEvent.getByToken(rhoToken_fixedGridRhoFastjetCentralChargedPileUp,rhoHandle_fixedGridRhoFastjetCentralChargedPileUp);
+  double rho_fixedGridRhoFastjetCentralChargedPileUp = *rhoHandle_fixedGridRhoFastjetCentralChargedPileUp;
+  h_rho_fixedGridRhoFastjetCentralChargedPileUp->Fill(rho_fixedGridRhoFastjetCentralChargedPileUp,wgt);
+
+  edm::Handle<double> rhoHandle_fixedGridRhoFastjetCentralNeutral;
+  iEvent.getByToken(rhoToken_fixedGridRhoFastjetCentralNeutral,rhoHandle_fixedGridRhoFastjetCentralNeutral);
+  double rho_fixedGridRhoFastjetCentralNeutral = *rhoHandle_fixedGridRhoFastjetCentralNeutral;
+  h_rho_fixedGridRhoFastjetCentralNeutral->Fill(rho_fixedGridRhoFastjetCentralNeutral,wgt);
+
+
+  edm::Handle<EcalRecHitCollection> reducedEBRecHits;
+  iEvent.getByToken(reducedEBRecHitsToken,reducedEBRecHits);
+
+  edm::Handle<EcalRecHitCollection> reducedEERecHits;
+  iEvent.getByToken(reducedEERecHitsToken,reducedEERecHits);
+
+
+  for( EcalRecHitCollection::const_iterator iRecHit = reducedEBRecHits->begin(); iRecHit!=reducedEBRecHits->end(); ++iRecHit ){
+    h_EBRecHit_energy->Fill(iRecHit->energy(),wgt);
+  }
+  for( EcalRecHitCollection::const_iterator iRecHit = reducedEERecHits->begin(); iRecHit!=reducedEERecHits->end(); ++iRecHit ){
+    h_EERecHit_energy->Fill(iRecHit->energy(),wgt);
+  }
+
 
   edm::Handle<std::vector< PileupSummaryInfo > > PupInfo;
   iEvent.getByToken(puInfoToken,PupInfo);
-
 
 
   math::XYZPoint beamSpotPosition;
@@ -1009,10 +1357,14 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   if( numpv>0 ) miniAODhelper.SetVertex(vertex);
 
   double numTruePV = -1;
+  double numGenPV = -1;
   if( (PupInfo.isValid()) ){
     for( std::vector<PileupSummaryInfo>::const_iterator PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI ) {
       int BX = PVI->getBunchCrossing();
-      if( BX==0 ) numTruePV = PVI->getTrueNumInteractions();
+      if( BX==0 ){
+	numTruePV = PVI->getTrueNumInteractions();
+	numGenPV  = PVI->getPU_NumInteractions();
+      }
     }
   }
 
@@ -1022,14 +1374,29 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   miniAODhelper.SetJetCorrector(corrector);
 
 
-  double wgt = 1;
+  //
+  /////////
+  ///
+  /// Lost tracks
+  ///
+  ////////
 
-  double xSec = mySample_xSec_;
-  double nGen = mySample_nGen_;
+  for( std::vector<pat::PackedCandidate>::const_iterator pfCand = lostTracks->begin(); pfCand!=lostTracks->end(); ++pfCand ){
 
-  wgt = intLumi_ * xSec / nGen;
+    h_lostTrack_pt->Fill(pfCand->pseudoTrack().pt());
+    h_lostTrack_eta->Fill(pfCand->pseudoTrack().eta());
+    h_lostTrack_phi->Fill(pfCand->pseudoTrack().phi());
+    h_lostTrack_ndof->Fill(pfCand->pseudoTrack().ndof());
+    h_lostTrack_chi2->Fill(pfCand->pseudoTrack().chi2());
+    h_lostTrack_normChi2->Fill(pfCand->pseudoTrack().normalizedChi2());
 
+    h_lostTrack_numberOfLostHits->Fill(pfCand->pseudoTrack().numberOfLostHits());
+    h_lostTrack_numberOfValidHits->Fill(pfCand->pseudoTrack().numberOfValidHits());
 
+    h_lostTrack_hitPattern_numberOfValidHits->Fill(pfCand->pseudoTrack().hitPattern().numberOfValidHits());
+    h_lostTrack_hitPattern_numberOfValidTrackerHits->Fill(pfCand->pseudoTrack().hitPattern().numberOfValidTrackerHits());
+    h_lostTrack_hitPattern_numberOfValidPixelHits->Fill(pfCand->pseudoTrack().hitPattern().numberOfValidPixelHits());
+  }
 
   /////////
   ///
@@ -1129,6 +1496,25 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       std::cout << " !! pdgId ignored!! pdgId = " << pfCand->pdgId() << std::endl;
       break;
     }
+
+
+    h_pfcand_numberOfPixelHits->Fill(pfCand->numberOfPixelHits(),wgt);
+    h_pfcand_numberOfHits->Fill(pfCand->numberOfHits(),wgt);
+
+    h_pfcand_pseudoTrack_pt->Fill(pfCand->pseudoTrack().pt());
+    h_pfcand_pseudoTrack_eta->Fill(pfCand->pseudoTrack().eta());
+    h_pfcand_pseudoTrack_phi->Fill(pfCand->pseudoTrack().phi());
+    h_pfcand_pseudoTrack_ndof->Fill(pfCand->pseudoTrack().ndof());
+    h_pfcand_pseudoTrack_chi2->Fill(pfCand->pseudoTrack().chi2());
+    h_pfcand_pseudoTrack_normChi2->Fill(pfCand->pseudoTrack().normalizedChi2());
+
+    h_pfcand_pseudoTrack_numberOfLostHits->Fill(pfCand->pseudoTrack().numberOfLostHits());
+    h_pfcand_pseudoTrack_numberOfValidHits->Fill(pfCand->pseudoTrack().numberOfValidHits());
+
+    h_pfcand_pseudoTrack_hitPattern_numberOfValidHits->Fill(pfCand->pseudoTrack().hitPattern().numberOfValidHits());
+    h_pfcand_pseudoTrack_hitPattern_numberOfValidTrackerHits->Fill(pfCand->pseudoTrack().hitPattern().numberOfValidTrackerHits());
+    h_pfcand_pseudoTrack_hitPattern_numberOfValidPixelHits->Fill(pfCand->pseudoTrack().hitPattern().numberOfValidPixelHits());
+
 
     h_pfcand_energy->Fill(pfCand->energy(),wgt);
     h_pfcand_pt->Fill(pfCand->pt(),wgt);
@@ -1435,6 +1821,62 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     int ncut = 0;
     h_electron_selection->Fill(0.5+ncut++, 1);
 
+    h_ele_pt->Fill(std::min(double(pfele->pt()),ptmax)-0.0001,wgt);
+    h_ele_eta->Fill(pfele->eta(),wgt);
+    h_ele_phi->Fill(pfele->phi(),wgt);
+
+    h_ele_eSuperClusterOverP->Fill(pfele->eSuperClusterOverP(),wgt);
+    h_ele_eSeedClusterOverP->Fill(pfele->eSeedClusterOverP(),wgt);
+    h_ele_eSeedClusterOverPout->Fill(pfele->eSeedClusterOverPout(),wgt);
+    h_ele_eEleClusterOverPout->Fill(pfele->eEleClusterOverPout(),wgt);
+
+    h_ele_eEleClusterOverPout->Fill(pfele->sigmaEtaEta(),wgt);
+    h_ele_sigmaIetaIeta->Fill(pfele->sigmaIetaIeta(),wgt);
+
+    h_ele_e1x5->Fill(pfele->e1x5(),wgt);
+    h_ele_e2x5Max->Fill(pfele->e2x5Max(),wgt);
+    h_ele_e5x5->Fill(pfele->e5x5(),wgt);
+    h_ele_r9->Fill(pfele->r9(),wgt);
+
+    h_ele_hcalOverEcal->Fill(pfele->hcalOverEcal(),wgt);
+    h_ele_hadronicOverEm->Fill(pfele->hadronicOverEm(),wgt);
+
+    h_ele_scSigmaEtaEta->Fill(pfele->scSigmaEtaEta(),wgt);
+    h_ele_scSigmaIEtaIEta->Fill(pfele->scSigmaIEtaIEta(),wgt);
+
+    h_ele_scE1x5->Fill(pfele->scE1x5(),wgt);
+    h_ele_scE2x5Max->Fill(pfele->scE2x5Max(),wgt);
+    h_ele_scE5x5->Fill(pfele->scE5x5(),wgt);
+
+    h_ele_ecalEnergy->Fill(pfele->ecalEnergy(),wgt);
+    h_ele_caloEnergy->Fill(pfele->caloEnergy(),wgt);
+
+    if( pfele->gsfTrack().isAvailable() ){
+      h_ele_gsfTrack_pt->Fill(pfele->gsfTrack()->pt());
+      h_ele_gsfTrack_eta->Fill(pfele->gsfTrack()->eta());
+      h_ele_gsfTrack_phi->Fill(pfele->gsfTrack()->phi());
+      h_ele_gsfTrack_ndof->Fill(pfele->gsfTrack()->ndof());
+      h_ele_gsfTrack_chi2->Fill(pfele->gsfTrack()->chi2());
+      h_ele_gsfTrack_normChi2->Fill(pfele->gsfTrack()->normalizedChi2());
+
+      h_ele_gsfTrack_numberOfLostHits->Fill(pfele->gsfTrack()->numberOfLostHits());
+      h_ele_gsfTrack_numberOfValidHits->Fill(pfele->gsfTrack()->numberOfValidHits());
+
+      h_ele_gsfTrack_trackerExpectedHitsInner_numberOfLostHits->Fill(pfele->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS));
+      h_ele_gsfTrack_trackerExpectedHitsInner_numberOfHits->Fill(pfele->gsfTrack()->hitPattern().numberOfHits(reco::HitPattern::TRACK_HITS));
+      h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelHits->Fill(pfele->gsfTrack()->hitPattern().numberOfValidPixelHits());
+      h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelBarrelHits->Fill(pfele->gsfTrack()->hitPattern().numberOfValidPixelBarrelHits());
+      h_ele_gsfTrack_trackerExpectedHitsInner_numberOfValidPixelEndcapHits->Fill(pfele->gsfTrack()->hitPattern().numberOfValidPixelEndcapHits());
+
+      h_ele_gsfTrack_hitPattern_numberOfValidHits->Fill(pfele->gsfTrack()->hitPattern().numberOfValidHits());
+      h_ele_gsfTrack_hitPattern_numberOfValidTrackerHits->Fill(pfele->gsfTrack()->hitPattern().numberOfValidTrackerHits());
+      h_ele_gsfTrack_hitPattern_numberOfValidPixelHits->Fill(pfele->gsfTrack()->hitPattern().numberOfValidPixelHits());
+    }
+
+    for( EcalRecHitCollection::const_iterator iRecHit = pfele->recHits()->begin(); iRecHit!=pfele->recHits()->end(); ++iRecHit ){
+      h_ele_recHit_energy->Fill(iRecHit->energy(),wgt);
+    }
+
     if( (pfele->genLepton()) ){
       if( abs(pfele->genLepton()->pdgId())==11 ) h_electron_selection->Fill(0.5+ncut++, 1);
       else continue;
@@ -1500,6 +1942,29 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   // Get numJets, numTags
   int numJet = int( selectedJets.size() );
   int numTag = int( selectedJets_tag.size() );
+
+  int numTag_BtagWP65_CSV = 0;
+  int numTag_BtagWP65_CMVA = 0;
+  int numTag_BtagWP65_CSVv2IVF = 0;
+  
+  // Loop over jets
+  for( std::vector<pat::Jet>::const_iterator iJet = selectedJets.begin(); iJet != selectedJets.end(); iJet++ ){ 
+    double csv = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
+    if( csv>-5 && csv<-0.5 ) csv = -0.2;
+    if( csv<-5 )             csv = -0.4;
+
+    double CMVA = iJet->bDiscriminator("combinedMVABJetTags");
+    if( CMVA>-5 && CMVA<-0.5 ) CMVA = -0.2;
+    if( CMVA<-5 )              CMVA = -0.4;
+
+    double CSVv2IVF = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
+    if( CSVv2IVF>-5 && CSVv2IVF<-0.5 ) CSVv2IVF = -0.2;
+    if( CSVv2IVF<-5 )                  CSVv2IVF = -0.4;
+
+    if( csv>0.679 ) numTag_BtagWP65_CSV++;
+    if( CMVA>0.735 ) numTag_BtagWP65_CMVA++;
+    if( CSVv2IVF>0.825 ) numTag_BtagWP65_CSVv2IVF++;
+  }
 
   int numJet_nocc = int( selectedJets_nocc.size() );
 
@@ -1803,8 +2268,14 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   h_numJet->Fill(std::min(numJet,NjetMax),wgt);
   h_numTag->Fill(std::min(numTag,NtagMax),wgt);
+
+  h_numTag_BtagWP65_CSV->Fill(numTag_BtagWP65_CSV,wgt);
+  h_numTag_BtagWP65_CMVA->Fill(numTag_BtagWP65_CMVA,wgt);
+  h_numTag_BtagWP65_CSVv2IVF->Fill(numTag_BtagWP65_CSVv2IVF,wgt);
+
   h_numPV->Fill(std::min(numpv,NpuMax),wgt);
   h_numTruePV->Fill(std::min(numTruePV,double(NpuMax)),wgt);
+  h_numGenPV->Fill(std::min(numGenPV,double(NpuMax)),wgt);
 
   h_numSecVtx->Fill(numSecVtx,wgt);
 
@@ -1986,6 +2457,114 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   } // end loop on electrons
 
 
+  //////
+
+  // CSV
+  int this_category_BtagWP65_CSV = -1;
+  if( numJet==4 && numTag_BtagWP65_CSV==2) this_category_BtagWP65_CSV=1;
+  if( numJet==5 && numTag_BtagWP65_CSV==2) this_category_BtagWP65_CSV=2;
+  if( numJet>=6 && numTag_BtagWP65_CSV==2) this_category_BtagWP65_CSV=3;	
+  if( numJet==4 && numTag_BtagWP65_CSV==3) this_category_BtagWP65_CSV=4;
+  if( numJet==5 && numTag_BtagWP65_CSV==3) this_category_BtagWP65_CSV=5;
+  if( numJet>=6 && numTag_BtagWP65_CSV==3) this_category_BtagWP65_CSV=6;
+  if( numJet==4 && numTag_BtagWP65_CSV>=4) this_category_BtagWP65_CSV=7;
+  if( numJet==5 && numTag_BtagWP65_CSV>=4) this_category_BtagWP65_CSV=8;
+  if( numJet>=6 && numTag_BtagWP65_CSV>=4) this_category_BtagWP65_CSV=9;
+
+  // CMVA
+  int this_category_BtagWP65_CMVA = -1;
+  if( numJet==4 && numTag_BtagWP65_CMVA==2) this_category_BtagWP65_CMVA=1;
+  if( numJet==5 && numTag_BtagWP65_CMVA==2) this_category_BtagWP65_CMVA=2;
+  if( numJet>=6 && numTag_BtagWP65_CMVA==2) this_category_BtagWP65_CMVA=3;	
+  if( numJet==4 && numTag_BtagWP65_CMVA==3) this_category_BtagWP65_CMVA=4;
+  if( numJet==5 && numTag_BtagWP65_CMVA==3) this_category_BtagWP65_CMVA=5;
+  if( numJet>=6 && numTag_BtagWP65_CMVA==3) this_category_BtagWP65_CMVA=6;
+  if( numJet==4 && numTag_BtagWP65_CMVA>=4) this_category_BtagWP65_CMVA=7;
+  if( numJet==5 && numTag_BtagWP65_CMVA>=4) this_category_BtagWP65_CMVA=8;
+  if( numJet>=6 && numTag_BtagWP65_CMVA>=4) this_category_BtagWP65_CMVA=9;
+
+  // CSVv2IVF
+  int this_category_BtagWP65_CSVv2IVF = -1;
+  if( numJet==4 && numTag_BtagWP65_CSVv2IVF==2) this_category_BtagWP65_CSVv2IVF=1;
+  if( numJet==5 && numTag_BtagWP65_CSVv2IVF==2) this_category_BtagWP65_CSVv2IVF=2;
+  if( numJet>=6 && numTag_BtagWP65_CSVv2IVF==2) this_category_BtagWP65_CSVv2IVF=3;	
+  if( numJet==4 && numTag_BtagWP65_CSVv2IVF==3) this_category_BtagWP65_CSVv2IVF=4;
+  if( numJet==5 && numTag_BtagWP65_CSVv2IVF==3) this_category_BtagWP65_CSVv2IVF=5;
+  if( numJet>=6 && numTag_BtagWP65_CSVv2IVF==3) this_category_BtagWP65_CSVv2IVF=6;
+  if( numJet==4 && numTag_BtagWP65_CSVv2IVF>=4) this_category_BtagWP65_CSVv2IVF=7;
+  if( numJet==5 && numTag_BtagWP65_CSVv2IVF>=4) this_category_BtagWP65_CSVv2IVF=8;
+  if( numJet>=6 && numTag_BtagWP65_CSVv2IVF>=4) this_category_BtagWP65_CSVv2IVF=9;
+
+  if( numJet>=4 && numTag_BtagWP65_CSV>=2){
+    h_category_yield_BtagWP65_CSV->Fill(0.5,wgt);
+    h_category_yield_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
+  }
+
+  if( numJet>=4 && numTag_BtagWP65_CMVA>=2){
+    h_category_yield_BtagWP65_CMVA->Fill(0.5,wgt);
+    h_category_yield_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
+  }
+
+  if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
+    h_category_yield_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
+    h_category_yield_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+  }
+
+
+  if( (numNoIsoMu+numNoIsoEle)>0 ){
+    if( numJet>=4 && numTag_BtagWP65_CSV>=2){
+      h_category_yield_1l_noiso_BtagWP65_CSV->Fill(0.5,wgt);
+      h_category_yield_1l_noiso_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
+    }
+
+    if( numJet>=4 && numTag_BtagWP65_CMVA>=2){
+      h_category_yield_1l_noiso_BtagWP65_CMVA->Fill(0.5,wgt);
+      h_category_yield_1l_noiso_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
+    }
+
+    if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
+      h_category_yield_1l_noiso_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
+      h_category_yield_1l_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+    }
+
+    if( numNoIsoEle>=1 ){
+      if( numJet>=4 && numTag_BtagWP65_CSV>=2){
+	h_category_yield_1e_noiso_BtagWP65_CSV->Fill(0.5,wgt);
+	h_category_yield_1e_noiso_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
+      }
+
+      if( numJet>=4 && numTag_BtagWP65_CMVA>=2){
+	h_category_yield_1e_noiso_BtagWP65_CMVA->Fill(0.5,wgt);
+	h_category_yield_1e_noiso_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
+      }
+
+      if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
+	h_category_yield_1e_noiso_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
+	h_category_yield_1e_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+      }
+    } 
+    else if( numNoIsoMu>=1 ){
+      if( numJet>=4 && numTag_BtagWP65_CSV>=2){
+	h_category_yield_1m_noiso_BtagWP65_CSV->Fill(0.5,wgt);
+	h_category_yield_1m_noiso_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
+      }
+
+      if( numJet>=4 && numTag_BtagWP65_CMVA>=2){
+	h_category_yield_1m_noiso_BtagWP65_CMVA->Fill(0.5,wgt);
+	h_category_yield_1m_noiso_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
+      }
+
+      if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
+	h_category_yield_1m_noiso_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
+	h_category_yield_1m_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+      }
+    } 
+  }
+
+
+
+  //////
+
   // Require at least 4 regular jets and tags
   if( !(numJet>=4 && numTag>=2) ) return;
 
@@ -2008,11 +2587,11 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     h_category_yield_1l_noiso->Fill(0.5,wgt);
     h_category_yield_1l_noiso->Fill(this_category,wgt);
 
-    if( numTightElectrons==1 ){
+    if( numNoIsoEle>=1 ){
       h_category_yield_1e_noiso->Fill(0.5,wgt);
       h_category_yield_1e_noiso->Fill(this_category,wgt);
     } 
-    else if( numTightMuons==1 ){
+    else if( numNoIsoMu>=1 ){
       h_category_yield_1m_noiso->Fill(0.5,wgt);
       h_category_yield_1m_noiso->Fill(this_category,wgt);
     } 
@@ -2031,6 +2610,55 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   else if( numTightMuons==1 ){
     h_category_yield_1m->Fill(0.5,wgt);
     h_category_yield_1m->Fill(this_category,wgt);
+  } 
+
+
+  if( numJet>=4 && numTag_BtagWP65_CSV>=2){
+    h_category_yield_1l_noiso_BtagWP65_CSV->Fill(0.5,wgt);
+    h_category_yield_1l_noiso_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
+  }
+
+  if( numJet>=4 && numTag_BtagWP65_CMVA>=2){
+    h_category_yield_1l_noiso_BtagWP65_CMVA->Fill(0.5,wgt);
+    h_category_yield_1l_noiso_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
+  }
+
+  if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
+    h_category_yield_1l_noiso_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
+    h_category_yield_1l_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+  }
+
+  if( numTightElectrons==1 ){
+    if( numJet>=4 && numTag_BtagWP65_CSV>=2){
+      h_category_yield_1e_noiso_BtagWP65_CSV->Fill(0.5,wgt);
+      h_category_yield_1e_noiso_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
+    }
+
+    if( numJet>=4 && numTag_BtagWP65_CMVA>=2){
+      h_category_yield_1e_noiso_BtagWP65_CMVA->Fill(0.5,wgt);
+      h_category_yield_1e_noiso_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
+    }
+
+    if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
+      h_category_yield_1e_noiso_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
+      h_category_yield_1e_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+    }
+  } 
+  else if( numTightMuons==1 ){
+    if( numJet>=4 && numTag_BtagWP65_CSV>=2){
+      h_category_yield_1m_noiso_BtagWP65_CSV->Fill(0.5,wgt);
+      h_category_yield_1m_noiso_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
+    }
+
+    if( numJet>=4 && numTag_BtagWP65_CMVA>=2){
+      h_category_yield_1m_noiso_BtagWP65_CMVA->Fill(0.5,wgt);
+      h_category_yield_1m_noiso_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
+    }
+
+    if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
+      h_category_yield_1m_noiso_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
+      h_category_yield_1m_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+    }
   } 
 
 
