@@ -68,6 +68,8 @@
 
 #include "ttH-LeptonPlusJets/AnalysisCode/interface/YggdrasilEventVars.h"
 
+#include "EgammaAnalysis/ElectronTools/interface/EGammaMvaEleEstimatorCSA14.h"
+
 //
 // class declaration
 //
@@ -155,7 +157,8 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   TTree *worldTree;
   yggdrasilEventVars *eve; 
 
-
+  EGammaMvaEleEstimatorCSA14* myMVATrig;
+ 
   MiniAODHelper miniAODhelper;
 };
 
@@ -256,6 +259,24 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig)
 
   miniAODhelper.SetJetCorrectorUncertainty();
 
+
+
+  std::vector<std::string> myManualCatWeigths;
+  myManualCatWeigths.push_back("EgammaAnalysis/ElectronTools/data/CSA14/TrigIDMVA_50ns_EB_BDT.weights.xml");
+  myManualCatWeigths.push_back("EgammaAnalysis/ElectronTools/data/CSA14/TrigIDMVA_50ns_EE_BDT.weights.xml");
+
+  std::vector<std::string> myManualCatWeigthsTrig;
+  std::string the_path;
+  for (unsigned i  = 0 ; i < myManualCatWeigths.size() ; i++){
+    the_path = edm::FileInPath ( myManualCatWeigths[i] ).fullPath();
+    myManualCatWeigthsTrig.push_back(the_path);
+  }
+    
+  myMVATrig = new EGammaMvaEleEstimatorCSA14();
+  myMVATrig->initialize("BDT",
+			EGammaMvaEleEstimatorCSA14::kTrig,
+			true,
+			myManualCatWeigthsTrig);
 }
 
 
@@ -280,7 +301,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 
   double minTightLeptonPt = ( isLJ_ ) ? 30. : 20.;
-
+  double looseLeptonPt = 10.;
 
   edm::Handle<reco::VertexCollection> vtxHandle;
   iEvent.getByToken(vertexToken,vtxHandle);
@@ -360,13 +381,17 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   if( numpv>0 ) miniAODhelper.SetVertex(vertex);
 
-  // double numTruePV = -1;
-  // if( (PupInfo.isValid()) ){
-  //   for( std::vector<PileupSummaryInfo>::const_iterator PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI ) {
-  //     int BX = PVI->getBunchCrossing();
-  //     if( BX==0 ) numTruePV = PVI->getTrueNumInteractions();
-  //   }
-  // }
+  double numTruePV = -1;
+  double numGenPV = -1;
+  if( (PupInfo.isValid()) ){
+    for( std::vector<PileupSummaryInfo>::const_iterator PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI ) {
+      int BX = PVI->getBunchCrossing();
+      if( BX==0 ){
+	numTruePV = PVI->getTrueNumInteractions();
+	numGenPV  = PVI->getPU_NumInteractions();
+      }
+    }
+  }
 
 
   double wgt_lumi = 1.;
@@ -396,7 +421,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   ///
   ////////
   std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( *electrons, minTightLeptonPt, electronID::electronTight );
-  std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( *electrons, 10., electronID::electronLoose );
+  std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( *electrons, looseLeptonPt, electronID::electronLoose );
 
   int numTightElectrons = int(selectedElectrons_tight.size());
   int numLooseElectrons = int(selectedElectrons_loose.size());// - numTightElectrons;
@@ -408,7 +433,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   ///
   ////////
   std::vector<pat::Muon> selectedMuons_tight = miniAODhelper.GetSelectedMuons( *muons, minTightLeptonPt, muonID::muonTight );
-  std::vector<pat::Muon> selectedMuons_loose = miniAODhelper.GetSelectedMuons( *muons, 10., muonID::muonLoose );
+  std::vector<pat::Muon> selectedMuons_loose = miniAODhelper.GetSelectedMuons( *muons, looseLeptonPt, muonID::muonLoose );
 
   int numTightMuons = int(selectedMuons_tight.size());
   int numLooseMuons = int(selectedMuons_loose.size());// - numTightMuons;
@@ -537,6 +562,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   // 	eve->Q2ScaleDownWgt_ = miniAODhelper.GetQ2ScaleDown(events.at(0));//0.683 * event->Q2ScaleDownWgt;
   // }
 
+  eve->numTruePV_ = numTruePV;
+  eve->numGenPV_ = numGenPV;
 
   eve->numPVs_ = numpv;
   eve->numSys_ = rNumSys;
@@ -553,7 +580,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   vdouble vlepton;
       
-  double lepton_relIso = -99;
+  double tight_lepton_relIso = -99;
 
   vvdouble vvleptons;
   if( OneMuon ) {
@@ -573,7 +600,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       }
     }
 
-    lepton_relIso = miniAODhelper.GetMuonRelIso(selectedMuons_tight.at(0));
+    tight_lepton_relIso = miniAODhelper.GetMuonRelIso(selectedMuons_tight.at(0));
   }
   else if( OneElectron ){
     leptonV.SetPxPyPzE( selectedElectrons_tight.at(0).px(), selectedElectrons_tight.at(0).py(), selectedElectrons_tight.at(0).pz(), selectedElectrons_tight.at(0).energy());
@@ -592,14 +619,14 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       }
     }
 
-    lepton_relIso = miniAODhelper.GetElectronRelIso(selectedElectrons_tight.at(0));
+    tight_lepton_relIso = miniAODhelper.GetElectronRelIso(selectedElectrons_tight.at(0));
   }
 
   if( OneMuon || OneElectron ){
     eve->tight_lepton_pt_  = leptonV.Pt();
     eve->tight_lepton_eta_ = leptonV.Eta();
     eve->tight_lepton_phi_ = leptonV.Phi();
-    eve->tight_lepton_relIso_ = lepton_relIso;
+    eve->tight_lepton_relIso_ = tight_lepton_relIso;
     eve->tight_lepton_isMuon_ = ( OneMuon ) ? 1 : 0;
 
     eve->tight_lepton_genId_ = lep_genId;
@@ -608,13 +635,38 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   }
 
 
-  vint lepton_genId, lepton_genParentId, lepton_genGrandParentId, lepton_trkCharge, lepton_isMuon, lepton_isTight;
+  vint lepton_genId, lepton_genParentId, lepton_genGrandParentId, lepton_trkCharge, lepton_isMuon, lepton_isTight, lepton_isLoose;
+  vdouble lepton_pt;
+  vdouble lepton_eta;
+  vdouble lepton_phi;
+  vdouble lepton_relIso;
+  vdouble lepton_iso_sumChargedHadronPt;
+  vdouble lepton_iso_sumNeutralHadronEt;
+  vdouble lepton_iso_sumPhotonEt;
+  vdouble lepton_iso_sumPUPt;
+  vdouble lepton_mvaTrigValue;
+  vint    lepton_numMissingHits;
+  vdouble lepton_scSigmaIEtaIEta;
+  vdouble lepton_full5x5_scSigmaIEtaIEta;
+  vdouble lepton_hadronicOverEm;
+  vdouble lepton_relEcalIso;
+  vdouble lepton_relHcalIso;
+  vdouble lepton_relTrackIso;
+  vdouble lepton_OneOESuperMinusOneOP;
+  vint    lepton_isEB;
+  vint    lepton_passHLTId;
+  vint    lepton_passConversionVeto;
+  vint    lepton_inCrack;
+  vdouble lepton_scEta;
+  vdouble lepton_dEtaSCTrackAtVtx;
+  vdouble lepton_dPhiSCTrackAtVtx;
+
   std::vector<TLorentzVector> vec_TLV_lep;
   TLorentzVector sum_lepton_vect;
   sum_lepton_vect.SetPxPyPzE(0., 0., 0., 0.);
 
-  // Loop over loose muons
-  for( std::vector<pat::Muon>::const_iterator iMu = selectedMuons_loose.begin(); iMu != selectedMuons_loose.end(); iMu++ ){ 
+  // Loop over muons
+  for( std::vector<pat::Muon>::const_iterator iMu = muons->begin(); iMu != muons->end(); iMu++ ){ 
  
     int genId=-99, genParentId=-99, genGrandParentId=-99;
     if( (iMu->genLepton()) ){
@@ -629,13 +681,40 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
 
     int isTight = ( miniAODhelper.isGoodMuon(*iMu, minTightLeptonPt, muonID::muonTight) ) ? 1 : 0;
+    int isLoose = ( miniAODhelper.isGoodMuon(*iMu, looseLeptonPt, muonID::muonLoose) ) ? 1 : 0;
 
     lepton_trkCharge.push_back(trkCharge);
     lepton_isMuon.push_back(1);
     lepton_isTight.push_back(isTight);
+    lepton_isLoose.push_back(isLoose);
     lepton_genId.push_back(genId);
     lepton_genParentId.push_back(genParentId);
     lepton_genGrandParentId.push_back(genGrandParentId);
+    lepton_pt.push_back(iMu->pt());
+    lepton_eta.push_back(iMu->eta());
+    lepton_phi.push_back(iMu->phi());
+    lepton_relIso.push_back(miniAODhelper.GetMuonRelIso(*iMu));
+    lepton_iso_sumChargedHadronPt.push_back(iMu->pfIsolationR04().sumChargedHadronPt);
+    lepton_iso_sumNeutralHadronEt.push_back(iMu->pfIsolationR04().sumNeutralHadronEt);
+    lepton_iso_sumPhotonEt.push_back(iMu->pfIsolationR04().sumPhotonEt);
+    lepton_iso_sumPUPt.push_back(iMu->pfIsolationR04().sumPUPt);
+    lepton_mvaTrigValue.push_back(-99);
+    lepton_scSigmaIEtaIEta.push_back(-99);
+    lepton_full5x5_scSigmaIEtaIEta.push_back(-99);
+    lepton_hadronicOverEm.push_back(-99);
+    lepton_relEcalIso.push_back(-99);
+    lepton_relHcalIso.push_back(-99);
+    lepton_relTrackIso.push_back(-99);
+    lepton_OneOESuperMinusOneOP.push_back(-99);
+    lepton_numMissingHits.push_back(-99);
+    lepton_isEB.push_back(-99);
+    lepton_passHLTId.push_back(-99);
+    lepton_passConversionVeto.push_back(-99);
+    lepton_inCrack.push_back(-99);
+    lepton_scEta.push_back(-99);
+    lepton_dEtaSCTrackAtVtx.push_back(-99);
+    lepton_dPhiSCTrackAtVtx.push_back(-99);
+
 
     // Get muon 4Vector and add to vecTLorentzVector for muons
     TLorentzVector leptonP4;	  
@@ -653,9 +732,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     vvleptons.push_back(vleptons);
   }
 
-  // Loop over loose muons
-  for( std::vector<pat::Electron>::const_iterator iEle = selectedElectrons_loose.begin(); iEle != selectedElectrons_loose.end(); iEle++ ){ 
- 
+  // Loop over electrons
+  for( std::vector<pat::Electron>::const_iterator iEle = electrons->begin(); iEle != electrons->end(); iEle++ ){ 
+
     int genId=-99, genParentId=-99, genGrandParentId=-99;
     if( (iEle->genLepton()) ){
       genId = iEle->genLepton()->pdgId();
@@ -669,13 +748,93 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
 
     int isTight = ( miniAODhelper.isGoodElectron(*iEle, minTightLeptonPt, electronID::electronTight) ) ? 1 : 0;
+    int isLoose = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, electronID::electronLoose) ) ? 1 : 0;
+
+    double mvaTrigValue = myMVATrig->mvaValue(*iEle,false);
+
+    bool inCrack = false;
+    double scEta = -99;
+    if( iEle->superCluster().isAvailable() ){
+      inCrack = ( fabs(iEle->superCluster()->position().eta())>1.4442 && fabs(iEle->superCluster()->position().eta())<1.5660 );
+      scEta = iEle->superCluster()->position().eta();
+    }
+
+    bool passHLTId = false;
+    double OneOESuperMinusOneOP = -1;
+    int numMissingHits = 99;
+    int isEB = -1;
+    double relEcalIso = 99, relHcalIso = 99, relTrackIso = 99;
+    if( (iEle->superCluster().isAvailable()) && (iEle->gsfTrack().isAvailable()) ){
+      double SCenergy = iEle->superCluster()->energy();
+      double SCeta = iEle->superCluster()->position().eta();
+      double absSCeta = fabs( SCeta );
+      double SCet = SCenergy * sin (2*atan(exp(-SCeta))); 
+
+      double TrkP = iEle->gsfTrack()->p();
+      numMissingHits = iEle->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS);
+
+      OneOESuperMinusOneOP = 1/SCenergy - 1/TrkP;
+
+      relEcalIso = iEle->ecalIso()/SCet;
+      relHcalIso = iEle->hcalIso()/SCet;
+      relTrackIso = iEle->trackIso()/SCet;
+
+      if( absSCeta < 1.479 ){
+	isEB = 1;
+	passHLTId = ( iEle->scSigmaIEtaIEta() <= 0.011 &&
+		      iEle->hadronicOverEm() <= 0.15 &&
+		      iEle->ecalIso()/SCet <= 0.16 &&
+		      iEle->hcalIso()/SCet <= 0.20 &&
+		      iEle->trackIso()/SCet <= 0.05 &&
+		      OneOESuperMinusOneOP <= 0.012 &&
+		      numMissingHits <= 999
+		      );
+      }
+      else{
+	isEB = 0;
+	passHLTId = ( iEle->scSigmaIEtaIEta() <= 0.033 &&
+		      iEle->hadronicOverEm() <= 0.20 &&
+		      iEle->ecalIso()/SCet <= 0.12 &&
+		      iEle->hcalIso()/SCet <= 0.30 &&
+		      iEle->trackIso()/SCet <= 0.05 &&
+		      OneOESuperMinusOneOP <= 0.009 &&
+		      numMissingHits <= 1
+		      );
+      }
+    }
 
     lepton_trkCharge.push_back(trkCharge);
     lepton_isMuon.push_back(0);
     lepton_isTight.push_back(isTight);
+    lepton_isLoose.push_back(isLoose);
     lepton_genId.push_back(genId);
     lepton_genParentId.push_back(genParentId);
     lepton_genGrandParentId.push_back(genGrandParentId);
+    lepton_pt.push_back(iEle->pt());
+    lepton_eta.push_back(iEle->eta());
+    lepton_phi.push_back(iEle->phi());
+    lepton_relIso.push_back(miniAODhelper.GetElectronRelIso(*iEle));
+    lepton_iso_sumChargedHadronPt.push_back(iEle->pfIsolationVariables().sumChargedHadronPt);
+    lepton_iso_sumNeutralHadronEt.push_back(iEle->pfIsolationVariables().sumNeutralHadronEt);
+    lepton_iso_sumPhotonEt.push_back(iEle->pfIsolationVariables().sumPhotonEt);
+    lepton_iso_sumPUPt.push_back(iEle->pfIsolationVariables().sumPUPt);
+    lepton_mvaTrigValue.push_back(mvaTrigValue);
+    lepton_scSigmaIEtaIEta.push_back(iEle->scSigmaIEtaIEta());
+    lepton_full5x5_scSigmaIEtaIEta.push_back(iEle->full5x5_sigmaIetaIeta());
+    lepton_hadronicOverEm.push_back(iEle->hadronicOverEm());
+    lepton_relEcalIso.push_back(relEcalIso);
+    lepton_relHcalIso.push_back(relHcalIso);
+    lepton_relTrackIso.push_back(relTrackIso);
+    lepton_OneOESuperMinusOneOP.push_back(OneOESuperMinusOneOP);
+    lepton_numMissingHits.push_back(numMissingHits);
+    lepton_isEB.push_back(isEB);
+    lepton_passHLTId.push_back(passHLTId);
+    lepton_passConversionVeto.push_back(iEle->passConversionVeto());
+    lepton_inCrack.push_back(inCrack);
+    lepton_scEta.push_back(scEta);
+    lepton_dEtaSCTrackAtVtx.push_back(iEle->deltaEtaSuperClusterTrackAtVtx());
+    lepton_dPhiSCTrackAtVtx.push_back(iEle->deltaPhiSuperClusterTrackAtVtx());
+
 
     // Get electron 4Vector and add to vecTLorentzVector for electrons
     TLorentzVector leptonP4;	  
@@ -697,9 +856,34 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->lepton_trkCharge_        = lepton_trkCharge;
   eve->lepton_isMuon_           = lepton_isMuon;
   eve->lepton_isTight_          = lepton_isTight;
+  eve->lepton_isLoose_          = lepton_isLoose;
   eve->lepton_genId_            = lepton_genId;
   eve->lepton_genParentId_      = lepton_genParentId;
   eve->lepton_genGrandParentId_ = lepton_genGrandParentId;
+  eve->lepton_pt_               = lepton_pt;
+  eve->lepton_eta_              = lepton_eta;
+  eve->lepton_phi_              = lepton_phi;
+  eve->lepton_relIso_           = lepton_relIso;
+  eve->lepton_iso_sumChargedHadronPt_ = lepton_iso_sumChargedHadronPt;
+  eve->lepton_iso_sumNeutralHadronEt_ = lepton_iso_sumNeutralHadronEt;
+  eve->lepton_iso_sumPhotonEt_        = lepton_iso_sumPhotonEt;
+  eve->lepton_iso_sumPUPt_            = lepton_iso_sumPUPt;
+  eve->lepton_mvaTrigValue_     = lepton_mvaTrigValue;
+  eve->lepton_scSigmaIEtaIEta_  = lepton_scSigmaIEtaIEta;
+  eve->lepton_full5x5_scSigmaIEtaIEta_ = lepton_full5x5_scSigmaIEtaIEta;
+  eve->lepton_hadronicOverEm_   = lepton_hadronicOverEm;
+  eve->lepton_relEcalIso_       = lepton_relEcalIso;
+  eve->lepton_relHcalIso_       = lepton_relHcalIso;
+  eve->lepton_relTrackIso_      = lepton_relTrackIso;
+  eve->lepton_OneOESuperMinusOneOP_ = lepton_OneOESuperMinusOneOP;
+  eve->lepton_numMissingHits_   = lepton_numMissingHits;
+  eve->lepton_isEB_             = lepton_isEB;
+  eve->lepton_passHLTId_        = lepton_passHLTId;
+  eve->lepton_passConversionVeto_ = lepton_passConversionVeto;
+  eve->lepton_inCrack_          = lepton_inCrack;
+  eve->lepton_scEta_            = lepton_scEta;
+  eve->lepton_dEtaSCTrackAtVtx_ = lepton_dEtaSCTrackAtVtx;
+  eve->lepton_dPhiSCTrackAtVtx_ = lepton_dPhiSCTrackAtVtx;
 
 
   int oppositeLepCharge = -9;
@@ -1060,6 +1244,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     std::vector<double> jet_loose_vtxNtracks;
     std::vector<double> jet_loose_vtx3DVal;
     std::vector<double> jet_loose_vtx3DSig;
+    std::vector<double> jet_loose_pileupJetId_fullDiscriminant;
     vint jet_flavour_vect_loose;
     vecTLorentzVector jetV_loose;
 
@@ -1105,6 +1290,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       jet_loose_vtx3DVal.push_back(iJet->userFloat("vtx3DVal"));
       jet_loose_vtx3DSig.push_back(iJet->userFloat("vtx3DSig"));
 
+      jet_loose_pileupJetId_fullDiscriminant.push_back(iJet->userFloat("pileupJetId:fullDiscriminant"));
+
       TLorentzVector jet0p4;	  
       jet0p4.SetPxPyPzE(iJet->px(),iJet->py(),iJet->pz(),iJet->energy());
       jetV_loose.push_back(jet0p4);
@@ -1137,7 +1324,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       vjets_temp_loose.push_back(iJet->py());
       vjets_temp_loose.push_back(iJet->pz());
       vjets_temp_loose.push_back(iJet->energy());
-      jet_all_vect_TLV.push_back(vjets_temp_loose);
 
       double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
       // jet_temp_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
@@ -1156,6 +1342,41 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       csvV_temp_loose.push_back(myCSV);
     }
 
+
+
+
+
+    // Add no cc loose jet container
+    std::vector<pat::Jet> selectedJets_loose_nocc = miniAODhelper.GetSortedByPt( *pfjets );
+
+    vvdouble vvjets_nocc_loose;
+    std::vector<double> csvV_nocc_loose;
+    std::vector<double> jet_nocc_loose_combinedMVABJetTags;
+    std::vector<double> jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags;
+
+    vint jet_flavour_vect_nocc_loose;
+
+    // Loop over selected jets
+    for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_loose_nocc.begin(); iJet != selectedJets_loose_nocc.end(); iJet++ ){ 
+
+      vdouble vjets_nocc_loose;
+      vjets_nocc_loose.push_back(iJet->px());
+      vjets_nocc_loose.push_back(iJet->py());
+      vjets_nocc_loose.push_back(iJet->pz());
+      vjets_nocc_loose.push_back(iJet->energy());
+
+      double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
+      jet_nocc_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
+      jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") );
+
+      jet_flavour_vect_nocc_loose.push_back(iJet->partonFlavour());
+
+      // make vvdouble version of vecTLorentzVector
+      vvjets_nocc_loose.push_back(vjets_nocc_loose);
+
+      // Get CSV discriminant
+      csvV_nocc_loose.push_back(myCSV);
+    }
 
 
 
@@ -1462,6 +1683,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     eve->jet_loose_vtxNtracks_[iSys] = jet_loose_vtxNtracks;
     eve->jet_loose_vtx3DVal_[iSys]   = jet_loose_vtx3DVal;
     eve->jet_loose_vtx3DSig_[iSys]   = jet_loose_vtx3DSig;
+    eve->jet_loose_pileupJetId_fullDiscriminant_[iSys] = jet_loose_pileupJetId_fullDiscriminant;
     eve->jet_loose_flavour_[iSys]  = jet_flavour_vect_loose;
 
 
@@ -1469,6 +1691,13 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     eve->jet_temp_loose_vect_TLV_[iSys] = vvjets_temp_loose;
     eve->jet_temp_loose_CSV_[iSys]      = csvV_temp_loose;
     eve->jet_temp_loose_flavour_[iSys]  = jet_flavour_vect_temp_loose;
+
+    // no cc jets
+    eve->jet_nocc_loose_vect_TLV_[iSys] = vvjets_nocc_loose;
+    eve->jet_nocc_loose_CSV_[iSys]      = csvV_nocc_loose;
+    eve->jet_nocc_loose_combinedMVABJetTags_[iSys] = jet_nocc_loose_combinedMVABJetTags;
+    eve->jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags_[iSys] = jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags;
+    eve->jet_nocc_loose_flavour_[iSys]  = jet_flavour_vect_nocc_loose;
 
 
 

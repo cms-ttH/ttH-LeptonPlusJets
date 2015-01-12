@@ -74,6 +74,9 @@ struct yggdrasilEventVars{
   double Q2ScaleUpWgt_;
   double Q2ScaleDownWgt_;
 
+  int     numTruePV_;
+  int     numGenPV_;
+
   Int_t   numPVs_;
   Int_t   numSys_;
 
@@ -91,9 +94,34 @@ struct yggdrasilEventVars{
   vint lepton_trkCharge_;
   vint lepton_isMuon_;
   vint lepton_isTight_;
+  vint lepton_isLoose_;
   vint lepton_genId_;
   vint lepton_genParentId_;
   vint lepton_genGrandParentId_;
+  vdouble lepton_pt_;
+  vdouble lepton_eta_;
+  vdouble lepton_phi_;
+  vdouble lepton_relIso_;
+  vdouble lepton_iso_sumChargedHadronPt_;
+  vdouble lepton_iso_sumNeutralHadronEt_;
+  vdouble lepton_iso_sumPhotonEt_;
+  vdouble lepton_iso_sumPUPt_;
+  vdouble lepton_mvaTrigValue_;
+  vdouble lepton_scSigmaIEtaIEta_;
+  vdouble lepton_full5x5_scSigmaIEtaIEta_;
+  vdouble lepton_hadronicOverEm_;
+  vdouble lepton_relEcalIso_;
+  vdouble lepton_relHcalIso_;
+  vdouble lepton_relTrackIso_;
+  vdouble lepton_OneOESuperMinusOneOP_;
+  vint lepton_numMissingHits_;
+  vint lepton_isEB_;
+  vint lepton_passHLTId_;
+  vint lepton_passConversionVeto_;
+  vint lepton_inCrack_;
+  vdouble lepton_scEta_;
+  vdouble lepton_dEtaSCTrackAtVtx_;
+  vdouble lepton_dPhiSCTrackAtVtx_;
 
 
   Float_t wgt_lumi_;
@@ -209,12 +237,20 @@ struct yggdrasilEventVars{
   vdouble jet_loose_vtxNtracks_[rNumSys];
   vdouble jet_loose_vtx3DVal_[rNumSys];
   vdouble jet_loose_vtx3DSig_[rNumSys];  
+  vdouble jet_loose_pileupJetId_fullDiscriminant_[rNumSys];
   vint jet_loose_flavour_[rNumSys];
 
   // temp loose jets
   vvdouble jet_temp_loose_vect_TLV_[rNumSys];
   vdouble jet_temp_loose_CSV_[rNumSys];
   vint jet_temp_loose_flavour_[rNumSys];
+
+  // no cc loose jets
+  vvdouble jet_nocc_loose_vect_TLV_[rNumSys];
+  vdouble jet_nocc_loose_CSV_[rNumSys];
+  vdouble jet_nocc_loose_combinedMVABJetTags_[rNumSys];
+  vdouble jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags_[rNumSys];
+  vint jet_nocc_loose_flavour_[rNumSys];
 
 
   void initialize();
@@ -258,6 +294,9 @@ void yggdrasilEventVars::initialize(){
   Q2ScaleUpWgt_   = -99.9;
   Q2ScaleDownWgt_ = -99.9;
 
+  numTruePV_ = -99;
+  numGenPV_ = -99;
+
   numPVs_ = -99;
   numSys_ = -99;
 
@@ -275,10 +314,34 @@ void yggdrasilEventVars::initialize(){
   lepton_trkCharge_.clear();
   lepton_isMuon_.clear();
   lepton_isTight_.clear();
+  lepton_isLoose_.clear();
   lepton_genId_.clear();
   lepton_genParentId_.clear();
   lepton_genGrandParentId_.clear();
-
+  lepton_pt_.clear();
+  lepton_eta_.clear();
+  lepton_phi_.clear();
+  lepton_relIso_.clear();
+  lepton_iso_sumChargedHadronPt_.clear();
+  lepton_iso_sumNeutralHadronEt_.clear();
+  lepton_iso_sumPhotonEt_.clear();
+  lepton_iso_sumPUPt_.clear();
+  lepton_mvaTrigValue_.clear();
+  lepton_scSigmaIEtaIEta_.clear();
+  lepton_full5x5_scSigmaIEtaIEta_.clear();
+  lepton_hadronicOverEm_.clear();
+  lepton_relEcalIso_.clear();
+  lepton_relHcalIso_.clear();
+  lepton_relTrackIso_.clear();
+  lepton_OneOESuperMinusOneOP_.clear();
+  lepton_numMissingHits_.clear();
+  lepton_isEB_.clear();
+  lepton_passHLTId_.clear();
+  lepton_passConversionVeto_.clear();
+  lepton_inCrack_.clear();
+  lepton_scEta_.clear();
+  lepton_dEtaSCTrackAtVtx_.clear();
+  lepton_dPhiSCTrackAtVtx_.clear();
 
   wgt_generator_        = -99.9;
   wgt_lumi_             = -99.9;
@@ -392,10 +455,15 @@ void yggdrasilEventVars::initialize(){
     jet_loose_vtx3DSig_[iSys].clear();
     jet_loose_flavour_[iSys].clear();
 
-
     jet_temp_loose_vect_TLV_[iSys].clear();
     jet_temp_loose_CSV_[iSys].clear();
     jet_temp_loose_flavour_[iSys].clear();
+
+    jet_nocc_loose_vect_TLV_[iSys].clear();
+    jet_nocc_loose_CSV_[iSys].clear();
+    jet_nocc_loose_combinedMVABJetTags_[iSys].clear();
+    jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags_[iSys].clear();
+    jet_nocc_loose_flavour_[iSys].clear();
 
     IsTauTauLeptonEvent_[iSys] = -99;
   }

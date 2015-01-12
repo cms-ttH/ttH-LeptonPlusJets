@@ -10,5 +10,6 @@
 <use name="PhysicsTools/Utilities"/>
 <use name="SimDataFormats/PileupSummaryInfo"/>
 <use name="HLTrigger/HLTcore"/>
+<use name="EgammaAnalysis/ElectronTools"/>
 <use name="MiniAOD/MiniAODHelper"/>
 <flags EDM_PLUGIN="1"/>
