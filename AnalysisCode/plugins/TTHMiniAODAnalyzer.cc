@@ -70,6 +70,7 @@
 #include "DataFormats/Candidate/interface/VertexCompositePtrCandidateFwd.h"
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
@@ -132,6 +133,8 @@ class TTHMiniAODAnalyzer : public edm::EDAnalyzer {
 
   edm::EDGetTokenT <reco::GenParticleCollection> mcparicleToken;
   edm::EDGetTokenT <std::vector< PileupSummaryInfo > > puInfoToken;
+
+  edm::EDGetTokenT <GenEventInfoProduct> genInfoProductToken;
 
 
   HLTConfigProvider hlt_config_;
@@ -270,9 +273,15 @@ class TTHMiniAODAnalyzer : public edm::EDAnalyzer {
   TH1D* h_numJet;
   TH1D* h_numTag;
 
+  TH1D* h_numJet20;
+  TH1D* h_numJet25;
+  TH1D* h_numJet30;
+  TH1D* h_numJet40;
+
   TH1D* h_numTag_BtagWP65_CSV;
   TH1D* h_numTag_BtagWP65_CMVA;
   TH1D* h_numTag_BtagWP65_CSVv2IVF;
+  TH1D* h_numTag_BTVWPM_CSVv2IVF;
 
   TH1D* h_numPV;
   TH1D* h_numTruePV;
@@ -280,15 +289,109 @@ class TTHMiniAODAnalyzer : public edm::EDAnalyzer {
 
   TH1D* h_numSecVtx;
 
+  TH1D* h_diff_jet_genJet_pt;
+  TH1D* h_diff_jet_genJet_minJetPt10_pt;
+  TH1D* h_diff_jet_genJet_minJetPt15_pt;
+  TH1D* h_diff_jet_genJet_minJetPt20_pt;
+  TH1D* h_diff_jet_genJet_minJetPt25_pt;
+  TH1D* h_diff_jet_genJet_minJetPt30_pt;
+  TH2D* h_jet_vs_genJet_pt;
+  TH2D* h_diff_jet_genJet_vs_jet_pt;
+
+  TH1D* h_numJet_Wp;
+  TH1D* h_numJet_Wm;
+
+  TH1D* h_recoWp_mass;
+  TH1D* h_recoWm_mass;
+  TH1D* h_recoW_mass;
+  TH1D* h_recoW_minJetPt10_mass;
+  TH1D* h_recoW_minJetPt15_mass;
+  TH1D* h_recoW_minJetPt20_mass;
+  TH1D* h_recoW_minJetPt25_mass;
+  TH1D* h_recoW_minJetPt30_mass;
+  TH2D* h_recoW_mass_vs_minJetPt;
+
+  TH1D* h_numGenJet_Wp;
+  TH1D* h_numGenJet_Wm;
+
+  TH1D* h_genWp_mass;
+  TH1D* h_genWm_mass;
+  TH1D* h_genW_mass;
+  TH1D* h_genW_minJetPt10_mass;
+  TH1D* h_genW_minJetPt15_mass;
+  TH1D* h_genW_minJetPt20_mass;
+  TH1D* h_genW_minJetPt25_mass;
+  TH1D* h_genW_minJetPt30_mass;
+  TH2D* h_genW_mass_vs_minJetPt;
+
+
+  TH1D* h_numJet_Bp;
+  TH1D* h_numJet_Bm;
+
+  TH1D* h_recoTp_mass;
+  TH1D* h_recoTm_mass;
+  TH1D* h_recoT_mass;
+  TH1D* h_recoT_minJetPt10_mass;
+  TH1D* h_recoT_minJetPt15_mass;
+  TH1D* h_recoT_minJetPt20_mass;
+  TH1D* h_recoT_minJetPt25_mass;
+  TH1D* h_recoT_minJetPt30_mass;
+  TH2D* h_recoT_mass_vs_minJetPt;
+
+  TH1D* h_numGenJet_Bp;
+  TH1D* h_numGenJet_Bm;
+
+  TH1D* h_genTp_mass;
+  TH1D* h_genTm_mass;
+  TH1D* h_genT_mass;
+  TH1D* h_genT_minJetPt10_mass;
+  TH1D* h_genT_minJetPt15_mass;
+  TH1D* h_genT_minJetPt20_mass;
+  TH1D* h_genT_minJetPt25_mass;
+  TH1D* h_genT_minJetPt30_mass;
+  TH2D* h_genT_mass_vs_minJetPt;
+
+
+
+
+  TH1D* h_numJet_HBp;
+  TH1D* h_numJet_HBm;
+
+  TH1D* h_recoH_mass;
+  TH1D* h_recoH_minJetPt10_mass;
+  TH1D* h_recoH_minJetPt15_mass;
+  TH1D* h_recoH_minJetPt20_mass;
+  TH1D* h_recoH_minJetPt25_mass;
+  TH1D* h_recoH_minJetPt30_mass;
+  TH2D* h_recoH_mass_vs_minJetPt;
+
+  TH1D* h_numGenJet_HBp;
+  TH1D* h_numGenJet_HBm;
+
+  TH1D* h_genH_mass;
+  TH1D* h_genH_minJetPt10_mass;
+  TH1D* h_genH_minJetPt15_mass;
+  TH1D* h_genH_minJetPt20_mass;
+  TH1D* h_genH_minJetPt25_mass;
+  TH1D* h_genH_minJetPt30_mass;
+  TH2D* h_genH_mass_vs_minJetPt;
+
+
+
   TH1D* h_jet_pt;
   TH1D* h_jet_eta;
   TH1D* h_jet_phi;
   TH1D* h_jet_mass;
-  TH1D* h_jet_csv;
-  TH1D* h_jet_csv_b;
-  TH1D* h_jet_csv_c;
-  TH1D* h_jet_csv_l;
-  TH1D* h_jet_csv_o;
+  TH1D* h_jet_CSV;
+  TH1D* h_jet_CSV_b;
+  TH1D* h_jet_CSV_c;
+  TH1D* h_jet_CSV_l;
+  TH1D* h_jet_CSV_o;
+  TH1D* h_jet_CSVv2IVF;
+  TH1D* h_jet_CSVv2IVF_b;
+  TH1D* h_jet_CSVv2IVF_c;
+  TH1D* h_jet_CSVv2IVF_l;
+  TH1D* h_jet_CSVv2IVF_o;
   TH1D* h_jet_secVtx_mass;
   TH1D* h_jet_secVtx_mass_b;
   TH1D* h_jet_secVtx_mass_c;
@@ -339,6 +442,14 @@ class TTHMiniAODAnalyzer : public edm::EDAnalyzer {
   TH1D* h_jet_neutralMultiplicity;
   TH1D* h_jet_numberOfDaughters;
 
+  TH1D* h_jet_renorm_chargedHadronEnergyFraction;
+  TH1D* h_jet_renorm_neutralHadronEnergyFraction;
+  TH1D* h_jet_renorm_chargedEmEnergyFraction;
+  TH1D* h_jet_renorm_neutralEmEnergyFraction;
+  TH1D* h_jet_renorm_chargedMultiplicity;
+  TH1D* h_jet_renorm_neutralMultiplicity;
+  TH1D* h_jet_renorm_numberOfDaughters;
+
   TH1D* h_numJet_nocc;
 
   TH1D* h_jet_nocc_pt;
@@ -358,6 +469,14 @@ class TTHMiniAODAnalyzer : public edm::EDAnalyzer {
   TH1D* h_jet_nocc_chargedMultiplicity;
   TH1D* h_jet_nocc_neutralMultiplicity;
   TH1D* h_jet_nocc_numberOfDaughters;
+
+  TH1D* h_jet_nocc_renorm_chargedHadronEnergyFraction;
+  TH1D* h_jet_nocc_renorm_neutralHadronEnergyFraction;
+  TH1D* h_jet_nocc_renorm_chargedEmEnergyFraction;
+  TH1D* h_jet_nocc_renorm_neutralEmEnergyFraction;
+  TH1D* h_jet_nocc_renorm_chargedMultiplicity;
+  TH1D* h_jet_nocc_renorm_neutralMultiplicity;
+  TH1D* h_jet_nocc_renorm_numberOfDaughters;
 
 
   TH1D* h_ele_tight_pt;
@@ -396,6 +515,9 @@ class TTHMiniAODAnalyzer : public edm::EDAnalyzer {
 
   TH1D* h_met_pt;
   TH1D* h_met_phi;
+
+  TH1D* h_raw_met_pt;
+  TH1D* h_raw_met_phi;
 
   TH1D* h_H_pt;
   TH1D* h_H_eta;
@@ -441,30 +563,37 @@ class TTHMiniAODAnalyzer : public edm::EDAnalyzer {
   TH1D* h_category_yield_BtagWP65_CSV;
   TH1D* h_category_yield_BtagWP65_CMVA;
   TH1D* h_category_yield_BtagWP65_CSVv2IVF;
+  TH1D* h_category_yield_BTVWPM_CSVv2IVF;
 
   TH1D* h_category_yield_1l_BtagWP65_CSV;
   TH1D* h_category_yield_1l_BtagWP65_CMVA;
   TH1D* h_category_yield_1l_BtagWP65_CSVv2IVF;
+  TH1D* h_category_yield_1l_BTVWPM_CSVv2IVF;
 
   TH1D* h_category_yield_1e_BtagWP65_CSV;
   TH1D* h_category_yield_1e_BtagWP65_CMVA;
   TH1D* h_category_yield_1e_BtagWP65_CSVv2IVF;
+  TH1D* h_category_yield_1e_BTVWPM_CSVv2IVF;
 
   TH1D* h_category_yield_1m_BtagWP65_CSV;
   TH1D* h_category_yield_1m_BtagWP65_CMVA;
   TH1D* h_category_yield_1m_BtagWP65_CSVv2IVF;
+  TH1D* h_category_yield_1m_BTVWPM_CSVv2IVF;
 
   TH1D* h_category_yield_1l_noiso_BtagWP65_CSV;
   TH1D* h_category_yield_1l_noiso_BtagWP65_CMVA;
   TH1D* h_category_yield_1l_noiso_BtagWP65_CSVv2IVF;
+  TH1D* h_category_yield_1l_noiso_BTVWPM_CSVv2IVF;
 
   TH1D* h_category_yield_1e_noiso_BtagWP65_CSV;
   TH1D* h_category_yield_1e_noiso_BtagWP65_CMVA;
   TH1D* h_category_yield_1e_noiso_BtagWP65_CSVv2IVF;
+  TH1D* h_category_yield_1e_noiso_BTVWPM_CSVv2IVF;
 
   TH1D* h_category_yield_1m_noiso_BtagWP65_CSV;
   TH1D* h_category_yield_1m_noiso_BtagWP65_CMVA;
   TH1D* h_category_yield_1m_noiso_BtagWP65_CSVv2IVF;
+  TH1D* h_category_yield_1m_noiso_BTVWPM_CSVv2IVF;
 
   TH1D* h_pfcand_energy;
   TH1D* h_pfcand_pt;
@@ -582,6 +711,8 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
   mcparicleToken = consumes <reco::GenParticleCollection> (edm::InputTag(std::string("prunedGenParticles")));
   puInfoToken = consumes <std::vector< PileupSummaryInfo > > (edm::InputTag(std::string("addPileupInfo")));
 
+  genInfoProductToken = consumes <GenEventInfoProduct> (edm::InputTag(std::string("generator")));
+
 
   ptmax = 500.;
   NptBins = int( ptmax/1. + 0.0001 );
@@ -606,9 +737,15 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
   h_numTruePV  = fs_->make<TH1D>("h_numTruePV", ";Number of True PU Vertices", NpuBins, NpuMin-0.5, NpuMax+0.5 );
   h_numGenPV  = fs_->make<TH1D>("h_numGenPV", ";Number of Generated PU Vertices", NpuBins, NpuMin-0.5, NpuMax+0.5 );
 
+  h_numJet20 = fs_->make<TH1D>("h_numJet20", ";Number of Jets", NjetBins, NjetMin-0.5, NjetMax+0.5 );
+  h_numJet25 = fs_->make<TH1D>("h_numJet25", ";Number of Jets", NjetBins, NjetMin-0.5, NjetMax+0.5 );
+  h_numJet30 = fs_->make<TH1D>("h_numJet30", ";Number of Jets", NjetBins, NjetMin-0.5, NjetMax+0.5 );
+  h_numJet40 = fs_->make<TH1D>("h_numJet40", ";Number of Jets", NjetBins, NjetMin-0.5, NjetMax+0.5 );
+
   h_numTag_BtagWP65_CSV = fs_->make<TH1D>("h_numTag_BtagWP65_CSV", ";Number of Tags (WP65, CSV)", NtagBins, NtagMin-0.5, NtagMax+0.5 );
   h_numTag_BtagWP65_CMVA = fs_->make<TH1D>("h_numTag_BtagWP65_CMVA", ";Number of Tags (WP65, CMVA)", NtagBins, NtagMin-0.5, NtagMax+0.5 );
   h_numTag_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_numTag_BtagWP65_CSVv2IVF", ";Number of Tags (WP65, CSVv2IVF)", NtagBins, NtagMin-0.5, NtagMax+0.5 );
+  h_numTag_BTVWPM_CSVv2IVF = fs_->make<TH1D>("h_numTag_BTVWPM_CSVv2IVF", ";Number of Tags (BTVWPM, CSVv2IVF)", NtagBins, NtagMin-0.5, NtagMax+0.5 );
 
   h_numSecVtx = fs_->make<TH1D>("h_numSecVtx", ";Number of Secondary Vertices", 6, 6-0.5, 6+0.5 );
 
@@ -700,16 +837,124 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
   h_EBRecHit_energy = fs_->make<TH1D>("h_EBRecHit_energy", ";EB recHit energy", 100, 0, 200 );
   h_EERecHit_energy = fs_->make<TH1D>("h_EERecHit_energy", ";EE recHit energy", 100, 0, 200 );
   
+  h_diff_jet_genJet_pt = fs_->make<TH1D>("h_diff_jet_genJet_pt",";jet p_{T} - genJet p_{T}", 200, -100, 100 );
+  h_diff_jet_genJet_minJetPt10_pt = fs_->make<TH1D>("h_diff_jet_genJet_minJetPt10_pt",";jet p_{T} - genJet p_{T}", 200, -100, 100 );
+  h_diff_jet_genJet_minJetPt15_pt = fs_->make<TH1D>("h_diff_jet_genJet_minJetPt15_pt",";jet p_{T} - genJet p_{T}", 200, -100, 100 );
+  h_diff_jet_genJet_minJetPt20_pt = fs_->make<TH1D>("h_diff_jet_genJet_minJetPt20_pt",";jet p_{T} - genJet p_{T}", 200, -100, 100 );
+  h_diff_jet_genJet_minJetPt25_pt = fs_->make<TH1D>("h_diff_jet_genJet_minJetPt25_pt",";jet p_{T} - genJet p_{T}", 200, -100, 100 );
+  h_diff_jet_genJet_minJetPt30_pt = fs_->make<TH1D>("h_diff_jet_genJet_minJetPt30_pt",";jet p_{T} - genJet p_{T}", 200, -100, 100 );
+
+  h_jet_vs_genJet_pt = fs_->make<TH2D>("h_jet_vs_genJet_pt",";jet p_{T};genJet p_{T}", NjetptBins, 0, jetptmax, NjetptBins, 0, jetptmax );
+  h_diff_jet_genJet_vs_jet_pt = fs_->make<TH2D>("h_diff_jet_genJet_vs_jet_pt",";jet p_{T};jet p_{T} - genJet p_{T}", NjetptBins, 0, jetptmax, 200, -100, 100 );
+
+  h_numJet_Wp = fs_->make<TH1D>("h_numJet_Wp",";number of jets matched to W^{+}", 5, 0-0.5, 4+0.5 );
+  h_numJet_Wm = fs_->make<TH1D>("h_numJet_Wm",";number of jets matched to W^{-}", 5, 0-0.5, 4+0.5 );
+
+  h_recoWp_mass = fs_->make<TH1D>("h_recoWp_mass",";mass of jets matched to W^{+}", 200, 0, 200 );
+  h_recoWm_mass = fs_->make<TH1D>("h_recoWm_mass",";mass of jets matched to W^{-}", 200, 0, 200 );
+  h_recoW_mass = fs_->make<TH1D>("h_recoW_mass",";mass of jets matched to W", 200, 0, 200 );
+  h_recoW_minJetPt10_mass = fs_->make<TH1D>("h_recoW_minJetPt10_mass",";mass of jets matched to W", 200, 0, 200 );
+  h_recoW_minJetPt15_mass = fs_->make<TH1D>("h_recoW_minJetPt15_mass",";mass of jets matched to W", 200, 0, 200 );
+  h_recoW_minJetPt20_mass = fs_->make<TH1D>("h_recoW_minJetPt20_mass",";mass of jets matched to W", 200, 0, 200 );
+  h_recoW_minJetPt25_mass = fs_->make<TH1D>("h_recoW_minJetPt25_mass",";mass of jets matched to W", 200, 0, 200 );
+  h_recoW_minJetPt30_mass = fs_->make<TH1D>("h_recoW_minJetPt30_mass",";mass of jets matched to W", 200, 0, 200 );
+
+  h_recoW_mass_vs_minJetPt = fs_->make<TH2D>("h_recoW_mass_vs_minJetPt",";min jet p_{T};mass of jets matched to W", 100, 0, 100, 200, 0, 200 );
+
+
+
+  h_numGenJet_Wp = fs_->make<TH1D>("h_numGenJet_Wp",";number of gen jets matched to W^{+}", 5, 0-0.5, 4+0.5 );
+  h_numGenJet_Wm = fs_->make<TH1D>("h_numGenJet_Wm",";number of gen jets matched to W^{-}", 5, 0-0.5, 4+0.5 );
+
+  h_genWp_mass = fs_->make<TH1D>("h_genWp_mass",";mass of gen jets matched to W^{+}", 200, 0, 200 );
+  h_genWm_mass = fs_->make<TH1D>("h_genWm_mass",";mass of gen jets matched to W^{-}", 200, 0, 200 );
+  h_genW_mass = fs_->make<TH1D>("h_genW_mass",";mass of gen jets matched to W", 200, 0, 200 );
+  h_genW_minJetPt10_mass = fs_->make<TH1D>("h_genW_minJetPt10_mass",";mass of gen jets matched to W", 200, 0, 200 );
+  h_genW_minJetPt15_mass = fs_->make<TH1D>("h_genW_minJetPt15_mass",";mass of gen jets matched to W", 200, 0, 200 );
+  h_genW_minJetPt20_mass = fs_->make<TH1D>("h_genW_minJetPt20_mass",";mass of gen jets matched to W", 200, 0, 200 );
+  h_genW_minJetPt25_mass = fs_->make<TH1D>("h_genW_minJetPt25_mass",";mass of gen jets matched to W", 200, 0, 200 );
+  h_genW_minJetPt30_mass = fs_->make<TH1D>("h_genW_minJetPt30_mass",";mass of gen jets matched to W", 200, 0, 200 );
+
+  h_genW_mass_vs_minJetPt = fs_->make<TH2D>("h_genW_mass_vs_minJetPt",";min gen jet p_{T};mass of gen jets matched to W", 100, 0, 100, 200, 0, 200 );
+
+
+
+  //
+
+  h_numJet_Bp = fs_->make<TH1D>("h_numJet_Bp",";number of jets matched to b{+}", 5, 0-0.5, 4+0.5 );
+  h_numJet_Bm = fs_->make<TH1D>("h_numJet_Bm",";number of jets matched to b{-}", 5, 0-0.5, 4+0.5 );
+
+  h_recoTp_mass = fs_->make<TH1D>("h_recoTp_mass",";mass of jets matched to t{+}", 400, 0, 400 );
+  h_recoTm_mass = fs_->make<TH1D>("h_recoTm_mass",";mass of jets matched to t{-}", 400, 0, 400 );
+  h_recoT_mass = fs_->make<TH1D>("h_recoT_mass",";mass of jets matched to top", 400, 0, 400 );
+  h_recoT_minJetPt10_mass = fs_->make<TH1D>("h_recoT_minJetPt10_mass",";mass of jets matched to top", 400, 0, 400 );
+  h_recoT_minJetPt15_mass = fs_->make<TH1D>("h_recoT_minJetPt15_mass",";mass of jets matched to top", 400, 0, 400 );
+  h_recoT_minJetPt20_mass = fs_->make<TH1D>("h_recoT_minJetPt20_mass",";mass of jets matched to top", 400, 0, 400 );
+  h_recoT_minJetPt25_mass = fs_->make<TH1D>("h_recoT_minJetPt25_mass",";mass of jets matched to top", 400, 0, 400 );
+  h_recoT_minJetPt30_mass = fs_->make<TH1D>("h_recoT_minJetPt30_mass",";mass of jets matched to top", 400, 0, 400 );
+
+  h_recoT_mass_vs_minJetPt = fs_->make<TH2D>("h_recoT_mass_vs_minJetPt",";min jet p_{T};mass of jets matched to top", 100, 0, 100, 400, 0, 400 );
+
+
+
+  h_numGenJet_Bp = fs_->make<TH1D>("h_numGenJet_Bp",";number of gen jets matched to b{+}", 5, 0-0.5, 4+0.5 );
+  h_numGenJet_Bm = fs_->make<TH1D>("h_numGenJet_Bm",";number of gen jets matched to b{-}", 5, 0-0.5, 4+0.5 );
+
+  h_genTp_mass = fs_->make<TH1D>("h_genTp_mass",";mass of gen jets matched to t{+}", 400, 0, 400 );
+  h_genTm_mass = fs_->make<TH1D>("h_genTm_mass",";mass of gen jets matched to t{-}", 400, 0, 400 );
+  h_genT_mass = fs_->make<TH1D>("h_genT_mass",";mass of gen jets matched to top", 400, 0, 400 );
+  h_genT_minJetPt10_mass = fs_->make<TH1D>("h_genT_minJetPt10_mass",";mass of gen jets matched to top", 400, 0, 400 );
+  h_genT_minJetPt15_mass = fs_->make<TH1D>("h_genT_minJetPt15_mass",";mass of gen jets matched to top", 400, 0, 400 );
+  h_genT_minJetPt20_mass = fs_->make<TH1D>("h_genT_minJetPt20_mass",";mass of gen jets matched to top", 400, 0, 400 );
+  h_genT_minJetPt25_mass = fs_->make<TH1D>("h_genT_minJetPt25_mass",";mass of gen jets matched to top", 400, 0, 400 );
+  h_genT_minJetPt30_mass = fs_->make<TH1D>("h_genT_minJetPt30_mass",";mass of gen jets matched to top", 400, 0, 400 );
+
+  h_genT_mass_vs_minJetPt = fs_->make<TH2D>("h_genT_mass_vs_minJetPt",";min gen jet p_{T};mass of gen jets matched to top", 100, 0, 100, 400, 0, 400 );
+
+
+  // Higgs
+  h_numJet_HBp = fs_->make<TH1D>("h_numJet_HBp",";number of jets matched to b{+}", 5, 0-0.5, 4+0.5 );
+  h_numJet_HBm = fs_->make<TH1D>("h_numJet_HBm",";number of jets matched to b{-}", 5, 0-0.5, 4+0.5 );
+
+  h_recoH_mass = fs_->make<TH1D>("h_recoH_mass",";mass of jets matched to Higgs", 400, 0, 400 );
+  h_recoH_minJetPt10_mass = fs_->make<TH1D>("h_recoH_minJetPt10_mass",";mass of jets matched to Higgs", 400, 0, 400 );
+  h_recoH_minJetPt15_mass = fs_->make<TH1D>("h_recoH_minJetPt15_mass",";mass of jets matched to Higgs", 400, 0, 400 );
+  h_recoH_minJetPt20_mass = fs_->make<TH1D>("h_recoH_minJetPt20_mass",";mass of jets matched to Higgs", 400, 0, 400 );
+  h_recoH_minJetPt25_mass = fs_->make<TH1D>("h_recoH_minJetPt25_mass",";mass of jets matched to Higgs", 400, 0, 400 );
+  h_recoH_minJetPt30_mass = fs_->make<TH1D>("h_recoH_minJetPt30_mass",";mass of jets matched to Higgs", 400, 0, 400 );
+
+  h_recoH_mass_vs_minJetPt = fs_->make<TH2D>("h_recoH_mass_vs_minJetPt",";min jet p_{T};mass of jets matched to Higgs", 100, 0, 100, 400, 0, 400 );
+
+
+  h_numGenJet_HBp = fs_->make<TH1D>("h_numGenJet_HBp",";number of gen jets matched to b{+}", 5, 0-0.5, 4+0.5 );
+  h_numGenJet_HBm = fs_->make<TH1D>("h_numGenJet_HBm",";number of gen jets matched to b{-}", 5, 0-0.5, 4+0.5 );
+
+  h_genH_mass = fs_->make<TH1D>("h_genH_mass",";mass of gen jets matched to Higgs", 400, 0, 400 );
+  h_genH_minJetPt10_mass = fs_->make<TH1D>("h_genH_minJetPt10_mass",";mass of gen jets matched to Higgs", 400, 0, 400 );
+  h_genH_minJetPt15_mass = fs_->make<TH1D>("h_genH_minJetPt15_mass",";mass of gen jets matched to Higgs", 400, 0, 400 );
+  h_genH_minJetPt20_mass = fs_->make<TH1D>("h_genH_minJetPt20_mass",";mass of gen jets matched to Higgs", 400, 0, 400 );
+  h_genH_minJetPt25_mass = fs_->make<TH1D>("h_genH_minJetPt25_mass",";mass of gen jets matched to Higgs", 400, 0, 400 );
+  h_genH_minJetPt30_mass = fs_->make<TH1D>("h_genH_minJetPt30_mass",";mass of gen jets matched to Higgs", 400, 0, 400 );
+
+  h_genH_mass_vs_minJetPt = fs_->make<TH2D>("h_genH_mass_vs_minJetPt",";min jet p_{T};mass of jets matched to Higgs", 100, 0, 100, 400, 0, 400 );
+
+
 
   h_jet_pt = fs_->make<TH1D>("h_jet_pt",";jet p_{T}", NjetptBins, 0, jetptmax );
   h_jet_eta = fs_->make<TH1D>("h_jet_eta",";jet #eta", 25, -2.5, 2.5 );
   h_jet_phi = fs_->make<TH1D>("h_jet_phi",";jet #phi", 34, -3.4, 3.4 );
   h_jet_mass = fs_->make<TH1D>("h_jet_mass",";jet mass", 30, 0, 300 );
-  h_jet_csv = fs_->make<TH1D>("h_jet_csv",";jet CSV output", 1600, -0.5, 1.1 );
-  h_jet_csv_b = fs_->make<TH1D>("h_jet_csv_b",";b jet CSV output", 1600, -0.5, 1.1 );
-  h_jet_csv_c = fs_->make<TH1D>("h_jet_csv_c",";c jet CSV output", 1600, -0.5, 1.1 );
-  h_jet_csv_l = fs_->make<TH1D>("h_jet_csv_l",";udsg jet CSV output", 1600, -0.5, 1.1 );
-  h_jet_csv_o = fs_->make<TH1D>("h_jet_csv_o",";other jet CSV output", 1600, -0.5, 1.1 );
+  h_jet_CSV = fs_->make<TH1D>("h_jet_CSV",";jet CSV output", 1600, -0.5, 1.1 );
+  h_jet_CSV_b = fs_->make<TH1D>("h_jet_CSV_b",";b jet CSV output", 1600, -0.5, 1.1 );
+  h_jet_CSV_c = fs_->make<TH1D>("h_jet_CSV_c",";c jet CSV output", 1600, -0.5, 1.1 );
+  h_jet_CSV_l = fs_->make<TH1D>("h_jet_CSV_l",";udsg jet CSV output", 1600, -0.5, 1.1 );
+  h_jet_CSV_o = fs_->make<TH1D>("h_jet_CSV_o",";other jet CSV output", 1600, -0.5, 1.1 );
+
+  h_jet_CSVv2IVF = fs_->make<TH1D>("h_jet_CSVv2IVF",";jet CSVv2IVF output", 1600, -0.5, 1.1 );
+  h_jet_CSVv2IVF_b = fs_->make<TH1D>("h_jet_CSVv2IVF_b",";b jet CSVv2IVF output", 1600, -0.5, 1.1 );
+  h_jet_CSVv2IVF_c = fs_->make<TH1D>("h_jet_CSVv2IVF_c",";c jet CSVv2IVF output", 1600, -0.5, 1.1 );
+  h_jet_CSVv2IVF_l = fs_->make<TH1D>("h_jet_CSVv2IVF_l",";udsg jet CSVv2IVF output", 1600, -0.5, 1.1 );
+  h_jet_CSVv2IVF_o = fs_->make<TH1D>("h_jet_CSVv2IVF_o",";other jet CSVv2IVF output", 1600, -0.5, 1.1 );
 
   h_jet_secVtx_mass = fs_->make<TH1D>("h_jet_secVtx_mass",";jet secondary vertex mass", 80, 0., 8.0 );
   h_jet_secVtx_mass_b = fs_->make<TH1D>("h_jet_secVtx_mass_b",";b jet secondary vertex mass", 80, 0., 8.0 );
@@ -768,6 +1013,14 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
   h_jet_neutralMultiplicity = fs_->make<TH1D>("h_jet_neutralMultiplicity",";jet neutralMultiplicity", 100, 0, 100 );
   h_jet_numberOfDaughters = fs_->make<TH1D>("h_jet_numberOfDaughters",";jet numberOfDaughters", 100, 0, 100 );
 
+  h_jet_renorm_chargedHadronEnergyFraction = fs_->make<TH1D>("h_jet_renorm_chargedHadronEnergyFraction",";jet chargedHadronEnergyFraction", 100, 0, 1 );
+  h_jet_renorm_neutralHadronEnergyFraction = fs_->make<TH1D>("h_jet_renorm_neutralHadronEnergyFraction",";jet neutralHadronEnergyFraction", 100, 0, 1 );
+  h_jet_renorm_chargedEmEnergyFraction = fs_->make<TH1D>("h_jet_renorm_chargedEmEnergyFraction",";jet chargedEmEnergyFraction", 100, 0, 1 );
+  h_jet_renorm_neutralEmEnergyFraction = fs_->make<TH1D>("h_jet_renorm_neutralEmEnergyFraction",";jet neutralEmEnergyFraction", 100, 0, 1 );
+  h_jet_renorm_chargedMultiplicity = fs_->make<TH1D>("h_jet_renorm_chargedMultiplicity",";jet chargedMultiplicity", 100, 0, 100 );
+  h_jet_renorm_neutralMultiplicity = fs_->make<TH1D>("h_jet_renorm_neutralMultiplicity",";jet neutralMultiplicity", 100, 0, 100 );
+  h_jet_renorm_numberOfDaughters = fs_->make<TH1D>("h_jet_renorm_numberOfDaughters",";jet numberOfDaughters", 100, 0, 100 );
+
 
   h_numJet_nocc = fs_->make<TH1D>("h_numJet_nocc", ";Number of Jets", NjetBins, NjetMin-0.5, NjetMax+0.5 );
 
@@ -788,6 +1041,14 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
   h_jet_nocc_chargedMultiplicity = fs_->make<TH1D>("h_jet_nocc_chargedMultiplicity",";jet chargedMultiplicity", 100, 0, 100 );
   h_jet_nocc_neutralMultiplicity = fs_->make<TH1D>("h_jet_nocc_neutralMultiplicity",";jet neutralMultiplicity", 100, 0, 100 );
   h_jet_nocc_numberOfDaughters = fs_->make<TH1D>("h_jet_nocc_numberOfDaughters",";jet numberOfDaughters", 100, 0, 100 );
+
+  h_jet_nocc_renorm_chargedHadronEnergyFraction = fs_->make<TH1D>("h_jet_nocc_renorm_chargedHadronEnergyFraction",";jet chargedHadronEnergyFraction", 100, 0, 1 );
+  h_jet_nocc_renorm_neutralHadronEnergyFraction = fs_->make<TH1D>("h_jet_nocc_renorm_neutralHadronEnergyFraction",";jet neutralHadronEnergyFraction", 100, 0, 1 );
+  h_jet_nocc_renorm_chargedEmEnergyFraction = fs_->make<TH1D>("h_jet_nocc_renorm_chargedEmEnergyFraction",";jet chargedEmEnergyFraction", 100, 0, 1 );
+  h_jet_nocc_renorm_neutralEmEnergyFraction = fs_->make<TH1D>("h_jet_nocc_renorm_neutralEmEnergyFraction",";jet neutralEmEnergyFraction", 100, 0, 1 );
+  h_jet_nocc_renorm_chargedMultiplicity = fs_->make<TH1D>("h_jet_nocc_renorm_chargedMultiplicity",";jet chargedMultiplicity", 100, 0, 100 );
+  h_jet_nocc_renorm_neutralMultiplicity = fs_->make<TH1D>("h_jet_nocc_renorm_neutralMultiplicity",";jet neutralMultiplicity", 100, 0, 100 );
+  h_jet_nocc_renorm_numberOfDaughters = fs_->make<TH1D>("h_jet_nocc_renorm_numberOfDaughters",";jet numberOfDaughters", 100, 0, 100 );
 
 
   h_ele_tight_pt  = fs_->make<TH1D>("h_ele_tight_pt",";tight ele p_{T}", NptBins, 0, ptmax );
@@ -824,8 +1085,11 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
   h_mu_noiso_photonIso = fs_->make<TH1D>("h_mu_noiso_photonIso",";mu photon isolation", 200, -0.01, 20. );
   h_mu_noiso_sumPUPtIso = fs_->make<TH1D>("h_mu_noiso_sumPUPtIso",";mu sum PU pT", 200, -0.01, 20. );
 
-  h_met_pt = fs_->make<TH1D>("h_met_pt",";met p_{T}", NptBins, 0, ptmax );
-  h_met_phi = fs_->make<TH1D>("h_met_phi",";met #phi", 34, -3.4, 3.4 );
+  h_met_pt = fs_->make<TH1D>("h_met_pt",";MET p_{T}", NptBins, 0, ptmax );
+  h_met_phi = fs_->make<TH1D>("h_met_phi",";MET #phi", 34, -3.4, 3.4 );
+
+  h_raw_met_pt = fs_->make<TH1D>("h_raw_met_pt",";uncorrected MET p_{T}", NptBins, 0, ptmax );
+  h_raw_met_phi = fs_->make<TH1D>("h_raw_met_phi",";uncorrected MET #phi", 34, -3.4, 3.4 );
 
   h_H_pt = fs_->make<TH1D>("h_H_pt",";H p_{T}", NjetptBins, 0, jetptmax );
   h_H_eta = fs_->make<TH1D>("h_H_eta",";H #eta", 70, -3.5, 3.5 );
@@ -954,30 +1218,37 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
   h_category_yield_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
   h_category_yield_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
   h_category_yield_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+  h_category_yield_BTVWPM_CSVv2IVF = fs_->make<TH1D>("h_category_yield_BTVWPM_CSVv2IVF", ";category", NumCat, 0, NumCat );
 
   h_category_yield_1l_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1l_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
   h_category_yield_1l_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1l_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
   h_category_yield_1l_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1l_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+  h_category_yield_1l_BTVWPM_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1l_BTVWPM_CSVv2IVF", ";category", NumCat, 0, NumCat );
 
   h_category_yield_1e_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1e_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
   h_category_yield_1e_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1e_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
   h_category_yield_1e_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1e_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+  h_category_yield_1e_BTVWPM_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1e_BTVWPM_CSVv2IVF", ";category", NumCat, 0, NumCat );
 
   h_category_yield_1m_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1m_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
   h_category_yield_1m_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1m_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
   h_category_yield_1m_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1m_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+  h_category_yield_1m_BTVWPM_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1m_BTVWPM_CSVv2IVF", ";category", NumCat, 0, NumCat );
 
   h_category_yield_1l_noiso_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1l_noiso_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
   h_category_yield_1l_noiso_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1l_noiso_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
   h_category_yield_1l_noiso_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1l_noiso_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+  h_category_yield_1l_noiso_BTVWPM_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1l_noiso_BTVWPM_CSVv2IVF", ";category", NumCat, 0, NumCat );
 
   h_category_yield_1e_noiso_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1e_noiso_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
   h_category_yield_1e_noiso_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1e_noiso_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
   h_category_yield_1e_noiso_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1e_noiso_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+  h_category_yield_1e_noiso_BTVWPM_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1e_noiso_BTVWPM_CSVv2IVF", ";category", NumCat, 0, NumCat );
 
   h_category_yield_1m_noiso_BtagWP65_CSV = fs_->make<TH1D>("h_category_yield_1m_noiso_BtagWP65_CSV", ";category", NumCat, 0, NumCat );
   h_category_yield_1m_noiso_BtagWP65_CMVA = fs_->make<TH1D>("h_category_yield_1m_noiso_BtagWP65_CMVA", ";category", NumCat, 0, NumCat );
   h_category_yield_1m_noiso_BtagWP65_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1m_noiso_BtagWP65_CSVv2IVF", ";category", NumCat, 0, NumCat );
+  h_category_yield_1m_noiso_BTVWPM_CSVv2IVF = fs_->make<TH1D>("h_category_yield_1m_noiso_BTVWPM_CSVv2IVF", ";category", NumCat, 0, NumCat );
 
 
   for( int iCat=0; iCat<NumCat; iCat++ ){
@@ -992,30 +1263,37 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
     h_category_yield_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_BTVWPM_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
 
     h_category_yield_1l_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1l_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1l_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1l_BTVWPM_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
 
     h_category_yield_1e_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1e_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1e_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1e_BTVWPM_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
 
     h_category_yield_1m_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1m_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1m_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1m_BTVWPM_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
 
     h_category_yield_1l_noiso_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1l_noiso_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1l_noiso_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1l_noiso_BTVWPM_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
 
     h_category_yield_1e_noiso_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1e_noiso_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1e_noiso_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1e_noiso_BTVWPM_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
 
     h_category_yield_1m_noiso_BtagWP65_CSV->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1m_noiso_BtagWP65_CMVA->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
     h_category_yield_1m_noiso_BtagWP65_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
+    h_category_yield_1m_noiso_BTVWPM_CSVv2IVF->GetXaxis()->SetBinLabel(iCat+1,cat_labels[iCat].c_str());
   }
 
 
@@ -1137,6 +1415,13 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   wgt = intLumi_ * xSec / nGen;
 
+
+  edm::Handle<GenEventInfoProduct> GenEventInfoHandle;
+  iEvent.getByToken(genInfoProductToken,GenEventInfoHandle);
+
+  double GenEventInfoWeight = GenEventInfoHandle.product()->weight();
+
+  wgt *= GenEventInfoWeight;
 
   double minTightLeptonPt = 30.;
 
@@ -1932,20 +2217,112 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   std::vector<pat::Jet> selectedJets_nocc_unsorted = miniAODhelper.GetSelectedJets(*pfjets, 30., 2.4, jetID::jetLoose, '-' );
 
+  std::vector<pat::Jet> selectedJets20_unsorted = miniAODhelper.GetSelectedJets(correctedJets, 20., 2.4, jetID::jetLoose, '-' );
+  std::vector<pat::Jet> selectedJets25_unsorted = miniAODhelper.GetSelectedJets(correctedJets, 25., 2.4, jetID::jetLoose, '-' );
+  std::vector<pat::Jet> selectedJets30_unsorted = miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::jetLoose, '-' );
+  std::vector<pat::Jet> selectedJets40_unsorted = miniAODhelper.GetSelectedJets(correctedJets, 40., 2.4, jetID::jetLoose, '-' );
+
+
+  /*
+  /////////
+  ///////// DELETE ME
+  /////////
+ 
+  std::vector<std::string> availableJECSets;
+  std::cout << " ======================== " << std::endl;
+  std::cout << "\t pfjets " << std::endl;
+  for( std::vector<pat::Jet>::const_iterator iJet = pfjets->begin(); iJet != pfjets->end(); iJet++ ){
+    availableJECSets = iJet->availableJECSets();
+    std::cout << " currentJECSet() = " << iJet->currentJECSet() << ",\t currentJECLevel() = " << iJet->currentJECLevel() << std::endl;
+    double corrPt = iJet->pt();
+    double uncorrPt = iJet->correctedJet(0).pt();
+    double jecFactor = iJet->jecFactor(0);
+
+    printf("\t\t pfjets Jet %d: pt = %.1f,\t uncorrpt = %.1f,\t jecFactor = %.3f,\t eta = %.2f,\t phi = %.2f \n", 
+	   int(iJet - pfjets->begin()), corrPt, uncorrPt, jecFactor, iJet->eta(), iJet->phi() );
+  }
+  std::cout << "\t ----- " << std::endl;
+  std::cout << "\t rawJets " << std::endl;
+  for( std::vector<pat::Jet>::const_iterator iJet = rawJets.begin(); iJet != rawJets.end(); iJet++ ){ 
+    double corrPt = iJet->pt();
+    double uncorrPt = iJet->correctedJet(0).pt();
+    double jecFactor = iJet->jecFactor(0);
+
+    printf("\t\t rawJets Jet %d: pt = %.1f,\t uncorrpt = %.1f,\t jecFactor = %.3f,\t eta = %.2f,\t phi = %.2f \n", 
+	   int(iJet - rawJets.begin()), corrPt, uncorrPt, jecFactor, iJet->eta(), iJet->phi() );
+  }
+  std::cout << "\t ----- " << std::endl;
+  std::cout << "\t jetsNoMu " << std::endl;
+  for( std::vector<pat::Jet>::const_iterator iJet = jetsNoMu.begin(); iJet != jetsNoMu.end(); iJet++ ){ 
+    double corrPt = iJet->pt();
+    double uncorrPt = iJet->correctedJet(0).pt();
+    double jecFactor = iJet->jecFactor(0);
+
+    printf("\t\t jetsNoMu Jet %d: pt = %.1f,\t uncorrpt = %.1f,\t jecFactor = %.3f,\t eta = %.2f,\t phi = %.2f \n", 
+	   int(iJet - jetsNoMu.begin()), corrPt, uncorrPt, jecFactor, iJet->eta(), iJet->phi() );
+  }
+  std::cout << "\t ----- " << std::endl;
+  std::cout << "\t jetsNoEle " << std::endl;
+  for( std::vector<pat::Jet>::const_iterator iJet = jetsNoEle.begin(); iJet != jetsNoEle.end(); iJet++ ){ 
+    double corrPt = iJet->pt();
+    double uncorrPt = iJet->correctedJet(0).pt();
+    double jecFactor = iJet->jecFactor(0);
+
+    printf("\t\t jetsNoEle Jet %d: pt = %.1f,\t uncorrpt = %.1f,\t jecFactor = %.3f,\t eta = %.2f,\t phi = %.2f \n", 
+	   int(iJet - jetsNoEle.begin()), corrPt, uncorrPt, jecFactor, iJet->eta(), iJet->phi() );
+  }
+  std::cout << "\t ----- " << std::endl;
+  std::cout << "\t correctedJets " << std::endl;
+  for( std::vector<pat::Jet>::const_iterator iJet = correctedJets.begin(); iJet != correctedJets.end(); iJet++ ){ 
+    double corrPt = iJet->pt();
+    double uncorrPt = iJet->correctedJet(0).pt();
+    double jecFactor = iJet->jecFactor(0);
+
+    double scale = corrector->correction(*iJet, iEvent, iSetup);
+
+    printf("\t\t correctedJets Jet %d: pt = %.1f,\t uncorrpt = %.1f,\t jecFactor = %.3f,\t scale = %.3f,\t eta = %.2f,\t phi = %.2f \n", 
+	   int(iJet - correctedJets.begin()), corrPt, uncorrPt, jecFactor, scale, iJet->eta(), iJet->phi() );
+  }
+  // std::cout << "\t ----- " << std::endl;
+
+  // for( int iSet=0; iSet<int(availableJECSets.size()); iSet++ ){
+  //   std::cout << "\t\t iSet = " << iSet << ": JEC set = " << availableJECSets[iSet] << std::endl;
+  // }
+  // std::cout << "\t ----- " << std::endl;
+  */
+
+
   // Sort jet collections by pT
   std::vector<pat::Jet> selectedJets       = miniAODhelper.GetSortedByPt( selectedJets_unsorted );
   std::vector<pat::Jet> selectedJets_tag   = miniAODhelper.GetSortedByPt( selectedJets_tag_unsorted );
 
   std::vector<pat::Jet> selectedJets_nocc = miniAODhelper.GetSortedByPt( selectedJets_nocc_unsorted );
 
+  std::vector<pat::Jet> selectedJets20 = miniAODhelper.GetSortedByPt( selectedJets20_unsorted );
+  std::vector<pat::Jet> selectedJets25 = miniAODhelper.GetSortedByPt( selectedJets25_unsorted );
+  std::vector<pat::Jet> selectedJets30 = miniAODhelper.GetSortedByPt( selectedJets30_unsorted );
+  std::vector<pat::Jet> selectedJets40 = miniAODhelper.GetSortedByPt( selectedJets40_unsorted );
+
+
+  // Loose jets
+  std::vector<pat::Jet> selectedJets_loose_unsorted = miniAODhelper.GetSelectedJets(correctedJets, 10., 2.4, jetID::jetLoose, '-' );
+  std::vector<pat::Jet> selectedJets_loose          = miniAODhelper.GetSortedByPt( selectedJets_loose_unsorted );
+
 
   // Get numJets, numTags
   int numJet = int( selectedJets.size() );
+
+  int numJet20 = int( selectedJets20.size() );
+  int numJet25 = int( selectedJets25.size() );
+  int numJet30 = int( selectedJets30.size() );
+  int numJet40 = int( selectedJets40.size() );
+
   int numTag = int( selectedJets_tag.size() );
 
   int numTag_BtagWP65_CSV = 0;
   int numTag_BtagWP65_CMVA = 0;
   int numTag_BtagWP65_CSVv2IVF = 0;
+  int numTag_BTVWPM_CSVv2IVF = 0;
   
   // Loop over jets
   for( std::vector<pat::Jet>::const_iterator iJet = selectedJets.begin(); iJet != selectedJets.end(); iJet++ ){ 
@@ -1964,6 +2341,7 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if( csv>0.679 ) numTag_BtagWP65_CSV++;
     if( CMVA>0.735 ) numTag_BtagWP65_CMVA++;
     if( CSVv2IVF>0.825 ) numTag_BtagWP65_CSVv2IVF++;
+    if( CSVv2IVF>0.814 ) numTag_BTVWPM_CSVv2IVF++;
   }
 
   int numJet_nocc = int( selectedJets_nocc.size() );
@@ -2269,9 +2647,15 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   h_numJet->Fill(std::min(numJet,NjetMax),wgt);
   h_numTag->Fill(std::min(numTag,NtagMax),wgt);
 
+  h_numJet20->Fill(std::min(numJet20,NjetMax),wgt);
+  h_numJet25->Fill(std::min(numJet25,NjetMax),wgt);
+  h_numJet30->Fill(std::min(numJet30,NjetMax),wgt);
+  h_numJet40->Fill(std::min(numJet40,NjetMax),wgt);
+
   h_numTag_BtagWP65_CSV->Fill(numTag_BtagWP65_CSV,wgt);
   h_numTag_BtagWP65_CMVA->Fill(numTag_BtagWP65_CMVA,wgt);
   h_numTag_BtagWP65_CSVv2IVF->Fill(numTag_BtagWP65_CSVv2IVF,wgt);
+  h_numTag_BTVWPM_CSVv2IVF->Fill(numTag_BTVWPM_CSVv2IVF,wgt);
 
   h_numPV->Fill(std::min(numpv,NpuMax),wgt);
   h_numTruePV->Fill(std::min(numTruePV,double(NpuMax)),wgt);
@@ -2282,14 +2666,84 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   h_met_pt->Fill(std::min(double(correctedMET.pt()),jetptmax)-0.0001,wgt);
   h_met_phi->Fill(correctedMET.phi(),wgt);
 
+  h_raw_met_pt->Fill(std::min(double(correctedMET.uncorrectedPt()),jetptmax)-0.0001,wgt);
+  h_raw_met_phi->Fill(correctedMET.uncorrectedPhi(),wgt);
+
   h_numJet_nocc->Fill(std::min(numJet_nocc,NjetMax),wgt);
 
 
   // Loop over jets
+  std::vector< TLorentzVector > vrecojetWp;
+  std::vector< TLorentzVector > vrecojetWm;
+  std::vector< TLorentzVector > vrecojetBp;
+  std::vector< TLorentzVector > vrecojetBm;
+  std::vector< TLorentzVector > vrecojetHBp;
+  std::vector< TLorentzVector > vrecojetHBm;
+  std::vector< TLorentzVector > vgenjetWp;
+  std::vector< TLorentzVector > vgenjetWm;
+  std::vector< TLorentzVector > vgenjetBp;
+  std::vector< TLorentzVector > vgenjetBm;
+  std::vector< TLorentzVector > vgenjetHBp;
+  std::vector< TLorentzVector > vgenjetHBm;
+
+  for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_loose.begin(); iJet != selectedJets_loose.end(); iJet++ ){ 
+    if( iJet->genJet() ){
+      h_diff_jet_genJet_pt->Fill(iJet->pt() - iJet->genJet()->pt(),wgt);
+      h_jet_vs_genJet_pt->Fill(iJet->pt(),iJet->genJet()->pt(),wgt);
+      h_diff_jet_genJet_vs_jet_pt->Fill(iJet->pt(),iJet->pt() - iJet->genJet()->pt(),wgt);
+
+      if( iJet->pt() > 10 ) h_diff_jet_genJet_minJetPt10_pt->Fill(iJet->pt() - iJet->genJet()->pt(),wgt);
+      if( iJet->pt() > 15 ) h_diff_jet_genJet_minJetPt15_pt->Fill(iJet->pt() - iJet->genJet()->pt(),wgt);
+      if( iJet->pt() > 20 ) h_diff_jet_genJet_minJetPt20_pt->Fill(iJet->pt() - iJet->genJet()->pt(),wgt);
+      if( iJet->pt() > 25 ) h_diff_jet_genJet_minJetPt25_pt->Fill(iJet->pt() - iJet->genJet()->pt(),wgt);
+      if( iJet->pt() > 30 ) h_diff_jet_genJet_minJetPt30_pt->Fill(iJet->pt() - iJet->genJet()->pt(),wgt);
+    }
+
+    if( iJet->genParton() ){
+      int pdgId = iJet->genParton()->pdgId();
+      TLorentzVector jetP4;	  
+      jetP4.SetPxPyPzE(iJet->px(),iJet->py(),iJet->pz(),iJet->energy());
+
+      if( iJet->genParton()->mother() ){
+	int motherId = iJet->genParton()->mother()->pdgId();
+	if( motherId==24 )  vrecojetWp.push_back(jetP4);
+	if( motherId==-24 ) vrecojetWm.push_back(jetP4);
+
+	if( motherId==6  && pdgId==5 )  vrecojetBm.push_back(jetP4);
+	if( motherId==-6 && pdgId==-5 ) vrecojetBp.push_back(jetP4);
+
+	if( motherId==25 && pdgId==5 )  vrecojetHBm.push_back(jetP4);
+	if( motherId==25 && pdgId==-5 ) vrecojetHBp.push_back(jetP4);
+      }
+
+      if( iJet->genJet() ){
+	TLorentzVector genJetP4;	  
+	genJetP4.SetPxPyPzE(iJet->genJet()->px(),iJet->genJet()->py(),iJet->genJet()->pz(),iJet->genJet()->energy());
+
+	if( iJet->genParton()->mother() ){
+	  int motherId = iJet->genParton()->mother()->pdgId();
+	  if( motherId==24 )  vgenjetWp.push_back(genJetP4);
+	  if( motherId==-24 ) vgenjetWm.push_back(genJetP4);
+
+	  if( motherId==6  && pdgId==5 )  vgenjetBm.push_back(genJetP4);
+	  if( motherId==-6 && pdgId==-5 ) vgenjetBp.push_back(genJetP4);
+
+	  if( motherId==25 && pdgId==5 )  vgenjetHBm.push_back(genJetP4);
+	  if( motherId==25 && pdgId==-5 ) vgenjetHBp.push_back(genJetP4);
+	}
+      }
+    }
+  }
+
   for( std::vector<pat::Jet>::const_iterator iJet = selectedJets.begin(); iJet != selectedJets.end(); iJet++ ){ 
     double csv = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
     if( csv>-5 && csv<-0.5 ) csv = -0.2;
     if( csv<-5 )             csv = -0.4;
+
+
+    double CSVv2IVF = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
+    if( CSVv2IVF>-5 && CSVv2IVF<-0.5 ) CSVv2IVF = -0.2;
+    if( CSVv2IVF<-5 )                  CSVv2IVF = -0.4;
 
     int flavour = abs( iJet->partonFlavour() );
 
@@ -2306,40 +2760,57 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     h_jet_neutralMultiplicity->Fill(iJet->neutralMultiplicity(),wgt);
     h_jet_numberOfDaughters->Fill(iJet->numberOfDaughters(),wgt);
 
+    double corrPt = iJet->pt();
+    double uncorrPt = iJet->correctedJet(0).pt();
+
+    double wgt_renorm = wgt * corrPt / uncorrPt;
+    h_jet_renorm_chargedHadronEnergyFraction->Fill(iJet->chargedHadronEnergyFraction(),wgt_renorm);
+    h_jet_renorm_neutralHadronEnergyFraction->Fill(iJet->neutralHadronEnergyFraction(),wgt_renorm);
+    h_jet_renorm_chargedEmEnergyFraction->Fill(iJet->chargedEmEnergyFraction(),wgt_renorm);
+    h_jet_renorm_neutralEmEnergyFraction->Fill(iJet->neutralEmEnergyFraction(),wgt_renorm);
+    h_jet_renorm_chargedMultiplicity->Fill(iJet->chargedMultiplicity(),wgt_renorm);
+    h_jet_renorm_neutralMultiplicity->Fill(iJet->neutralMultiplicity(),wgt_renorm);
+    h_jet_renorm_numberOfDaughters->Fill(iJet->numberOfDaughters(),wgt_renorm);
+
     double jet_secVtx_mass = iJet->userFloat("vtxMass");
     double jet_secVtx_Ntracks = iJet->userFloat("vtxNtracks");
     double jet_secVtx_3DVal = iJet->userFloat("vtx3DVal");
     double jet_secVtx_3DSig = iJet->userFloat("vtx3DSig");
 
 
-    h_jet_csv->Fill(csv,wgt);
+    h_jet_CSV->Fill(csv,wgt);
+    h_jet_CSVv2IVF->Fill(CSVv2IVF,wgt);
     h_jet_secVtx_mass->Fill(jet_secVtx_mass,wgt);
     h_jet_secVtx_Ntracks->Fill(jet_secVtx_Ntracks,wgt);
     h_jet_secVtx_3DVal->Fill(jet_secVtx_3DVal,wgt);
     h_jet_secVtx_3DSig->Fill(jet_secVtx_3DSig,wgt);
     if( flavour==5 ){
-      h_jet_csv_b->Fill(csv,wgt);
+      h_jet_CSV_b->Fill(csv,wgt);
+      h_jet_CSVv2IVF_b->Fill(CSVv2IVF,wgt);
       h_jet_secVtx_mass_b->Fill(jet_secVtx_mass,wgt);
       h_jet_secVtx_Ntracks_b->Fill(jet_secVtx_Ntracks,wgt);
       h_jet_secVtx_3DVal_b->Fill(jet_secVtx_3DVal,wgt);
       h_jet_secVtx_3DSig_b->Fill(jet_secVtx_3DSig,wgt);
     }
     else if( flavour==4 ){
-      h_jet_csv_c->Fill(csv,wgt);
+      h_jet_CSV_c->Fill(csv,wgt);
+      h_jet_CSVv2IVF_c->Fill(CSVv2IVF,wgt);
       h_jet_secVtx_mass_c->Fill(jet_secVtx_mass,wgt);
       h_jet_secVtx_Ntracks_c->Fill(jet_secVtx_Ntracks,wgt);
       h_jet_secVtx_3DVal_c->Fill(jet_secVtx_3DVal,wgt);
       h_jet_secVtx_3DSig_c->Fill(jet_secVtx_3DSig,wgt);
     }
     else if( (flavour<=3 && flavour!=0) || flavour==21 ){
-      h_jet_csv_l->Fill(csv,wgt);
+      h_jet_CSV_l->Fill(csv,wgt);
+      h_jet_CSVv2IVF_l->Fill(CSVv2IVF,wgt);
       h_jet_secVtx_mass_l->Fill(jet_secVtx_mass,wgt);
       h_jet_secVtx_Ntracks_l->Fill(jet_secVtx_Ntracks,wgt);
       h_jet_secVtx_3DVal_l->Fill(jet_secVtx_3DVal,wgt);
       h_jet_secVtx_3DSig_l->Fill(jet_secVtx_3DSig,wgt);
     }
     else{
-      h_jet_csv_o->Fill(csv,wgt);
+      h_jet_CSV_o->Fill(csv,wgt);
+      h_jet_CSVv2IVF_o->Fill(CSVv2IVF,wgt);
       h_jet_secVtx_mass_o->Fill(jet_secVtx_mass,wgt);
       h_jet_secVtx_Ntracks_o->Fill(jet_secVtx_Ntracks,wgt);
       h_jet_secVtx_3DVal_o->Fill(jet_secVtx_3DVal,wgt);
@@ -2380,6 +2851,223 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   } // end loop on jets
 
+  /// W bosons
+
+  int numJetWp = int( vrecojetWp.size() );
+  int numJetWm = int( vrecojetWm.size() );
+
+  h_numJet_Wp->Fill(numJetWp,wgt);
+  h_numJet_Wm->Fill(numJetWm,wgt);
+
+  if( numJetWp==2 ){
+    TLorentzVector recoWp = vrecojetWp[0] + vrecojetWp[1];
+    h_recoWp_mass->Fill(recoWp.M(),wgt);
+    h_recoW_mass->Fill(recoWp.M(),wgt);
+
+    //double maxPt = ( vrecojetWp[0].Pt() > vrecojetWp[1].Pt() ) ? vrecojetWp[0].Pt() : vrecojetWp[1].Pt();
+    double minPt = ( vrecojetWp[0].Pt() < vrecojetWp[1].Pt() ) ? vrecojetWp[0].Pt() : vrecojetWp[1].Pt();
+
+    h_recoW_mass_vs_minJetPt->Fill(minPt,recoWp.M(),wgt);
+
+    if( minPt>10 ) h_recoW_minJetPt10_mass->Fill(recoWp.M(),wgt);
+    if( minPt>15 ) h_recoW_minJetPt15_mass->Fill(recoWp.M(),wgt);
+    if( minPt>20 ) h_recoW_minJetPt20_mass->Fill(recoWp.M(),wgt);
+    if( minPt>25 ) h_recoW_minJetPt25_mass->Fill(recoWp.M(),wgt);
+    if( minPt>30 ) h_recoW_minJetPt30_mass->Fill(recoWp.M(),wgt);
+  }
+
+  if( numJetWm==2 ){
+    TLorentzVector recoWm = vrecojetWm[0] + vrecojetWm[1];
+    h_recoWm_mass->Fill(recoWm.M(),wgt);
+    h_recoW_mass->Fill(recoWm.M(),wgt);
+
+    //double maxPt = ( vrecojetWm[0].Pt() > vrecojetWm[1].Pt() ) ? vrecojetWm[0].Pt() : vrecojetWm[1].Pt();
+    double minPt = ( vrecojetWm[0].Pt() < vrecojetWm[1].Pt() ) ? vrecojetWm[0].Pt() : vrecojetWm[1].Pt();
+
+    h_recoW_mass_vs_minJetPt->Fill(minPt,recoWm.M(),wgt);
+
+    if( minPt>10 ) h_recoW_minJetPt10_mass->Fill(recoWm.M(),wgt);
+    if( minPt>15 ) h_recoW_minJetPt15_mass->Fill(recoWm.M(),wgt);
+    if( minPt>20 ) h_recoW_minJetPt20_mass->Fill(recoWm.M(),wgt);
+    if( minPt>25 ) h_recoW_minJetPt25_mass->Fill(recoWm.M(),wgt);
+    if( minPt>30 ) h_recoW_minJetPt30_mass->Fill(recoWm.M(),wgt);
+  }
+
+
+  int numGenJetWp = int( vgenjetWp.size() );
+  int numGenJetWm = int( vgenjetWm.size() );
+
+  h_numGenJet_Wp->Fill(numGenJetWp,wgt);
+  h_numGenJet_Wm->Fill(numGenJetWm,wgt);
+
+  if( numGenJetWp==2 ){
+    TLorentzVector genWp = vgenjetWp[0] + vgenjetWp[1];
+    h_genWp_mass->Fill(genWp.M(),wgt);
+    h_genW_mass->Fill(genWp.M(),wgt);
+
+    //double maxPt = ( vgenjetWp[0].Pt() > vgenjetWp[1].Pt() ) ? vgenjetWp[0].Pt() : vgenjetWp[1].Pt();
+    double minPt = ( vgenjetWp[0].Pt() < vgenjetWp[1].Pt() ) ? vgenjetWp[0].Pt() : vgenjetWp[1].Pt();
+
+    h_genW_mass_vs_minJetPt->Fill(minPt,genWp.M(),wgt);
+
+    if( minPt>10 ) h_genW_minJetPt10_mass->Fill(genWp.M(),wgt);
+    if( minPt>15 ) h_genW_minJetPt15_mass->Fill(genWp.M(),wgt);
+    if( minPt>20 ) h_genW_minJetPt20_mass->Fill(genWp.M(),wgt);
+    if( minPt>25 ) h_genW_minJetPt25_mass->Fill(genWp.M(),wgt);
+    if( minPt>30 ) h_genW_minJetPt30_mass->Fill(genWp.M(),wgt);
+  }
+
+  if( numGenJetWm==2 ){
+    TLorentzVector genWm = vgenjetWm[0] + vgenjetWm[1];
+    h_genWm_mass->Fill(genWm.M(),wgt);
+    h_genW_mass->Fill(genWm.M(),wgt);
+
+    //double maxPt = ( vgenjetWm[0].Pt() > vgenjetWm[1].Pt() ) ? vgenjetWm[0].Pt() : vgenjetWm[1].Pt();
+    double minPt = ( vgenjetWm[0].Pt() < vgenjetWm[1].Pt() ) ? vgenjetWm[0].Pt() : vgenjetWm[1].Pt();
+
+    h_genW_mass_vs_minJetPt->Fill(minPt,genWm.M(),wgt);
+
+    if( minPt>10 ) h_genW_minJetPt10_mass->Fill(genWm.M(),wgt);
+    if( minPt>15 ) h_genW_minJetPt15_mass->Fill(genWm.M(),wgt);
+    if( minPt>20 ) h_genW_minJetPt20_mass->Fill(genWm.M(),wgt);
+    if( minPt>25 ) h_genW_minJetPt25_mass->Fill(genWm.M(),wgt);
+    if( minPt>30 ) h_genW_minJetPt30_mass->Fill(genWm.M(),wgt);
+  }
+
+
+
+  //// top quark
+
+
+  int numJetBp = int( vrecojetBp.size() );
+  int numJetBm = int( vrecojetBm.size() );
+
+  h_numJet_Bp->Fill(numJetBp,wgt);
+  h_numJet_Bm->Fill(numJetBm,wgt);
+
+  if( numJetBm==1 && numJetWp==2 ){
+    TLorentzVector recoTp = vrecojetBm[0] + vrecojetWp[0] + vrecojetWp[1];
+    double mass = recoTp.M();
+    h_recoTp_mass->Fill(mass,wgt);
+    h_recoT_mass->Fill(mass,wgt);
+
+    double minPt = std::min( vrecojetBm[0].Pt(), std::min( vrecojetWp[0].Pt(), vrecojetWp[1].Pt()) );
+
+    h_recoT_mass_vs_minJetPt->Fill(minPt,mass,wgt);
+
+    if( minPt>10 ) h_recoT_minJetPt10_mass->Fill(mass,wgt);
+    if( minPt>15 ) h_recoT_minJetPt15_mass->Fill(mass,wgt);
+    if( minPt>20 ) h_recoT_minJetPt20_mass->Fill(mass,wgt);
+    if( minPt>25 ) h_recoT_minJetPt25_mass->Fill(mass,wgt);
+    if( minPt>30 ) h_recoT_minJetPt30_mass->Fill(mass,wgt);
+  }
+
+  if( numJetBp==1 && numJetWm==2 ){
+    TLorentzVector recoTp = vrecojetBp[0] + vrecojetWm[0] + vrecojetWm[1];
+    double mass = recoTp.M();
+    h_recoTm_mass->Fill(mass,wgt);
+    h_recoT_mass->Fill(mass,wgt);
+
+    double minPt = std::min( vrecojetBp[0].Pt(), std::min( vrecojetWm[0].Pt(), vrecojetWm[1].Pt()) );
+
+    h_recoT_mass_vs_minJetPt->Fill(minPt,mass,wgt);
+
+    if( minPt>10 ) h_recoT_minJetPt10_mass->Fill(mass,wgt);
+    if( minPt>15 ) h_recoT_minJetPt15_mass->Fill(mass,wgt);
+    if( minPt>20 ) h_recoT_minJetPt20_mass->Fill(mass,wgt);
+    if( minPt>25 ) h_recoT_minJetPt25_mass->Fill(mass,wgt);
+    if( minPt>30 ) h_recoT_minJetPt30_mass->Fill(mass,wgt);
+  }
+
+
+  int numGenJetBp = int( vgenjetBp.size() );
+  int numGenJetBm = int( vgenjetBm.size() );
+
+  h_numGenJet_Bp->Fill(numGenJetBp,wgt);
+  h_numGenJet_Bm->Fill(numGenJetBm,wgt);
+
+  if( numGenJetBm==1 && numGenJetWp==2 ){
+    TLorentzVector genTp = vgenjetBm[0] + vgenjetWp[0] + vgenjetWp[1];
+    double mass = genTp.M();
+    h_genTp_mass->Fill(mass,wgt);
+    h_genT_mass->Fill(mass,wgt);
+
+    double minPt = std::min( vgenjetBm[0].Pt(), std::min( vgenjetWp[0].Pt(), vgenjetWp[1].Pt()) );
+
+    h_genT_mass_vs_minJetPt->Fill(minPt,mass,wgt);
+
+    if( minPt>10 ) h_genT_minJetPt10_mass->Fill(mass,wgt);
+    if( minPt>15 ) h_genT_minJetPt15_mass->Fill(mass,wgt);
+    if( minPt>20 ) h_genT_minJetPt20_mass->Fill(mass,wgt);
+    if( minPt>25 ) h_genT_minJetPt25_mass->Fill(mass,wgt);
+    if( minPt>30 ) h_genT_minJetPt30_mass->Fill(mass,wgt);
+  }
+
+  if( numGenJetBp==1 && numGenJetWm==2 ){
+    TLorentzVector genTp = vgenjetBp[0] + vgenjetWm[0] + vgenjetWm[1];
+    double mass = genTp.M();
+    h_genTm_mass->Fill(mass,wgt);
+    h_genT_mass->Fill(mass,wgt);
+
+    double minPt = std::min( vgenjetBp[0].Pt(), std::min( vgenjetWm[0].Pt(), vgenjetWm[1].Pt()) );
+
+    h_genT_mass_vs_minJetPt->Fill(minPt,mass,wgt);
+
+    if( minPt>10 ) h_genT_minJetPt10_mass->Fill(mass,wgt);
+    if( minPt>15 ) h_genT_minJetPt15_mass->Fill(mass,wgt);
+    if( minPt>20 ) h_genT_minJetPt20_mass->Fill(mass,wgt);
+    if( minPt>25 ) h_genT_minJetPt25_mass->Fill(mass,wgt);
+    if( minPt>30 ) h_genT_minJetPt30_mass->Fill(mass,wgt);
+  }
+
+
+  /// Higgs
+
+
+  int numJetHBp = int( vrecojetHBp.size() );
+  int numJetHBm = int( vrecojetHBm.size() );
+
+  h_numJet_HBp->Fill(numJetHBp,wgt);
+  h_numJet_HBm->Fill(numJetHBm,wgt);
+
+  if( numJetHBm==1 && numJetHBp==1 ){
+    TLorentzVector recoH = vrecojetHBp[0] + vrecojetHBm[0];
+    double mass = recoH.M();
+    h_recoH_mass->Fill(mass,wgt);
+
+    double minPt = std::min( vrecojetHBp[0].Pt(), vrecojetHBp[0].Pt() );
+
+    h_recoH_mass_vs_minJetPt->Fill(minPt,mass,wgt);
+
+    if( minPt>10 ) h_recoH_minJetPt10_mass->Fill(mass,wgt);
+    if( minPt>15 ) h_recoH_minJetPt15_mass->Fill(mass,wgt);
+    if( minPt>20 ) h_recoH_minJetPt20_mass->Fill(mass,wgt);
+    if( minPt>25 ) h_recoH_minJetPt25_mass->Fill(mass,wgt);
+    if( minPt>30 ) h_recoH_minJetPt30_mass->Fill(mass,wgt);
+  }
+
+
+  int numGenJetHBp = int( vgenjetHBp.size() );
+  int numGenJetHBm = int( vgenjetHBm.size() );
+
+  h_numGenJet_HBp->Fill(numGenJetHBp,wgt);
+  h_numGenJet_HBm->Fill(numGenJetHBm,wgt);
+
+  if( numGenJetHBp==1 && numGenJetHBm==1 ){
+    TLorentzVector genH = vgenjetHBp[0] + vgenjetHBm[0];
+    double mass = genH.M();
+    h_genH_mass->Fill(mass,wgt);
+
+    double minPt = std::min( vgenjetHBp[0].Pt(), vgenjetHBp[0].Pt() );
+
+    h_genH_mass_vs_minJetPt->Fill(minPt,mass,wgt);
+
+    if( minPt>10 ) h_genH_minJetPt10_mass->Fill(mass,wgt);
+    if( minPt>15 ) h_genH_minJetPt15_mass->Fill(mass,wgt);
+    if( minPt>20 ) h_genH_minJetPt20_mass->Fill(mass,wgt);
+    if( minPt>25 ) h_genH_minJetPt25_mass->Fill(mass,wgt);
+    if( minPt>30 ) h_genH_minJetPt30_mass->Fill(mass,wgt);
+  }
 
 
 
@@ -2404,6 +3092,18 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     h_jet_nocc_neutralMultiplicity->Fill(iJet->neutralMultiplicity(),wgt);
     h_jet_nocc_numberOfDaughters->Fill(iJet->numberOfDaughters(),wgt);
 
+    double corrPt = iJet->pt();
+    double uncorrPt = iJet->correctedJet(0).pt();
+
+    double wgt_renorm = wgt * corrPt / uncorrPt;
+    h_jet_nocc_renorm_chargedHadronEnergyFraction->Fill(iJet->chargedHadronEnergyFraction(),wgt_renorm);
+    h_jet_nocc_renorm_neutralHadronEnergyFraction->Fill(iJet->neutralHadronEnergyFraction(),wgt_renorm);
+    h_jet_nocc_renorm_chargedEmEnergyFraction->Fill(iJet->chargedEmEnergyFraction(),wgt_renorm);
+    h_jet_nocc_renorm_neutralEmEnergyFraction->Fill(iJet->neutralEmEnergyFraction(),wgt_renorm);
+    h_jet_nocc_renorm_chargedMultiplicity->Fill(iJet->chargedMultiplicity(),wgt_renorm);
+    h_jet_nocc_renorm_neutralMultiplicity->Fill(iJet->neutralMultiplicity(),wgt_renorm);
+    h_jet_nocc_renorm_numberOfDaughters->Fill(iJet->numberOfDaughters(),wgt_renorm);
+
     h_jet_nocc_csv->Fill(csv,wgt);
     if( flavour==5 ){
       h_jet_nocc_csv_b->Fill(csv,wgt);
@@ -2420,6 +3120,36 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   } // end loop on jets with no cc
 
+
+
+  /////////
+  ///////// DELETE ME
+  /////////
+  std::cout << " ======================== " << std::endl;
+  for( std::vector<pat::Jet>::const_iterator iJet = selectedJets.begin(); iJet != selectedJets.end(); iJet++ ){ 
+    double corrPt = iJet->pt();
+    double uncorrPt = iJet->correctedJet(0).pt();
+    double jecFactor = iJet->jecFactor(0);
+
+    double scale = corrector->correction(*iJet, iEvent, iSetup);
+    uncorrPt = (scale > 0 ) ? corrPt / scale : corrPt;
+
+    printf("\t\t Jet %d: pt = %.1f,\t uncorrpt = %.1f,\t jecFactor = %.3f,\t scale = %.3f,\t eta = %.2f,\t phi = %.2f \n", 
+	   int(iJet - selectedJets.begin()), corrPt, uncorrPt, jecFactor, scale, iJet->eta(), iJet->phi() );
+  }
+
+  // Loop over jets with no cc
+  for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_nocc.begin(); iJet != selectedJets_nocc.end(); iJet++ ){ 
+    double corrPt = iJet->pt();
+    double uncorrPt = iJet->correctedJet(0).pt();
+    double jecFactor = iJet->jecFactor(0);
+
+    printf("\t\t No cc Jet %d: pt = %.1f,\t uncorrpt = %.1f,\t jecFactor = %.3f,\t eta = %.2f,\t phi = %.2f \n", 
+	   int(iJet - selectedJets_nocc.begin()), corrPt, uncorrPt, jecFactor, iJet->eta(), iJet->phi() );
+  }
+  /////////
+  ///////// DELETE ME
+  /////////
 
 
   // Loop over tight muons
@@ -2495,6 +3225,19 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   if( numJet==5 && numTag_BtagWP65_CSVv2IVF>=4) this_category_BtagWP65_CSVv2IVF=8;
   if( numJet>=6 && numTag_BtagWP65_CSVv2IVF>=4) this_category_BtagWP65_CSVv2IVF=9;
 
+  // BTVWPM CSVv2IVF
+  int this_category_BTVWPM_CSVv2IVF = -1;
+  if( numJet==4 && numTag_BTVWPM_CSVv2IVF==2) this_category_BTVWPM_CSVv2IVF=1;
+  if( numJet==5 && numTag_BTVWPM_CSVv2IVF==2) this_category_BTVWPM_CSVv2IVF=2;
+  if( numJet>=6 && numTag_BTVWPM_CSVv2IVF==2) this_category_BTVWPM_CSVv2IVF=3;	
+  if( numJet==4 && numTag_BTVWPM_CSVv2IVF==3) this_category_BTVWPM_CSVv2IVF=4;
+  if( numJet==5 && numTag_BTVWPM_CSVv2IVF==3) this_category_BTVWPM_CSVv2IVF=5;
+  if( numJet>=6 && numTag_BTVWPM_CSVv2IVF==3) this_category_BTVWPM_CSVv2IVF=6;
+  if( numJet==4 && numTag_BTVWPM_CSVv2IVF>=4) this_category_BTVWPM_CSVv2IVF=7;
+  if( numJet==5 && numTag_BTVWPM_CSVv2IVF>=4) this_category_BTVWPM_CSVv2IVF=8;
+  if( numJet>=6 && numTag_BTVWPM_CSVv2IVF>=4) this_category_BTVWPM_CSVv2IVF=9;
+
+
   if( numJet>=4 && numTag_BtagWP65_CSV>=2){
     h_category_yield_BtagWP65_CSV->Fill(0.5,wgt);
     h_category_yield_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
@@ -2508,6 +3251,11 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
     h_category_yield_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
     h_category_yield_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+  }
+
+  if( numJet>=4 && numTag_BTVWPM_CSVv2IVF>=2){
+    h_category_yield_BTVWPM_CSVv2IVF->Fill(0.5,wgt);
+    h_category_yield_BTVWPM_CSVv2IVF->Fill(this_category_BTVWPM_CSVv2IVF,wgt);
   }
 
 
@@ -2527,6 +3275,11 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       h_category_yield_1l_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
     }
 
+    if( numJet>=4 && numTag_BTVWPM_CSVv2IVF>=2){
+      h_category_yield_1l_noiso_BTVWPM_CSVv2IVF->Fill(0.5,wgt);
+      h_category_yield_1l_noiso_BTVWPM_CSVv2IVF->Fill(this_category_BTVWPM_CSVv2IVF,wgt);
+    }
+
     if( numNoIsoEle>=1 ){
       if( numJet>=4 && numTag_BtagWP65_CSV>=2){
 	h_category_yield_1e_noiso_BtagWP65_CSV->Fill(0.5,wgt);
@@ -2541,6 +3294,11 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
 	h_category_yield_1e_noiso_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
 	h_category_yield_1e_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+      }
+
+      if( numJet>=4 && numTag_BTVWPM_CSVv2IVF>=2){
+	h_category_yield_1e_noiso_BTVWPM_CSVv2IVF->Fill(0.5,wgt);
+	h_category_yield_1e_noiso_BTVWPM_CSVv2IVF->Fill(this_category_BTVWPM_CSVv2IVF,wgt);
       }
     } 
     else if( numNoIsoMu>=1 ){
@@ -2558,15 +3316,17 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	h_category_yield_1m_noiso_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
 	h_category_yield_1m_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
       }
+
+      if( numJet>=4 && numTag_BTVWPM_CSVv2IVF>=2){
+	h_category_yield_1m_noiso_BTVWPM_CSVv2IVF->Fill(0.5,wgt);
+	h_category_yield_1m_noiso_BTVWPM_CSVv2IVF->Fill(this_category_BTVWPM_CSVv2IVF,wgt);
+      }
     } 
   }
 
 
 
   //////
-
-  // Require at least 4 regular jets and tags
-  if( !(numJet>=4 && numTag>=2) ) return;
 
   int this_category = -1;
   if( numJet==4 && numTag==2) this_category=1;
@@ -2580,21 +3340,24 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   if( numJet>=6 && numTag>=4) this_category=9;
 
 
-  h_category_yield->Fill(0.5,wgt);
-  h_category_yield->Fill(this_category,wgt);
+  // Require at least 4 regular jets and tags
+  if( (numJet>=4 && numTag>=2) ){
+    h_category_yield->Fill(0.5,wgt);
+    h_category_yield->Fill(this_category,wgt);
 
-  if( (numNoIsoMu+numNoIsoEle)>0 ){
-    h_category_yield_1l_noiso->Fill(0.5,wgt);
-    h_category_yield_1l_noiso->Fill(this_category,wgt);
+    if( (numNoIsoMu+numNoIsoEle)>0 ){
+      h_category_yield_1l_noiso->Fill(0.5,wgt);
+      h_category_yield_1l_noiso->Fill(this_category,wgt);
 
-    if( numNoIsoEle>=1 ){
-      h_category_yield_1e_noiso->Fill(0.5,wgt);
-      h_category_yield_1e_noiso->Fill(this_category,wgt);
-    } 
-    else if( numNoIsoMu>=1 ){
-      h_category_yield_1m_noiso->Fill(0.5,wgt);
-      h_category_yield_1m_noiso->Fill(this_category,wgt);
-    } 
+      if( numNoIsoEle>=1 ){
+	h_category_yield_1e_noiso->Fill(0.5,wgt);
+	h_category_yield_1e_noiso->Fill(this_category,wgt);
+      } 
+      else if( numNoIsoMu>=1 ){
+	h_category_yield_1m_noiso->Fill(0.5,wgt);
+	h_category_yield_1m_noiso->Fill(this_category,wgt);
+      } 
+    }
   }
 
   // Require event has one good lepton
@@ -2614,50 +3377,65 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 
   if( numJet>=4 && numTag_BtagWP65_CSV>=2){
-    h_category_yield_1l_noiso_BtagWP65_CSV->Fill(0.5,wgt);
-    h_category_yield_1l_noiso_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
+    h_category_yield_1l_BtagWP65_CSV->Fill(0.5,wgt);
+    h_category_yield_1l_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
   }
 
   if( numJet>=4 && numTag_BtagWP65_CMVA>=2){
-    h_category_yield_1l_noiso_BtagWP65_CMVA->Fill(0.5,wgt);
-    h_category_yield_1l_noiso_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
+    h_category_yield_1l_BtagWP65_CMVA->Fill(0.5,wgt);
+    h_category_yield_1l_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
   }
 
   if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
-    h_category_yield_1l_noiso_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
-    h_category_yield_1l_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+    h_category_yield_1l_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
+    h_category_yield_1l_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+  }
+
+  if( numJet>=4 && numTag_BTVWPM_CSVv2IVF>=2){
+    h_category_yield_1l_BTVWPM_CSVv2IVF->Fill(0.5,wgt);
+    h_category_yield_1l_BTVWPM_CSVv2IVF->Fill(this_category_BTVWPM_CSVv2IVF,wgt);
   }
 
   if( numTightElectrons==1 ){
     if( numJet>=4 && numTag_BtagWP65_CSV>=2){
-      h_category_yield_1e_noiso_BtagWP65_CSV->Fill(0.5,wgt);
-      h_category_yield_1e_noiso_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
+      h_category_yield_1e_BtagWP65_CSV->Fill(0.5,wgt);
+      h_category_yield_1e_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
     }
 
     if( numJet>=4 && numTag_BtagWP65_CMVA>=2){
-      h_category_yield_1e_noiso_BtagWP65_CMVA->Fill(0.5,wgt);
-      h_category_yield_1e_noiso_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
+      h_category_yield_1e_BtagWP65_CMVA->Fill(0.5,wgt);
+      h_category_yield_1e_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
     }
 
     if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
-      h_category_yield_1e_noiso_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
-      h_category_yield_1e_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+      h_category_yield_1e_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
+      h_category_yield_1e_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+    }
+
+    if( numJet>=4 && numTag_BTVWPM_CSVv2IVF>=2){
+      h_category_yield_1e_noiso_BTVWPM_CSVv2IVF->Fill(0.5,wgt);
+      h_category_yield_1e_noiso_BTVWPM_CSVv2IVF->Fill(this_category_BTVWPM_CSVv2IVF,wgt);
     }
   } 
   else if( numTightMuons==1 ){
     if( numJet>=4 && numTag_BtagWP65_CSV>=2){
-      h_category_yield_1m_noiso_BtagWP65_CSV->Fill(0.5,wgt);
-      h_category_yield_1m_noiso_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
+      h_category_yield_1m_BtagWP65_CSV->Fill(0.5,wgt);
+      h_category_yield_1m_BtagWP65_CSV->Fill(this_category_BtagWP65_CSV,wgt);
     }
 
     if( numJet>=4 && numTag_BtagWP65_CMVA>=2){
-      h_category_yield_1m_noiso_BtagWP65_CMVA->Fill(0.5,wgt);
-      h_category_yield_1m_noiso_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
+      h_category_yield_1m_BtagWP65_CMVA->Fill(0.5,wgt);
+      h_category_yield_1m_BtagWP65_CMVA->Fill(this_category_BtagWP65_CMVA,wgt);
     }
 
     if( numJet>=4 && numTag_BtagWP65_CSVv2IVF>=2){
-      h_category_yield_1m_noiso_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
-      h_category_yield_1m_noiso_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+      h_category_yield_1m_BtagWP65_CSVv2IVF->Fill(0.5,wgt);
+      h_category_yield_1m_BtagWP65_CSVv2IVF->Fill(this_category_BtagWP65_CSVv2IVF,wgt);
+    }
+
+    if( numJet>=4 && numTag_BTVWPM_CSVv2IVF>=2){
+      h_category_yield_1m_BTVWPM_CSVv2IVF->Fill(0.5,wgt);
+      h_category_yield_1m_BTVWPM_CSVv2IVF->Fill(this_category_BTVWPM_CSVv2IVF,wgt);
     }
   } 
 
