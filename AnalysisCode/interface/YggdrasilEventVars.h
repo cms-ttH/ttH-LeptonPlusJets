@@ -64,6 +64,12 @@ struct yggdrasilEventVars{
   Int_t   matchSingleMuTrigger_;
   Int_t   matchSingleElectronTrigger_;
 
+  int passSingleElectronTrigger_;
+  int passSingleMuonTrigger_;
+  int passDoubleElectronTrigger_;
+  int passDoubleMuonTrigger_;
+  int passElectronMuonTrigger_;
+
   int run_;
   int lumi_;
   long evt_;
@@ -95,6 +101,9 @@ struct yggdrasilEventVars{
   vint lepton_isMuon_;
   vint lepton_isTight_;
   vint lepton_isLoose_;
+  vint lepton_isPhys14L_;
+  vint lepton_isPhys14M_;
+  vint lepton_isPhys14T_;
   vint lepton_genId_;
   vint lepton_genParentId_;
   vint lepton_genGrandParentId_;
@@ -122,6 +131,16 @@ struct yggdrasilEventVars{
   vdouble lepton_scEta_;
   vdouble lepton_dEtaSCTrackAtVtx_;
   vdouble lepton_dPhiSCTrackAtVtx_;
+  vdouble lepton_d0_;
+  vdouble lepton_dZ_;
+  vint lepton_isGlobalMuon_;
+  vint lepton_isTrackerMuon_;
+  vint lepton_isPFMuon_;
+  vdouble lepton_normalizedChi2_;
+  vint lepton_numberOfValidMuonHits_;
+  vint lepton_numberOfValidPixelHits_;
+  vint lepton_trackerLayersWithMeasurement_;
+  vint lepton_numberOfMatchedStations_;
 
 
   Float_t wgt_lumi_;
@@ -284,6 +303,12 @@ void yggdrasilEventVars::initialize(){
   matchSingleMuTrigger_       = 0;
   matchSingleElectronTrigger_ = 0;
 
+  passSingleElectronTrigger_ = -99;
+  passSingleMuonTrigger_     = -99;
+  passDoubleElectronTrigger_ = -99;
+  passDoubleMuonTrigger_     = -99;
+  passElectronMuonTrigger_   = -99;
+
   run_  = -99;
   lumi_ = -99;
   evt_ = -99;
@@ -315,6 +340,9 @@ void yggdrasilEventVars::initialize(){
   lepton_isMuon_.clear();
   lepton_isTight_.clear();
   lepton_isLoose_.clear();
+  lepton_isPhys14L_.clear();
+  lepton_isPhys14M_.clear();
+  lepton_isPhys14T_.clear();
   lepton_genId_.clear();
   lepton_genParentId_.clear();
   lepton_genGrandParentId_.clear();
@@ -342,6 +370,18 @@ void yggdrasilEventVars::initialize(){
   lepton_scEta_.clear();
   lepton_dEtaSCTrackAtVtx_.clear();
   lepton_dPhiSCTrackAtVtx_.clear();
+  lepton_d0_.clear();
+  lepton_dZ_.clear();
+  lepton_isGlobalMuon_.clear();
+  lepton_isTrackerMuon_.clear();
+  lepton_isPFMuon_.clear();
+  lepton_normalizedChi2_.clear();
+  lepton_numberOfValidMuonHits_.clear();
+  lepton_numberOfValidPixelHits_.clear();
+  lepton_trackerLayersWithMeasurement_.clear();
+  lepton_numberOfMatchedStations_.clear();
+
+
 
   wgt_generator_        = -99.9;
   wgt_lumi_             = -99.9;

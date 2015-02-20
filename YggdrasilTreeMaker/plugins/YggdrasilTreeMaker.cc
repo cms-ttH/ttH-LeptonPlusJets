@@ -87,6 +87,7 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
       virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
       virtual void endJob() override;
 
+      virtual void beginRun(edm::Run const& iRun,edm::EventSetup const& iSetup) override;
       //virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
       //virtual void endRun(edm::Run const&, edm::EventSetup const&) override;
       //virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
@@ -113,6 +114,8 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   edm::EDGetTokenT <GenEventInfoProduct> genInfoProductToken;
 
   edm::EDGetTokenT <pat::JetCollection> tempjetToken;
+
+  HLTConfigProvider hlt_config_;
 
   bool verbose_;
 
@@ -208,7 +211,7 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig)
 
   genInfoProductToken = consumes <GenEventInfoProduct> (edm::InputTag(std::string("generator")));
   
-  tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("patJetsAK4PFCHS")));
+  tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
 
 
   edm::Service<TFileService> fs_;
@@ -342,6 +345,39 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   double GenEventInfoWeight = GenEventInfoHandle.product()->weight();
 
 
+  edm::Handle<edm::TriggerResults> triggerResults;
+  iEvent.getByToken(triggerResultsToken, triggerResults);
+
+  bool passSingleElectronTrigger = false;
+  bool passSingleMuonTrigger = false;
+  bool passDoubleElectronTrigger = false;
+  bool passDoubleMuonTrigger = false;
+  bool passElectronMuonTrigger = false;
+
+  if( triggerResults.isValid() ){
+    std::vector<std::string> triggerNames = hlt_config_.triggerNames();
+
+    for( unsigned int iPath=0; iPath<triggerNames.size(); iPath++ ){
+      std::string pathName = triggerNames[iPath];
+      unsigned int hltIndex = hlt_config_.triggerIndex(pathName);
+
+      if( hltIndex >= triggerResults->size() ) continue;
+
+      int accept = triggerResults->accept(hltIndex);
+
+      if( accept ){
+	if( pathName=="HLT_Ele27_eta2p1_WP85_Gsf_v1" ) passSingleElectronTrigger = true;
+	if( pathName=="HLT_IsoMu24_eta2p1_IterTrk02_v1" ) passSingleMuonTrigger = true;
+	if( pathName=="HLT_Ele23_Ele12_CaloId_TrackId_Iso_v1" ) passDoubleElectronTrigger = true;
+	if( pathName=="HLT_Mu30_TkMu11_v1" ||
+	    pathName=="HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v1" ||
+	    pathName=="HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v1" ) passDoubleMuonTrigger = true;
+	if( pathName=="HLT_Mu23_TrkIsoVVL_Ele12_Gsf_CaloId_TrackId_Iso_MediumWP_v1" ||
+	    pathName=="HLT_Mu8_TrkIsoVVL_Ele23_Gsf_CaloId_TrackId_Iso_MediumWP_v1" ) passElectronMuonTrigger = true;
+      }
+    }
+  }
+
 
   edm::Handle<pat::JetCollection> pftempjets;
   iEvent.getByToken(tempjetToken,pftempjets);
@@ -420,8 +456,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   /// Electrons
   ///
   ////////
-  std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( *electrons, minTightLeptonPt, electronID::electronTight );
-  std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( *electrons, looseLeptonPt, electronID::electronLoose );
+  std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( *electrons, minTightLeptonPt, electronID::electronPhys14M );
+  std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( *electrons, looseLeptonPt, electronID::electronPhys14L );
 
   int numTightElectrons = int(selectedElectrons_tight.size());
   int numLooseElectrons = int(selectedElectrons_loose.size());// - numTightElectrons;
@@ -538,6 +574,13 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->passElectronTrigger_ = 1;//( electron_triggerPass ) ? 1 : 0;
   eve->passMuonTrigger_     = 1;//( muon_triggerPass     ) ? 1 : 0;
 
+  eve->passSingleElectronTrigger_ = ( passSingleElectronTrigger ) ? 1 : 0;
+  eve->passSingleMuonTrigger_     = ( passSingleMuonTrigger ) ? 1 : 0;
+  eve->passDoubleElectronTrigger_ = ( passDoubleElectronTrigger ) ? 1 : 0;
+  eve->passDoubleMuonTrigger_     = ( passDoubleMuonTrigger ) ? 1 : 0;
+  eve->passElectronMuonTrigger_   = ( passElectronMuonTrigger ) ? 1 : 0;
+
+
   bool matchSingleMuTrigger = false;
   bool matchSingleElectronTrigger = false;
 
@@ -636,6 +679,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 
   vint lepton_genId, lepton_genParentId, lepton_genGrandParentId, lepton_trkCharge, lepton_isMuon, lepton_isTight, lepton_isLoose;
+  vint lepton_isPhys14L, lepton_isPhys14M, lepton_isPhys14T;
   vdouble lepton_pt;
   vdouble lepton_eta;
   vdouble lepton_phi;
@@ -660,6 +704,16 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   vdouble lepton_scEta;
   vdouble lepton_dEtaSCTrackAtVtx;
   vdouble lepton_dPhiSCTrackAtVtx;
+  vdouble lepton_d0;
+  vdouble lepton_dZ;
+  vint lepton_isGlobalMuon;
+  vint lepton_isTrackerMuon;
+  vint lepton_isPFMuon;
+  vdouble lepton_normalizedChi2;
+  vint lepton_numberOfValidMuonHits;
+  vint lepton_numberOfValidPixelHits;
+  vint lepton_trackerLayersWithMeasurement;
+  vint lepton_numberOfMatchedStations;
 
   std::vector<TLorentzVector> vec_TLV_lep;
   TLorentzVector sum_lepton_vect;
@@ -683,10 +737,44 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     int isTight = ( miniAODhelper.isGoodMuon(*iMu, minTightLeptonPt, muonID::muonTight) ) ? 1 : 0;
     int isLoose = ( miniAODhelper.isGoodMuon(*iMu, looseLeptonPt, muonID::muonLoose) ) ? 1 : 0;
 
+    int isPhys14L = false;
+    int isPhys14M = false;
+    int isPhys14T = false;
+
+    double d0 = -999;
+    double dZ = -999;
+    if( iMu->muonBestTrack().isAvailable() ){
+      d0 = iMu->muonBestTrack()->dxy(vertex.position());
+      dZ = iMu->muonBestTrack()->dz(vertex.position());
+    }
+
+    double normalizedChi2 = -999;
+    int numberOfValidMuonHits = -999;
+    if( iMu->globalTrack().isAvailable() ){
+      normalizedChi2 = iMu->globalTrack()->normalizedChi2();
+      numberOfValidMuonHits = iMu->globalTrack()->hitPattern().numberOfValidMuonHits();
+    }
+
+    int numberOfValidPixelHits = -999;
+    if( iMu->innerTrack().isAvailable() ){
+      numberOfValidPixelHits = iMu->innerTrack()->hitPattern().numberOfValidPixelHits();
+    }
+
+    int trackerLayersWithMeasurement = -999;
+    if( iMu->track().isAvailable() ){
+      trackerLayersWithMeasurement = iMu->track()->hitPattern().trackerLayersWithMeasurement();
+    }
+
+    int numberOfMatchedStations = iMu->numberOfMatchedStations();
+
+
     lepton_trkCharge.push_back(trkCharge);
     lepton_isMuon.push_back(1);
     lepton_isTight.push_back(isTight);
     lepton_isLoose.push_back(isLoose);
+    lepton_isPhys14L.push_back(isPhys14L);
+    lepton_isPhys14M.push_back(isPhys14M);
+    lepton_isPhys14T.push_back(isPhys14T);
     lepton_genId.push_back(genId);
     lepton_genParentId.push_back(genParentId);
     lepton_genGrandParentId.push_back(genGrandParentId);
@@ -694,10 +782,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     lepton_eta.push_back(iMu->eta());
     lepton_phi.push_back(iMu->phi());
     lepton_relIso.push_back(miniAODhelper.GetMuonRelIso(*iMu));
-    lepton_iso_sumChargedHadronPt.push_back(iMu->pfIsolationR04().sumChargedHadronPt);
-    lepton_iso_sumNeutralHadronEt.push_back(iMu->pfIsolationR04().sumNeutralHadronEt);
-    lepton_iso_sumPhotonEt.push_back(iMu->pfIsolationR04().sumPhotonEt);
-    lepton_iso_sumPUPt.push_back(iMu->pfIsolationR04().sumPUPt);
+    lepton_iso_sumChargedHadronPt.push_back(iMu->pfIsolationR03().sumChargedHadronPt);
+    lepton_iso_sumNeutralHadronEt.push_back(iMu->pfIsolationR03().sumNeutralHadronEt);
+    lepton_iso_sumPhotonEt.push_back(iMu->pfIsolationR03().sumPhotonEt);
+    lepton_iso_sumPUPt.push_back(iMu->pfIsolationR03().sumPUPt);
     lepton_mvaTrigValue.push_back(-99);
     lepton_scSigmaIEtaIEta.push_back(-99);
     lepton_full5x5_scSigmaIEtaIEta.push_back(-99);
@@ -714,6 +802,17 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     lepton_scEta.push_back(-99);
     lepton_dEtaSCTrackAtVtx.push_back(-99);
     lepton_dPhiSCTrackAtVtx.push_back(-99);
+
+    lepton_d0.push_back(d0);
+    lepton_dZ.push_back(dZ);
+    lepton_isGlobalMuon.push_back(iMu->isGlobalMuon());
+    lepton_isTrackerMuon.push_back(iMu->isTrackerMuon());
+    lepton_isPFMuon.push_back(iMu->isPFMuon());
+    lepton_normalizedChi2.push_back(normalizedChi2);
+    lepton_numberOfValidMuonHits.push_back(numberOfValidMuonHits);
+    lepton_numberOfValidPixelHits.push_back(numberOfValidPixelHits);
+    lepton_trackerLayersWithMeasurement.push_back(trackerLayersWithMeasurement);
+    lepton_numberOfMatchedStations.push_back(numberOfMatchedStations);
 
 
     // Get muon 4Vector and add to vecTLorentzVector for muons
@@ -750,6 +849,11 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     int isTight = ( miniAODhelper.isGoodElectron(*iEle, minTightLeptonPt, electronID::electronTight) ) ? 1 : 0;
     int isLoose = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, electronID::electronLoose) ) ? 1 : 0;
 
+    int isPhys14L = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, electronID::electronPhys14L) ) ? 1 : 0;
+    int isPhys14M = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, electronID::electronPhys14M) ) ? 1 : 0;
+    int isPhys14T = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, electronID::electronPhys14T) ) ? 1 : 0;
+
+
     double mvaTrigValue = myMVATrig->mvaValue(*iEle,false);
 
     bool inCrack = false;
@@ -759,21 +863,28 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       scEta = iEle->superCluster()->position().eta();
     }
 
+    double ooEmooP = -999;
+    if( iEle->ecalEnergy() == 0 ) ooEmooP = 1e30;
+    else if( !std::isfinite(iEle->ecalEnergy()) ) ooEmooP = 1e30;
+    else ooEmooP = fabs(1.0/iEle->ecalEnergy() - iEle->eSuperClusterOverP()/iEle->ecalEnergy() );
+
     bool passHLTId = false;
-    double OneOESuperMinusOneOP = -1;
+    double OneOESuperMinusOneOP = ooEmooP;
     int numMissingHits = 99;
     int isEB = -1;
     double relEcalIso = 99, relHcalIso = 99, relTrackIso = 99;
+    double d0 = -999;
+    double dZ = -999;
     if( (iEle->superCluster().isAvailable()) && (iEle->gsfTrack().isAvailable()) ){
       double SCenergy = iEle->superCluster()->energy();
       double SCeta = iEle->superCluster()->position().eta();
       double absSCeta = fabs( SCeta );
       double SCet = SCenergy * sin (2*atan(exp(-SCeta))); 
 
-      double TrkP = iEle->gsfTrack()->p();
       numMissingHits = iEle->gsfTrack()->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS);
 
-      OneOESuperMinusOneOP = 1/SCenergy - 1/TrkP;
+      d0 = fabs(iEle->gsfTrack()->dxy(vertex.position()));
+      dZ = fabs(iEle->gsfTrack()->dz(vertex.position()));
 
       relEcalIso = iEle->ecalIso()/SCet;
       relHcalIso = iEle->hcalIso()/SCet;
@@ -807,6 +918,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     lepton_isMuon.push_back(0);
     lepton_isTight.push_back(isTight);
     lepton_isLoose.push_back(isLoose);
+    lepton_isPhys14L.push_back(isPhys14L);
+    lepton_isPhys14M.push_back(isPhys14M);
+    lepton_isPhys14T.push_back(isPhys14T);
     lepton_genId.push_back(genId);
     lepton_genParentId.push_back(genParentId);
     lepton_genGrandParentId.push_back(genGrandParentId);
@@ -834,6 +948,17 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     lepton_scEta.push_back(scEta);
     lepton_dEtaSCTrackAtVtx.push_back(iEle->deltaEtaSuperClusterTrackAtVtx());
     lepton_dPhiSCTrackAtVtx.push_back(iEle->deltaPhiSuperClusterTrackAtVtx());
+    lepton_d0.push_back(d0);
+    lepton_dZ.push_back(dZ);
+    lepton_isGlobalMuon.push_back(-99);
+    lepton_isTrackerMuon.push_back(-99);
+    lepton_isPFMuon.push_back(-99);
+    lepton_normalizedChi2.push_back(-99);
+    lepton_numberOfValidMuonHits.push_back(-99);
+    lepton_numberOfValidPixelHits.push_back(-99);
+    lepton_trackerLayersWithMeasurement.push_back(-99);
+    lepton_numberOfMatchedStations.push_back(-99);
+
 
 
     // Get electron 4Vector and add to vecTLorentzVector for electrons
@@ -857,6 +982,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->lepton_isMuon_           = lepton_isMuon;
   eve->lepton_isTight_          = lepton_isTight;
   eve->lepton_isLoose_          = lepton_isLoose;
+  eve->lepton_isPhys14L_        = lepton_isPhys14L;
+  eve->lepton_isPhys14M_        = lepton_isPhys14M;
+  eve->lepton_isPhys14T_        = lepton_isPhys14T;
   eve->lepton_genId_            = lepton_genId;
   eve->lepton_genParentId_      = lepton_genParentId;
   eve->lepton_genGrandParentId_ = lepton_genGrandParentId;
@@ -884,6 +1012,17 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->lepton_scEta_            = lepton_scEta;
   eve->lepton_dEtaSCTrackAtVtx_ = lepton_dEtaSCTrackAtVtx;
   eve->lepton_dPhiSCTrackAtVtx_ = lepton_dPhiSCTrackAtVtx;
+  eve->lepton_d0_ = lepton_d0;
+  eve->lepton_dZ_ = lepton_dZ;
+  eve->lepton_isGlobalMuon_ = lepton_isGlobalMuon;
+  eve->lepton_isTrackerMuon_ = lepton_isTrackerMuon;
+  eve->lepton_isPFMuon_ = lepton_isPFMuon;
+  eve->lepton_normalizedChi2_ = lepton_normalizedChi2;
+  eve->lepton_numberOfValidMuonHits_ = lepton_numberOfValidMuonHits;
+  eve->lepton_numberOfValidPixelHits_ = lepton_numberOfValidPixelHits;
+  eve->lepton_trackerLayersWithMeasurement_ = lepton_trackerLayersWithMeasurement;
+  eve->lepton_numberOfMatchedStations_ = lepton_numberOfMatchedStations;
+
 
 
   int oppositeLepCharge = -9;
@@ -1605,11 +1744,12 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if( selectedJets.size()>2 ) eve->third_jet_pt_[iSys]  = selectedJets.at(2).pt();
     if( selectedJets.size()>3 ) eve->fourth_jet_pt_[iSys] = selectedJets.at(3).pt();
 
+
     // MET
     eve->MET_[iSys]      = correctedMET.pt();
-    eve->uMET_[iSys]     = correctedMET.uncorrectedPt();
+    eve->uMET_[iSys]     = correctedMET.pt();//pfmet->front().shiftedPt(pat::MET::NoShift, pat::MET::Raw);
     eve->MET_phi_[iSys]  = correctedMET.phi();
-    eve->uMET_phi_[iSys] = correctedMET.uncorrectedPhi();
+    eve->uMET_phi_[iSys] = correctedMET.phi();//pfmet->front().shiftedPhi(pat::MET::NoShift, pat::MET::Raw);
 
 
     // Multi-object Quantities
@@ -1804,7 +1944,7 @@ YggdrasilTreeMaker::endJob()
     std::cout << "   Number of Events with two leptons, >=2 jets, >=2 tags (wgt) = " << nevents_2l_2j_2t_wgt << " (2e = " << nevents_2l_2j_2t_2e_wgt << ", 2m = " << nevents_2l_2j_2t_2m_wgt << ", em = " << nevents_2l_2j_2t_em_wgt << ")" << std::endl;
   }
 
-  for( int i=0; i<rNumSys; i++ ) printf(" i = %d,\t Num Pass = %d \n", i, neventsFillTree[i] );
+  //for( int i=0; i<rNumSys; i++ ) printf(" i = %d,\t Num Pass = %d \n", i, neventsFillTree[i] );
   std::cout << " *********************************************************** " << std::endl;
 
 }
@@ -1816,6 +1956,17 @@ YggdrasilTreeMaker::beginRun(edm::Run const&, edm::EventSetup const&)
 {
 }
 */
+void 
+YggdrasilTreeMaker::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
+{
+  bool hltchanged = true;
+  if (!hlt_config_.init(iRun, iSetup, hltTag, hltchanged)) {
+    std::cout << "Warning, didn't find trigger process HLT,\t" << hltTag << std::endl;
+    return;
+  }
+
+}
+
 
 // ------------ method called when ending the processing of a run  ------------
 /*
