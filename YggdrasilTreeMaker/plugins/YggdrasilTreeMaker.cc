@@ -4,9 +4,7 @@
 // Class:      YggdrasilTreeMaker
 // 
 /**\class YggdrasilTreeMaker YggdrasilTreeMaker.cc ttH-LeptonPlusJets/YggdrasilTreeMaker/plugins/YggdrasilTreeMaker.cc
-
  Description: [one line class summary]
-
  Implementation:
      [Notes on implementation]
 */
@@ -295,6 +293,13 @@ YggdrasilTreeMaker::~YggdrasilTreeMaker()
 //
 // member functions
 //
+
+
+void getSp(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, float &aplanarity, float &sphericity);
+void getFox(vecTLorentzVector jets, float &h0, float &h1, float &h2, float &h3, float &h4);
+double getBestHiggsMass(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, vdouble btag, double &minChi, double &dRbb, TLorentzVector &bjet1, TLorentzVector &bjet2, vecTLorentzVector loose_jets, vdouble loose_btag);
+
+
 
 // ------------ method called for each event  ------------
 void
@@ -1305,10 +1310,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       jet_vtx3DSig.push_back(iJet->userFloat("vtx3DSig"));
 
       // Get CSV discriminant, check if passes Med WP 
-      double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
+      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
       csvV.push_back(myCSV);
-      int csvM0 = ( myCSV > 0.679 ) ? 1 : 0;
-      if( myCSV>0.679 ){
+      int csvM0 = ( myCSV > 0.814 ) ? 1 : 0;
+      if( myCSV>0.814 ){
 	numtag += 1;
 	sum_btag_disc_btags += myCSV;
       }
@@ -1329,7 +1334,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	// Get second jet 4Vector and check bTag discriminant
 	TLorentzVector jet1p4;
 	jet1p4.SetPxPyPzE(jJet->px(),jJet->py(),jJet->pz(),jJet->energy());
-	int csvM1 = ( jJet->bDiscriminator("combinedSecondaryVertexBJetTags") > 0.679 ) ? 1 : 0;
+	int csvM1 = ( jJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") > 0.814 ) ? 1 : 0;
 
 	// Third loop over selected jets
 	for( std::vector<pat::Jet>::const_iterator kJet = jJet; kJet != selectedJets.end(); kJet++ ){ 
@@ -1340,7 +1345,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	  // Get third jet 4Vector and chekc bTag discriminant
 	  TLorentzVector jet2p4;
 	  jet2p4.SetPxPyPzE(kJet->px(),kJet->py(),kJet->pz(),kJet->energy());
-	  int csvM2 = ( kJet->bDiscriminator("combinedSecondaryVertexBJetTags") > 0.679 ) ? 1 : 0;
+	  int csvM2 = ( kJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") > 0.814 ) ? 1 : 0;
 
 	  // Get sum of three jet 4Vectors
 	  TLorentzVector sum_jet = jet0p4 + jet1p4 + jet2p4;
@@ -1404,7 +1409,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       vjets_loose.push_back(iJet->energy());
       jet_all_vect_TLV.push_back(vjets_loose);
 
-      double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
+      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
       jet_all_CSV.push_back(myCSV);
 
       jet_all_flavour.push_back(iJet->partonFlavour());
@@ -1440,7 +1445,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
       // Get CSV discriminant, check if passes Med WP 
       csvV_loose.push_back(myCSV);
-      if( myCSV>0.679 ) numTag_loose++;
+      if( myCSV>0.814 ) numTag_loose++;
     }
 
 
@@ -1464,7 +1469,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       vjets_temp_loose.push_back(iJet->pz());
       vjets_temp_loose.push_back(iJet->energy());
 
-      double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
+      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
       // jet_temp_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
       // jet_temp_loose_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") );
 
@@ -1504,7 +1509,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       vjets_nocc_loose.push_back(iJet->pz());
       vjets_nocc_loose.push_back(iJet->energy());
 
-      double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
+      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
       jet_nocc_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
       jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") );
 
@@ -1571,7 +1576,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_tag.begin(); iJet != selectedJets_tag.end(); iJet++ ){ 
 
       // Get bTag Value
-      double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
+      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
 
       // Compute Deviation from Avg bTag
       double dev = myCSV - ave_btag_disc_btags;
@@ -1650,7 +1655,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_untag.begin(); iJet != selectedJets_untag.end(); iJet++ ){ 
 
       // Get CSV discriminant
-      double myCSV = iJet->bDiscriminator("combinedSecondaryVertexBJetTags");
+      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
 
       // Compute deviation form Avg bTag Disc
       double dev = myCSV - ave_btag_disc_non_btags;
@@ -1708,8 +1713,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 
     // Compute angular quantities
-    // miniAODhelper.getSp(leptonV,metV,jetV,eve->aplanarity_[iSys],eve->sphericity_[iSys]);
-    // miniAODhelper.getFox(jetV,eve->h0_[iSys],eve->h1_[iSys],eve->h2_[iSys],eve->h3_[iSys],eve->h4_[iSys]);
+    getSp(leptonV,metV,jetV,eve->aplanarity_[iSys],eve->sphericity_[iSys]);
+    getFox(jetV,eve->h0_[iSys],eve->h1_[iSys],eve->h2_[iSys],eve->h3_[iSys],eve->h4_[iSys]);
 
     // Intialize 4Vectors, to use in Best Higgs Mass function
     TLorentzVector mydummyguy;
@@ -1718,7 +1723,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     TLorentzVector bjet2_tmp = mydummyguy;
 
     // Get Best Higgs Mass (X^2 method)
-    eve->best_higgs_mass_[iSys] = 0.;//getBestHiggsMass(leptonV, metV, jetV, csvV, eve->minChi2_[iSys], eve->dRbb_[iSys], bjet1_tmp, bjet2_tmp, jetV_loose, csvV_loose);
+    eve->best_higgs_mass_[iSys] = getBestHiggsMass(leptonV, metV, jetV, csvV, eve->minChi2_[iSys], eve->dRbb_[iSys], bjet1_tmp, bjet2_tmp, jetV_loose, csvV_loose);
 
     //double chiSq2=10000;
 
@@ -2001,6 +2006,258 @@ YggdrasilTreeMaker::fillDescriptions(edm::ConfigurationDescriptions& description
   desc.setUnknown();
   descriptions.addDefault(desc);
 }
+
+
+void getSp(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, float &aplanarity, float &sphericity) {
+	//
+	// Aplanarity and sphericity
+	//
+
+	int nJets = int(jets.size());
+
+	float mxx = lepton.Px()*lepton.Px() + met.Px()*met.Px();
+	float myy = lepton.Py()*lepton.Py() + met.Py()*met.Py();
+	float mzz = lepton.Pz()*lepton.Pz() + met.Pz()*met.Pz();
+	float mxy = lepton.Px()*lepton.Py() + met.Px()*met.Py();
+	float mxz = lepton.Px()*lepton.Pz() + met.Px()*met.Pz();
+	float myz = lepton.Py()*lepton.Pz() + met.Px()*met.Pz();
+
+	for (int i=0; i<nJets; i++) {
+		mxx += jets[i].Px()*jets[i].Px();
+		myy += jets[i].Py()*jets[i].Py();
+		mzz += jets[i].Pz()*jets[i].Pz();
+		mxy += jets[i].Px()*jets[i].Py();
+		mxz += jets[i].Px()*jets[i].Pz();
+		myz += jets[i].Py()*jets[i].Pz();		
+	}
+	float sum = mxx + myy + mzz;
+	mxx /= sum;
+	myy /= sum;
+	mzz /= sum;
+	mxy /= sum;
+	mxz /= sum;
+	myz /= sum;
+
+	TMatrix tensor(3,3);
+	tensor(0,0) = mxx;
+	tensor(1,1) = myy;
+	tensor(2,2) = mzz;
+	tensor(0,1) = mxy;
+	tensor(1,0) = mxy;
+	tensor(0,2) = mxz;
+	tensor(2,0) = mxz;
+	tensor(1,2) = myz;
+	tensor(2,1) = myz;
+	TVector eigenval(3);
+	tensor.EigenVectors(eigenval);
+
+	sphericity = 3.0*(eigenval(1)+eigenval(2))/2.0;
+	aplanarity = 3.0*eigenval(2)/2.0;
+
+	return;
+}
+
+void getFox(vecTLorentzVector jets, float &h0, float &h1, float &h2, float &h3, float &h4) {
+	
+
+	int visObjects = int(jets.size());
+
+	float eVis = 0.0;
+	for (int i=0; i<visObjects; i++) {
+		eVis += jets[i].E();
+	}
+
+	h0 = 0.0;
+	h1 = 0.0;
+	h2 = 0.0;
+	h3 = 0.0;
+	h4 = 0.0;
+	for (int i=0; i<visObjects-1; i++) {
+		for (int j=i+1; j<visObjects; j++) {
+			float costh = cos(jets[i].Angle(jets[j].Vect()));
+			float p0 = 1.0;
+			float p1 = costh;
+			float p2 = 0.5*(3.0*costh*costh - 1.0);
+			float p3 = 0.5*(5.0*costh*costh - 3.0*costh);
+			float p4 = 0.125*(35.0*costh*costh*costh*costh - 30.0*costh*costh + 3.0);
+			float pipj = jets[i].P()*jets[j].P();
+			h0 += (pipj/(eVis*eVis))*p0;
+			h1 += (pipj/(eVis*eVis))*p1;
+			h2 += (pipj/(eVis*eVis))*p2;
+			h3 += (pipj/(eVis*eVis))*p3;
+			h4 += (pipj/(eVis*eVis))*p4;
+		}
+	}
+
+	return;
+}
+
+
+double getBestHiggsMass(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, vdouble btag, double &minChi, double &dRbb, TLorentzVector &bjet1, TLorentzVector &bjet2, vecTLorentzVector loose_jets, vdouble loose_btag)
+{
+
+  if( jets.size()<6 && loose_jets.size()>0 ){
+    jets.push_back( loose_jets[0] );
+    btag.push_back( loose_btag[0] );
+  }
+
+  int nJets = int(jets.size());
+
+  double chi_top_lep=10000;
+  double chi_top_had=10000;
+  //double chi_W_lep=10000; //isn't really used
+  double chi_W_had=10000;
+
+  minChi = 1000000;
+  dRbb = 1000000;
+  double btagCut = 0.814;
+  double W_mass = 80.0;
+  double top_mass = 172.5;
+  //double H_mass=120.0;
+
+  // updated 8/22/2012 from J. Timcheck
+  //sigma's from >=6j >=4t, muon, no imaginary neutrino pz ttH
+  double sigma_hadW   = 12.77;
+  double sigma_hadTop = 18.9;
+  double sigma_lepTop = 32.91;
+
+  // //sigma's from >=6j >=4t, muon, no imaginary neutrino pz ttH
+  // double sigma_hadW   = 12.59;
+  // double sigma_hadTop = 19.9;
+  // double sigma_lepTop = 39.05;
+
+  //sigma's from >=6j >=4t, muon, no imaginary neutrino pz ttJets
+  /*double sigma_hadW		= 12.72,
+    sigma_hadTop	= 18.12,
+    sigma_lepTop	= 38.72;
+  */
+
+  double metPz[2];
+  double chi=999999;
+
+  //stuff to find:
+  double higgs_mass_high_energy=0;
+
+  int nBtags = 0;
+  for(int i=0;i<nJets;i++){
+    if(btag[i]>btagCut) nBtags++;
+  }
+
+  int nUntags = nJets-nBtags;
+
+  double lowest_btag = 99.;
+  double second_lowest_btag = 999.;
+  int ind_lowest_btag = 999;
+  int ind_second_lowest_btag = 999;
+
+  if( nJets>=6 && nBtags>=4 ){
+    if( nUntags<2 ){
+      for(int i=0;i<nJets;i++){
+	if( btag[i]<lowest_btag ){
+	  second_lowest_btag = lowest_btag;
+	  ind_second_lowest_btag = ind_lowest_btag;
+
+	  lowest_btag = btag[i];
+	  ind_lowest_btag = i;
+	}
+	else if( btag[i]<second_lowest_btag ){
+	  second_lowest_btag = btag[i];
+	  ind_second_lowest_btag = i;
+	}
+      }
+    }
+  }
+
+
+  //Handle 6j3t.
+  int ind_promoted_btag = 999;
+
+  if( nJets>=6 && nBtags==3 ){
+    for(int i=0;i<nJets;i++){
+      int rank = 0;
+      for(int j=0;j<nJets;j++){
+	if( btag[j] > btag[i] ){
+	  rank++;
+	}
+      }
+      if( rank == 3 ) ind_promoted_btag = i;
+    }
+  }
+
+  // First get the neutrino z
+  double energyLep = lepton.E();
+  double a = (W_mass*W_mass/(2.0*energyLep)) + (lepton.Px()*met.Px() + lepton.Py()*met.Py())/energyLep;
+  double radical = (2.0*lepton.Pz()*a/energyLep)*(2.0*lepton.Pz()*a/energyLep);
+  radical = radical - 4.0*(1.0 - (lepton.Pz()/energyLep)*(lepton.Pz()/energyLep))*(met.Px()*met.Px() + met.Py()*met.Py()- a*a);
+  if (radical < 0.0) radical = 0.0;
+  metPz[0] = (lepton.Pz()*a/energyLep) + 0.5*sqrt(radical);
+  metPz[0] = metPz[0] / (1.0 - (lepton.Pz()/energyLep)*(lepton.Pz()/energyLep));
+  metPz[1] = (lepton.Pz()*a/energyLep) - 0.5*sqrt(radical);
+  metPz[1] = metPz[1] / (1.0 - (lepton.Pz()/energyLep)*(lepton.Pz()/energyLep));
+
+
+  // Loop over all jets, both Pz, calcaulte chi-square
+  TLorentzVector metNew;
+  for( int ipznu=0; ipznu<2; ipznu++ ){
+    metNew.SetXYZM(met.Px(),met.Py(),metPz[ipznu],0.0); //neutrino has mass 0
+    //with b-tag info
+    if( (nJets>=6 && nBtags>=4) || (nJets>=6 && nBtags==3) ){
+      vecTLorentzVector not_b_tagged,b_tagged;
+      //fill not_b_tagged and b_tagged
+      for( int i=0;i<nJets;i++ ){
+	if( (btag[i]>btagCut && i!=ind_second_lowest_btag && i!=ind_lowest_btag) || (i==ind_promoted_btag) ) b_tagged.push_back(jets[i]);
+	else not_b_tagged.push_back(jets[i]);
+      }
+      //first make possible t_lep's with b-tagged jets (includes making W_lep)
+      for( int i=0; i<int(b_tagged.size()); i++ ){
+	TLorentzVector W_lep=metNew+lepton; //used for histogram drawing only
+	TLorentzVector top_lep=metNew+lepton+b_tagged.at(i);
+	chi_top_lep=pow((top_lep.M()-top_mass)/sigma_lepTop,2);
+	//next make possible W_had's with not b-tagged jets
+	for( int j=0; j<int(not_b_tagged.size()); j++ ){
+	  for( int k=0; k<int(not_b_tagged.size()); k++ ){
+	    if( j!=k ){
+	      TLorentzVector W_had=not_b_tagged.at(j)+not_b_tagged.at(k);
+	      chi_W_had=pow((W_had.M()-W_mass)/sigma_hadW,2);
+	      //now make possible top_had's (using the W_had + some b-tagged jet)
+	      for( int l=0; l<int(b_tagged.size()); l++ ){
+		if( l!=i ){
+		  TLorentzVector top_had=W_had+b_tagged.at(l);
+		  chi_top_had=pow((top_had.M()-top_mass)/sigma_hadTop,2);
+		  chi=chi_top_lep+chi_W_had+chi_top_had;
+		  //accept the lowest chi
+		  if( chi<minChi ){
+		    minChi=chi;
+		    //pick the other two b's that have the highest et (energy in transverse plane) as higgs mass constituents
+		    TLorentzVector H2;
+		    int numH2Constituents=0;
+		    TLorentzVector bBest[2];
+		    for( int m=0; m<int(b_tagged.size()); m++ ){
+		      if( m!=i && m!=l && numH2Constituents<2 ){
+			bBest[numH2Constituents] = b_tagged.at(m);
+			numH2Constituents++;
+			H2+=b_tagged.at(m);
+		      }
+		    }
+		    dRbb = bBest[0].DeltaR( bBest[1] );
+		    higgs_mass_high_energy=H2.M();
+		    bjet1 = bBest[0];
+		    bjet2 = bBest[1];
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+  return higgs_mass_high_energy;
+}
+
+
+
+
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(YggdrasilTreeMaker);
