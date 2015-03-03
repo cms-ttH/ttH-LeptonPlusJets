@@ -10,9 +10,10 @@ process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_cff"
 process.GlobalTag.globaltag = 'PHYS14_25_V2::All'
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+process.options.allowUnscheduled = cms.untracked.bool(True)
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10000)
+    input = cms.untracked.int32(1000)
     )
 
 from JetMETCorrections.Configuration.JetCorrectionServices_cff import *
@@ -36,7 +37,8 @@ process.ak4PFchsL1L2L3 = cms.ESProducer("JetCorrectionESChain",
 
 process.source = cms.Source("PoolSource",
         fileNames = cms.untracked.vstring(
-            '/store/mc/Phys14DR/TTbarH_M-125_13TeV_amcatnlo-pythia8-tauola/MINIAODSIM/PU20bx25_tsg_PHYS14_25_V1-v2/00000/08B36E8F-5E7F-E411-9D5A-002590200AE4.root'
+        '/store/user/puigh/TTHSync/ttjets_phys14_20bx25_withfatjets_v2.root'
+            #'/store/mc/Phys14DR/TTbarH_M-125_13TeV_amcatnlo-pythia8-tauola/MINIAODSIM/PU20bx25_tsg_PHYS14_25_V1-v2/00000/08B36E8F-5E7F-E411-9D5A-002590200AE4.root'
             #'/store/mc/Phys14DR/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_PHYS14_25_V1-v1/00000/00C90EFC-3074-E411-A845-002590DB9262.root'
             #'/store/mc/Spring14miniaod/TTbarH_M-125_13TeV_amcatnlo-pythia8-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/1E4F9BDC-3E1E-E411-A56C-001E67396EAA.root'
             #'/store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v2/00000/004C6DA7-FB03-E411-96BD-0025905A497A.root'
@@ -44,7 +46,79 @@ process.source = cms.Source("PoolSource",
 )
 
 
+
+
+###############
+#### tt+X
+###############
+# Setting input particle collections to be used by the tools
+genJetCollection = 'ak4GenJetsCustom'
+genParticleCollection = 'prunedGenParticles'
+genJetInputParticleCollection = 'packedGenParticles'
+
+# Supplies PDG ID to real name resolution of MC particles
+process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
+
+# Producing own jets for testing purposes
+from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
+process.ak4GenJetsCustom = ak4GenJets.clone(
+    src = genJetInputParticleCollection,
+    rParam = cms.double(0.4),
+    jetAlgorithm = cms.string("AntiKt")
+)
+
+# Ghost particle collection used for Hadron-Jet association 
+# MUST use proper input particle collection
+from PhysicsTools.JetMCAlgos.HadronAndPartonSelector_cfi import selectedHadronsAndPartons
+process.selectedHadronsAndPartons = selectedHadronsAndPartons.clone(
+    particles = genParticleCollection
+)
+
+# Input particle collection for matching to gen jets (partons + leptons) 
+# MUST use use proper input jet collection: the jets to which hadrons should be associated
+# rParam and jetAlgorithm MUST match those used for jets to be associated with hadrons
+# More details on the tool: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagMCTools#New_jet_flavour_definition
+from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import genJetFlavourPlusLeptonInfos
+process.genJetFlavourPlusLeptonInfos = genJetFlavourPlusLeptonInfos.clone(
+    jets = genJetCollection,
+    rParam = cms.double(0.4),
+    jetAlgorithm = cms.string("AntiKt")
+)
+
+
+# Plugin for analysing B hadrons
+# MUST use the same particle collection as in selectedHadronsAndPartons
+from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import matchGenBHadron
+process.matchGenBHadron = matchGenBHadron.clone(
+    genParticles = genParticleCollection
+)
+
+# Plugin for analysing C hadrons
+# MUST use the same particle collection as in selectedHadronsAndPartons
+from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import matchGenCHadron
+process.matchGenCHadron = matchGenCHadron.clone(
+    genParticles = genParticleCollection
+)
+
+
 process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
+    # phase space of jets to be stored
+    genJetPtMin = cms.double(20),
+    genJetAbsEtaMax = cms.double(2.4),
+    # input tags holding information about matching
+    genJets = cms.InputTag(genJetCollection),
+    genBHadJetIndex = cms.InputTag("matchGenBHadron", "genBHadJetIndex"),
+    genBHadFlavour = cms.InputTag("matchGenBHadron", "genBHadFlavour"),
+    genBHadFromTopWeakDecay = cms.InputTag("matchGenBHadron", "genBHadFromTopWeakDecay"),
+    genBHadPlusMothers = cms.InputTag("matchGenBHadron", "genBHadPlusMothers"),
+    genBHadPlusMothersIndices = cms.InputTag("matchGenBHadron", "genBHadPlusMothersIndices"),
+    genBHadIndex = cms.InputTag("matchGenBHadron", "genBHadIndex"),
+    genBHadLeptonHadronIndex = cms.InputTag("matchGenBHadron", "genBHadLeptonHadronIndex"),
+    genBHadLeptonViaTau = cms.InputTag("matchGenBHadron", "genBHadLeptonViaTau"),
+    genCHadJetIndex = cms.InputTag("matchGenCHadron", "genCHadJetIndex"),
+    genCHadFlavour = cms.InputTag("matchGenCHadron", "genCHadFlavour"),
+    genCHadFromTopWeakDecay = cms.InputTag("matchGenCHadron", "genCHadFromTopWeakDecay"),
+    genCHadBHadronId = cms.InputTag("matchGenCHadron", "genCHadBHadronId"),
     )
 
 process.TFileService = cms.Service("TFileService",

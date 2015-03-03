@@ -38,7 +38,7 @@ struct yggdrasilEventVars{
   //////////////////////////////////////////////////////////////////////////
 
   explicit yggdrasilEventVars(): passElectronTrigger_(0),passMuonTrigger_(0) { }
-
+  Int_t   additionalJetEventId_;
   Int_t   passTrigger_;
   Int_t   passElectronTrigger_;
   Int_t   passMuonTrigger_;
@@ -111,6 +111,7 @@ struct yggdrasilEventVars{
   vdouble lepton_eta_;
   vdouble lepton_phi_;
   vdouble lepton_relIso_;
+  vdouble lepton_relIsoR04_;
   vdouble lepton_iso_sumChargedHadronPt_;
   vdouble lepton_iso_sumNeutralHadronEt_;
   vdouble lepton_iso_sumPhotonEt_;
@@ -271,6 +272,19 @@ struct yggdrasilEventVars{
   vdouble jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags_[rNumSys];
   vint jet_nocc_loose_flavour_[rNumSys];
 
+  ///boosted jets
+  vvdouble topfatJet_vect_TLV_;
+  vvdouble nonW_vect_TLV_;
+  vvdouble W1_vect_TLV_;
+  vvdouble W2_vect_TLV_;
+  vbool isTopTag_;
+  int numTopTags_;
+
+  int numHiggsTags_;
+  vvdouble higgsfatJet_vect_TLV_;
+  std::vector<vvdouble> higgsfilterjet_all_vect_TLV_;
+  vvdouble csv_filterjet_all_;
+
 
   void initialize();
 
@@ -281,7 +295,7 @@ typedef std::vector<yggdrasilEventVars> vyggdrasilEventVars;
 
 
 void yggdrasilEventVars::initialize(){
-
+  additionalJetEventId_ = -1;
   passTrigger_         = 0;
   passElectronTrigger_ = 0;
   passMuonTrigger_     = 0;
@@ -350,6 +364,7 @@ void yggdrasilEventVars::initialize(){
   lepton_eta_.clear();
   lepton_phi_.clear();
   lepton_relIso_.clear();
+  lepton_relIsoR04_.clear();
   lepton_iso_sumChargedHadronPt_.clear();
   lepton_iso_sumNeutralHadronEt_.clear();
   lepton_iso_sumPhotonEt_.clear();
@@ -507,6 +522,19 @@ void yggdrasilEventVars::initialize(){
 
     IsTauTauLeptonEvent_[iSys] = -99;
   }
+
+  //boosted jets
+  topfatJet_vect_TLV_.clear();
+  nonW_vect_TLV_.clear();
+  W1_vect_TLV_.clear();
+  W2_vect_TLV_.clear();
+  isTopTag_.clear();
+  numTopTags_ = -99;
+
+  numHiggsTags_ = -99;
+  higgsfatJet_vect_TLV_.clear();
+  higgsfilterjet_all_vect_TLV_.clear();
+  csv_filterjet_all_.clear();
 
 
   return;
