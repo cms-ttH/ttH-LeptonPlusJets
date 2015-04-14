@@ -71,6 +71,8 @@
 
 #include "EgammaAnalysis/ElectronTools/interface/EGammaMvaEleEstimatorCSA14.h"
 
+#include "MiniAOD/MiniAODHelper/interface/BDTvars.h"
+
 //
 // class declaration
 //
@@ -191,6 +193,9 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   EGammaMvaEleEstimatorCSA14* myMVATrig;
  
   MiniAODHelper miniAODhelper;
+
+  BDTvars bdtVARS;
+
 };
 
 //
@@ -342,11 +347,11 @@ YggdrasilTreeMaker::~YggdrasilTreeMaker()
 // member functions
 //
 
-
+/*
 void getSp(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, float &aplanarity, float &sphericity);
 void getFox(vecTLorentzVector jets, float &h0, float &h1, float &h2, float &h3, float &h4);
 double getBestHiggsMass(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, vdouble btag, double &minChi, double &dRbb, TLorentzVector &bjet1, TLorentzVector &bjet2, vecTLorentzVector loose_jets, vdouble loose_btag);
-
+*/
 
 
 // ------------ method called for each event  ------------
@@ -1136,7 +1141,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->lepton_numberOfMatchedStations_ = lepton_numberOfMatchedStations;
 
 
-
+  /// DIL specific, doesn't make sense in current scope
   int oppositeLepCharge = -9;
   if( lepton_trkCharge.size()==2 ){
     int chg0 = lepton_trkCharge[0];
@@ -1151,7 +1156,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->oppositeLepCharge_ = oppositeLepCharge;
 
 
-
+  /// DIL specific, doesn't make sense in current scope
   double mass_leplep = -99;
   if( vec_TLV_lep.size()==2 ){
     mass_leplep = sum_lepton_vect.M();
@@ -1783,7 +1788,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 
 
-  
+  /// DIL specific, doesn't make sense in current scope
     // Add lepton 4Vector quantities to MHT
     mht_px += - sum_lepton_vect.Px();
     mht_py += - sum_lepton_vect.Py();
@@ -1972,8 +1977,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 
     // Compute angular quantities
-    getSp(leptonV,metV,jetV,eve->aplanarity_[iSys],eve->sphericity_[iSys]);
-    getFox(jetV,eve->h0_[iSys],eve->h1_[iSys],eve->h2_[iSys],eve->h3_[iSys],eve->h4_[iSys]);
+    // getSp(leptonV,metV,jetV,eve->aplanarity_[iSys],eve->sphericity_[iSys]);
+    // getFox(jetV,eve->h0_[iSys],eve->h1_[iSys],eve->h2_[iSys],eve->h3_[iSys],eve->h4_[iSys]);
 
     // Intialize 4Vectors, to use in Best Higgs Mass function
     TLorentzVector mydummyguy;
@@ -1982,19 +1987,19 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     TLorentzVector bjet2_tmp = mydummyguy;
 
     // Get Best Higgs Mass (X^2 method)
-    eve->best_higgs_mass_[iSys] = getBestHiggsMass(leptonV, metV, jetV, csvV, eve->minChi2_[iSys], eve->dRbb_[iSys], bjet1_tmp, bjet2_tmp, jetV_loose, csvV_loose);
+    // eve->best_higgs_mass_[iSys] = getBestHiggsMass(leptonV, metV, jetV, csvV, eve->minChi2_[iSys], eve->dRbb_[iSys], bjet1_tmp, bjet2_tmp, jetV_loose, csvV_loose);
 
     //double chiSq2=10000;
 
-    eve->minChi2_bjet1_px_[iSys] = bjet1_tmp.Px();
-    eve->minChi2_bjet1_py_[iSys] = bjet1_tmp.Py();
-    eve->minChi2_bjet1_pz_[iSys] = bjet1_tmp.Pz();
-    eve->minChi2_bjet1_E_[iSys]  = bjet1_tmp.E();
+    // eve->minChi2_bjet1_px_[iSys] = bjet1_tmp.Px();
+    // eve->minChi2_bjet1_py_[iSys] = bjet1_tmp.Py();
+    // eve->minChi2_bjet1_pz_[iSys] = bjet1_tmp.Pz();
+    // eve->minChi2_bjet1_E_[iSys]  = bjet1_tmp.E();
 
-    eve->minChi2_bjet2_px_[iSys] = bjet2_tmp.Px();
-    eve->minChi2_bjet2_py_[iSys] = bjet2_tmp.Py();
-    eve->minChi2_bjet2_pz_[iSys] = bjet2_tmp.Pz();
-    eve->minChi2_bjet2_E_[iSys]  = bjet2_tmp.E();
+    // eve->minChi2_bjet2_px_[iSys] = bjet2_tmp.Px();
+    // eve->minChi2_bjet2_py_[iSys] = bjet2_tmp.Py();
+    // eve->minChi2_bjet2_pz_[iSys] = bjet2_tmp.Pz();
+    // eve->minChi2_bjet2_E_[iSys]  = bjet2_tmp.E();
 
 
     // nJets/Tags
@@ -2048,6 +2053,35 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if( csvV_temp.size()>3 ) eve->fourth_highest_btag_[iSys] = csvV_temp[3];
     eve->lowest_btag_[iSys]             = min_btag;
 
+
+    //getBDTvars
+    bdtVARS.getSp(leptonV,metV,jetV,eve->aplanarity_[iSys],eve->sphericity_[iSys]);
+    bdtVARS.getFox(jetV,eve->h0_[iSys],eve->h1_[iSys],eve->h2_[iSys],eve->h3_[iSys],eve->h4_[iSys]);
+    eve->best_higgs_mass_[iSys] = bdtVARS.getBestHiggsMass(leptonV, metV, jetV, csvV, eve->minChi2_[iSys], eve->dRbb_[iSys], bjet1_tmp, bjet2_tmp, jetV_loose, csvV_loose);
+
+    eve->maxeta_jet_jet_[iSys] = bdtVARS.get_jet_jet_etamax(vvjets);
+    eve->maxeta_jet_tag_[iSys] = bdtVARS.get_jet_tag_etamax(vvjets,csvV);
+    eve->maxeta_tag_tag_[iSys] = bdtVARS.get_tag_tag_etamax(vvjets,csvV);
+    
+    eve->median_bb_mass_[iSys]  = bdtVARS.get_median_bb_mass(vvjets,csvV);
+    eve->pt_all_jets_over_E_all_jets_[iSys]  = bdtVARS.pt_E_ratio_jets(vvjets);
+    
+    
+    TLorentzVector newmet, b1, b2;
+    double chi2lepW, chi2leptop, chi2hadW, chi2hadtop;
+    double mass_lepW, mass_leptop, mass_hadW, mass_hadtop, drbb_dummy, minChi;
+    double bbleptopeta, bbhadtopeta, dphifn, bbeta, avgetatops, detafn, anglbbtops;	
+    double MET_phi = correctedMET.phi();
+    double MET_pt = correctedMET.pt();
+    
+    bdtVARS.study_tops_bb_syst(MET_pt, MET_phi, newmet, leptonV, vvjets, 
+			       csvV, minChi, chi2lepW, chi2leptop, chi2hadW, chi2hadtop, mass_lepW, mass_leptop, mass_hadW, mass_hadtop, 
+			       drbb_dummy, bbleptopeta, bbhadtopeta, dphifn, bbeta, avgetatops, detafn, anglbbtops, b1, b2);	
+    
+    eve->dEta_leptop_bb_[iSys] = bbhadtopeta;
+    eve->dEta_hadtop_bb_[iSys] = bbleptopeta;
+    eve->dEta_f_[iSys] = detafn;
+    ////
 
     eve->minChi2_bjet1_px_[iSys] = bjet1_tmp.Px();
     eve->minChi2_bjet1_py_[iSys] = bjet1_tmp.Py();
@@ -2266,7 +2300,7 @@ YggdrasilTreeMaker::fillDescriptions(edm::ConfigurationDescriptions& description
   descriptions.addDefault(desc);
 }
 
-
+/*
 void getSp(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, float &aplanarity, float &sphericity) {
 	//
 	// Aplanarity and sphericity
@@ -2386,10 +2420,10 @@ double getBestHiggsMass(TLorentzVector lepton, TLorentzVector met, vecTLorentzVe
   // double sigma_lepTop = 39.05;
 
   //sigma's from >=6j >=4t, muon, no imaginary neutrino pz ttJets
-  /*double sigma_hadW		= 12.72,
-    sigma_hadTop	= 18.12,
-    sigma_lepTop	= 38.72;
-  */
+  //double sigma_hadW		= 12.72,
+    // sigma_hadTop	= 18.12,
+    // sigma_lepTop	= 38.72;
+
 
   double metPz[2];
   double chi=999999;
@@ -2516,7 +2550,7 @@ double getBestHiggsMass(TLorentzVector lepton, TLorentzVector met, vecTLorentzVe
 
 
 
-
+*/
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(YggdrasilTreeMaker);

@@ -272,6 +272,18 @@ struct yggdrasilEventVars{
   vdouble jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags_[rNumSys];
   vint jet_nocc_loose_flavour_[rNumSys];
 
+  // additional BDTvars
+  double maxeta_jet_jet_[rNumSys];  
+  double maxeta_jet_tag_[rNumSys];  
+  double maxeta_tag_tag_[rNumSys]; 	
+  
+  double dEta_leptop_bb_[rNumSys];
+  double dEta_hadtop_bb_[rNumSys];
+  double dEta_f_[rNumSys];
+  
+  double median_bb_mass_[rNumSys];
+  double pt_all_jets_over_E_all_jets_[rNumSys];
+  
   ///boosted jets
   vvdouble topfatJet_vect_TLV_;
   vvdouble nonW_vect_TLV_;
@@ -521,6 +533,18 @@ void yggdrasilEventVars::initialize(){
     jet_nocc_loose_flavour_[iSys].clear();
 
     IsTauTauLeptonEvent_[iSys] = -99;
+
+    maxeta_jet_jet_[iSys] = -99;  
+    maxeta_jet_tag_[iSys] = -99;  
+    maxeta_tag_tag_[iSys] = -99; 	
+    
+    dEta_leptop_bb_[iSys] = -99;
+    dEta_hadtop_bb_[iSys] = -99;
+    dEta_f_[iSys] = -99;
+    
+    median_bb_mass_[iSys] = -99;
+    pt_all_jets_over_E_all_jets_[iSys] = -99;
+    
   }
 
   //boosted jets
