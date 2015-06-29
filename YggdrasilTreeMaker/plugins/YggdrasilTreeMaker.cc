@@ -359,6 +359,8 @@ void
 YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
+   
+   eve->initialize();
 
 
   double minTightLeptonPt = ( isLJ_ ) ? 30. : 20.;
@@ -511,6 +513,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   if( verbose_ ) printf("\t BeamSpot: x = %.2f,\t y = %.2f,\t z = %.2f \n", BSx, BSy, BSz );
 
   int numpv=0;
+  int vn=0;
   reco::Vertex vertex;
   if( vtxHandle.isValid() ){
     for( reco::VertexCollection::const_iterator vtx = vtxs.begin(); vtx!=vtxs.end(); ++vtx ){
@@ -519,6 +522,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 		      (abs(vtx->z()) <= 24.0) &&
 		      (abs(vtx->position().Rho()) <= 2.0) 
 		      );
+		      
+		      if(isGood && vn==0)eve->GoodFirstPV_=true;
+		      vn++;
 
       if( !isGood ) continue;
 
@@ -562,6 +568,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   const JetCorrector* corrector = JetCorrector::getJetCorrector( "ak4PFchsL1L2L3", iSetup );   //Get the jet corrector from the event setup
 
   miniAODhelper.SetJetCorrector(corrector);
+  
+  int mHdecay = -1;
+  mHdecay = miniAODhelper.GetHiggsDecay(mcparticles);
+  eve->higgsDecayType_=mHdecay;
 
 
   /////////
@@ -569,8 +579,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   /// Electrons
   ///
   ////////
-  std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( *electrons, minTightLeptonPt, electronID::electronPhys14M );
-  std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( *electrons, looseLeptonPt, electronID::electronPhys14L );
+  std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( *electrons, minTightLeptonPt, electronID::electronPhys14M, 2.1 );
+  std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( *electrons, looseLeptonPt, electronID::electronPhys14L, 2.4 );
 
   int numTightElectrons = int(selectedElectrons_tight.size());
   int numLooseElectrons = int(selectedElectrons_loose.size());// - numTightElectrons;
@@ -581,11 +591,16 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   /// Muons
   ///
   ////////
-  std::vector<pat::Muon> selectedMuons_tight = miniAODhelper.GetSelectedMuons( *muons, minTightLeptonPt, muonID::muonTight );
+  std::vector<pat::Muon> selectedMuons_tight = miniAODhelper.GetSelectedMuons( *muons, minTightLeptonPt, muonID::muonTight, coneSize::R04, corrType::deltaBeta, 2.1 );
   std::vector<pat::Muon> selectedMuons_loose = miniAODhelper.GetSelectedMuons( *muons, looseLeptonPt, muonID::muonLoose );
 
   int numTightMuons = int(selectedMuons_tight.size());
   int numLooseMuons = int(selectedMuons_loose.size());// - numTightMuons;
+  
+  eve->numTightMuons_ = numTightMuons;
+  eve->numLooseMuons_ = numLooseMuons;
+  eve->numTightElectrons_ = numTightElectrons;
+  eve->numLooseElectrons_ = numLooseElectrons;
 
 
   // Pass one tight lepton, zero loose lepton cuts
@@ -626,21 +641,22 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   // Do jets stuff
   std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets(*pfjets);
-  std::vector<pat::Jet> jetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons_loose, rawJets);
+  std::vector<pat::Jet> rawJets_ID = miniAODhelper.GetSelectedJets(rawJets,0.,999,jetID::jetLoose,'-');
+  std::vector<pat::Jet> jetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons_loose, rawJets_ID);
   std::vector<pat::Jet> jetsNoEle = miniAODhelper.RemoveOverlaps(selectedElectrons_loose, jetsNoMu);
   std::vector<pat::Jet> correctedJets_noSys = miniAODhelper.GetCorrectedJets(jetsNoEle, iEvent, iSetup);
-  std::vector<pat::Jet> selectedJets_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 30., 2.4, jetID::jetLoose, '-' );
-  std::vector<pat::Jet> selectedJets_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 30., 2.4, jetID::jetLoose, 'M' );
+  std::vector<pat::Jet> selectedJets_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 30., 2.4, jetID::none, '-' );
+  std::vector<pat::Jet> selectedJets_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 30., 2.4, jetID::none, 'M' );
 
-  std::vector<pat::Jet> selectedJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 20., 2.4, jetID::jetLoose, '-' );
-  std::vector<pat::Jet> selectedJets_loose_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 20., 2.4, jetID::jetLoose, 'M' );
+  std::vector<pat::Jet> selectedJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 20., 2.4, jetID::none, '-' );
+  std::vector<pat::Jet> selectedJets_loose_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 20., 2.4, jetID::none, 'M' );
 
 
   std::vector<pat::Jet> rawTempJets = miniAODhelper.GetUncorrectedJets(*pftempjets);
   std::vector<pat::Jet> tempJetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons_loose, rawTempJets);
   std::vector<pat::Jet> tempJetsNoEle = miniAODhelper.RemoveOverlaps(selectedElectrons_loose, tempJetsNoMu);
   std::vector<pat::Jet> correctedTempJets_noSys = miniAODhelper.GetCorrectedJets(tempJetsNoEle, iEvent, iSetup);
-  std::vector<pat::Jet> selectedTempJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedTempJets_noSys, 20., 2.4, jetID::jetLoose, '-' );
+  std::vector<pat::Jet> selectedTempJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedTempJets_noSys, 20., 2.4, jetID::none, '-' );
 
 
 
@@ -848,8 +864,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     int trkCharge = -99;
     if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
 
-    int isTight = ( miniAODhelper.isGoodMuon(*iMu, minTightLeptonPt, muonID::muonTight, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
-    int isLoose = ( miniAODhelper.isGoodMuon(*iMu, looseLeptonPt, muonID::muonLoose, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
+    int isTight = ( miniAODhelper.isGoodMuon(*iMu, minTightLeptonPt, 2.1, muonID::muonTight, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
+    int isLoose = ( miniAODhelper.isGoodMuon(*iMu, looseLeptonPt, 2.4, muonID::muonLoose, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
 
     int isPhys14L = false;
     int isPhys14M = false;
@@ -961,12 +977,12 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     int trkCharge = -99;
     if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
 
-    int isTight = ( miniAODhelper.isGoodElectron(*iEle, minTightLeptonPt, electronID::electronTight) ) ? 1 : 0;
-    int isLoose = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, electronID::electronLoose) ) ? 1 : 0;
+    int isTight = ( miniAODhelper.isGoodElectron(*iEle, minTightLeptonPt, 2.1, electronID::electronTight) ) ? 1 : 0;
+    int isLoose = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, 2.4, electronID::electronLoose) ) ? 1 : 0;
 
-    int isPhys14L = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, electronID::electronPhys14L) ) ? 1 : 0;
-    int isPhys14M = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, electronID::electronPhys14M) ) ? 1 : 0;
-    int isPhys14T = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, electronID::electronPhys14T) ) ? 1 : 0;
+    int isPhys14L = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, 2.4, electronID::electronPhys14L) ) ? 1 : 0;
+    int isPhys14M = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, 2.4, electronID::electronPhys14M) ) ? 1 : 0;
+    int isPhys14T = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, 2.4, electronID::electronPhys14T) ) ? 1 : 0;
 
 
     double mvaTrigValue = myMVATrig->mvaValue(*iEle,false);
@@ -1446,11 +1462,11 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     ////////
 
     std::vector<pat::Jet> correctedJets = ( !(iSys>=5 && iSys<=8) ) ? correctedJets_noSys : miniAODhelper.GetCorrectedJets(jetsNoEle, iEvent, iSetup, iSysType);
-    std::vector<pat::Jet> selectedJets_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_noSys_unsorted : miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::jetLoose, '-' );
+    std::vector<pat::Jet> selectedJets_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_noSys_unsorted : miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::none, '-' );
 
 
     // Get CSVM tagged jet collection
-    std::vector<pat::Jet> selectedJets_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, 'M' );
+    std::vector<pat::Jet> selectedJets_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::none, 'M' );
 
     // Get nontagged jet collection
     std::vector<pat::Jet> selectedJets_untag_unsorted = selectedJets_tag_unsorted;//miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, 'M' ); 
@@ -1639,10 +1655,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 
     // Add loose jet container
-    std::vector<pat::Jet> selectedJets_loose_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::jetLoose, '-' );
+    std::vector<pat::Jet> selectedJets_loose_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::none, '-' );
     std::vector<pat::Jet> selectedJets_loose = miniAODhelper.GetSortedByPt( selectedJets_loose_unsorted );
 
-    std::vector<pat::Jet> selectedJets_loose_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::jetLoose, 'M' );
+    std::vector<pat::Jet> selectedJets_loose_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::none, 'M' );
 
     vvdouble vvjets_loose;
     std::vector<double> csvV_loose;
@@ -2051,6 +2067,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if( csvV_temp.size()>1 ) eve->second_highest_btag_[iSys] = csvV_temp[1];
     if( csvV_temp.size()>2 ) eve->third_highest_btag_[iSys]  = csvV_temp[2];
     if( csvV_temp.size()>3 ) eve->fourth_highest_btag_[iSys] = csvV_temp[3];
+    if( csvV_temp.size()>4 ) eve->fifth_highest_CSV_[iSys]   = csvV_temp[4];
+    if( csvV_temp.size()>5 ) eve->sixth_highest_CSV_[iSys]   = csvV_temp[5];
     eve->lowest_btag_[iSys]             = min_btag;
 
 
@@ -2062,6 +2080,15 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     eve->maxeta_jet_jet_[iSys] = bdtVARS.get_jet_jet_etamax(vvjets);
     eve->maxeta_jet_tag_[iSys] = bdtVARS.get_jet_tag_etamax(vvjets,csvV);
     eve->maxeta_tag_tag_[iSys] = bdtVARS.get_tag_tag_etamax(vvjets,csvV);
+    
+    //eve->maxdeta_JetAvgJet_[iSys] = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Jet","Jet");
+    //eve->maxdeta_TagAvgJet_[iSys] = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Tag","Jet");
+    //eve->maxdeta_TagAvgTag_[iSys] = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Tag","Tag");
+    //eve->maxdeta_JetAvgTag_[iSys] = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Jet","Tag");
+    
+    double poop = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Jet","Jet");
+    cout<<poop;
+    
     
     eve->median_bb_mass_[iSys]  = bdtVARS.get_median_bb_mass(vvjets,csvV);
     eve->pt_all_jets_over_E_all_jets_[iSys]  = bdtVARS.pt_E_ratio_jets(vvjets);

@@ -82,6 +82,13 @@ struct yggdrasilEventVars{
 
   int     numTruePV_;
   int     numGenPV_;
+  
+  bool    GoodFirstPV_;
+  
+  int numTightMuons_;
+  int numTightElectrons_;
+  int numLooseMuons_;
+  int numLooseElectrons_;
 
   Int_t   numPVs_;
   Int_t   numSys_;
@@ -203,6 +210,11 @@ struct yggdrasilEventVars{
   Float_t second_highest_btag_[rNumSys];
   Float_t third_highest_btag_[rNumSys];
   Float_t fourth_highest_btag_[rNumSys];
+  Float_t fifth_highest_CSV_[rNumSys];
+  Float_t sixth_highest_CSV_[rNumSys];
+
+  
+  
   Float_t invariant_mass_of_everything_[rNumSys];
 
   double HT_[rNumSys];
@@ -275,7 +287,12 @@ struct yggdrasilEventVars{
   // additional BDTvars
   double maxeta_jet_jet_[rNumSys];  
   double maxeta_jet_tag_[rNumSys];  
-  double maxeta_tag_tag_[rNumSys]; 	
+  double maxeta_tag_tag_[rNumSys]; 
+  
+  double maxdeta_JetAvgJet_[rNumSys];
+  double maxdeta_TagAvgJet_[rNumSys];
+  double maxdeta_TagAvgTag_[rNumSys];
+  double maxdeta_JetAvgTag_[rNumSys];	
   
   double dEta_leptop_bb_[rNumSys];
   double dEta_hadtop_bb_[rNumSys];
@@ -347,6 +364,13 @@ void yggdrasilEventVars::initialize(){
 
   numTruePV_ = -99;
   numGenPV_ = -99;
+  
+  GoodFirstPV_ = false;
+  
+  numTightMuons_=-99;
+  numTightElectrons_=-99;
+  numLooseMuons_=-99;
+  numLooseElectrons_=-99;
 
   numPVs_ = -99;
   numSys_ = -99;
@@ -473,6 +497,11 @@ void yggdrasilEventVars::initialize(){
     second_highest_btag_[iSys]            = -99.9;
     third_highest_btag_[iSys]             = -99.9;
     fourth_highest_btag_[iSys]            = -99.9;
+    fifth_highest_CSV_[iSys]              = -99.9;
+    sixth_highest_CSV_[iSys]              = -99.9;
+    
+    
+    
     invariant_mass_of_everything_[iSys]   = -99.9;
 
     HT_[iSys]       = -99.9;
@@ -536,7 +565,12 @@ void yggdrasilEventVars::initialize(){
 
     maxeta_jet_jet_[iSys] = -99;  
     maxeta_jet_tag_[iSys] = -99;  
-    maxeta_tag_tag_[iSys] = -99; 	
+    maxeta_tag_tag_[iSys] = -99; 
+    
+    maxdeta_JetAvgJet_[iSys] = -99;
+    maxdeta_TagAvgJet_[iSys] = -99;
+    maxdeta_TagAvgTag_[iSys] = -99;
+    maxdeta_JetAvgTag_[iSys] = -99;	
     
     dEta_leptop_bb_[iSys] = -99;
     dEta_hadtop_bb_[iSys] = -99;
