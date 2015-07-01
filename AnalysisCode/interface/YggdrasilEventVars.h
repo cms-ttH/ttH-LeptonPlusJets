@@ -331,6 +331,8 @@ void yggdrasilEventVars::initialize(){
   leptonType_          = 0;
   higgsDecayType_      = -1;
 
+  PassLJ_ = 0;
+  PassDIL_ = 0;
 
   OneMuon_ = -99;
   OneElectron_ = -99;
@@ -342,7 +344,8 @@ void yggdrasilEventVars::initialize(){
   oppositeLepCharge_ = -99;
 
   PassZmask_ = -99;
-
+  PassZmaskMET_ = -99;
+  
   matchSingleMuTrigger_       = 0;
   matchSingleElectronTrigger_ = 0;
 
@@ -452,6 +455,7 @@ void yggdrasilEventVars::initialize(){
     wgt_csvSF_[iSys] = -99.9;  
     wgt_csvSF_LF_[iSys] = -99.9;  
     wgt_csvSF_HF_[iSys] = -99.9;   
+    wgt_csvSF_CF_[iSys] = -99.9;   
 
     ttbb_algo_result_[iSys] = -99;  
     ttcc_algo_result_[iSys] = -99;  

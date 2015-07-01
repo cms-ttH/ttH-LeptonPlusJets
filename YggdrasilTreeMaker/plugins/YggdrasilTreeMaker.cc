@@ -99,6 +99,13 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
       // ----------member data ---------------------------
 
   //--------tt+X categorization
+  const edm::EDGetTokenT<int> genTtbarIdToken_;
+  // Histogram for ttbar event categorization ID including information about b jets from top in acceptance
+  TH1* h_ttbarId_;
+        
+  // Histogram for ttbar event categorization ID based on additional jets only
+  TH1* h_ttbarAdditionalJetId_;
+
   // Jets configuration
   const double genJetPtMin_;
   const double genJetAbsEtaMax_;
@@ -217,6 +224,7 @@ typedef std::vector< TLorentzVector >          vecTLorentzVector;
 // constructors and destructor
 //
 YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
+  genTtbarIdToken_(consumes<int>(iConfig.getParameter<edm::InputTag>("genTtbarId"))),
 //---tt+X Categorization
     genJetPtMin_(iConfig.getParameter<double>("genJetPtMin")),
     genJetAbsEtaMax_(iConfig.getParameter<double>("genJetAbsEtaMax")),
@@ -450,6 +458,16 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   ////----------------------
   ////---- tt+X Categorization
   ////----------------------
+  edm::Handle<int> genTtbarId;
+  iEvent.getByToken(genTtbarIdToken_, genTtbarId);
+  // eve->additionalJetEventId_ = *genTtbarId%100;
+
+  // Fill ID including information about b jets from top in acceptance
+  h_ttbarId_->Fill(*genTtbarId);
+    
+  // Fill ID based only on additional b/c jets
+  h_ttbarAdditionalJetId_->Fill(*genTtbarId%100);
+
     // Reading gen jets from the event
     edm::Handle<reco::GenJetCollection> genJets;
     iEvent.getByToken(genJetsToken_, genJets);
@@ -513,7 +531,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   if( verbose_ ) printf("\t BeamSpot: x = %.2f,\t y = %.2f,\t z = %.2f \n", BSx, BSy, BSz );
 
   int numpv=0;
-  int vn=0;
+  bool firstGoodPV = false;
   reco::Vertex vertex;
   if( vtxHandle.isValid() ){
     for( reco::VertexCollection::const_iterator vtx = vtxs.begin(); vtx!=vtxs.end(); ++vtx ){
@@ -523,16 +541,23 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 		      (abs(vtx->position().Rho()) <= 2.0) 
 		      );
 		      
-		      if(isGood && vn==0)eve->GoodFirstPV_=true;
-		      vn++;
-
       if( !isGood ) continue;
 
-      if( numpv==0 ) vertex = (*vtx);
+      if( numpv==0 ){
+	firstGoodPV = true;
+	vertex = (*vtx);
+      }
 
       numpv++;
     }
   }
+
+  eve->GoodFirstPV_=firstGoodPV;
+
+  // if( !firstGoodPV ){
+  //   std::cout << "ERROR!! First PV does not pass requirements! Skipping event" << std::endl;
+  //   return;
+  // }
 
   if( numpv>0 ) miniAODhelper.SetVertex(vertex);
 
@@ -2086,8 +2111,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     //eve->maxdeta_TagAvgTag_[iSys] = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Tag","Tag");
     //eve->maxdeta_JetAvgTag_[iSys] = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Jet","Tag");
     
-    double poop = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Jet","Jet");
-    cout<<poop;
+    // double poop = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Jet","Jet");
+    // cout<<poop;
     
     
     eve->median_bb_mass_[iSys]  = bdtVARS.get_median_bb_mass(vvjets,csvV);
@@ -2229,6 +2254,11 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 void 
 YggdrasilTreeMaker::beginJob()
 {
+  edm::Service<TFileService> fileService;
+  if(!fileService) throw edm::Exception(edm::errors::Configuration, "TFileService is not registered in cfg file");
+    
+  h_ttbarId_ = fileService->make<TH1F>("ttbarId", "ttbarId", 260, 0, 260);
+  h_ttbarAdditionalJetId_ = fileService->make<TH1F>("ttbarAdditionalJetId", "ttbarAdditionalJetId", 60, 0, 60);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

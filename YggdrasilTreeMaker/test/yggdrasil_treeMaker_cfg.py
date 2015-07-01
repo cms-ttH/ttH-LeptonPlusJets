@@ -13,7 +13,7 @@ process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.options.allowUnscheduled = cms.untracked.bool(True)
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(1000)
+    input = cms.untracked.int32(-1)
     )
 
 from JetMETCorrections.Configuration.JetCorrectionServices_cff import *
@@ -100,8 +100,17 @@ process.matchGenCHadron = matchGenCHadron.clone(
     genParticles = genParticleCollection
 )
 
+## Producer for ttbar categorisation ID
+# MUST use same genJetCollection as used for tools above
+from PhysicsTools.JetMCAlgos.GenTtbarCategorizer_cfi import categorizeGenTtbar
+process.categorizeGenTtbar = categorizeGenTtbar.clone(
+    genJetPtMin = 20.,
+    genJetAbsEtaMax = 2.4,
+    genJets = genJetCollection,
+)
 
 process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
+    genTtbarId = cms.InputTag("categorizeGenTtbar", "genTtbarId"),
     # phase space of jets to be stored
     genJetPtMin = cms.double(20),
     genJetAbsEtaMax = cms.double(2.4),
