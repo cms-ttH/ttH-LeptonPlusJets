@@ -20,7 +20,15 @@ git clone https://github.com/cms-ttH/ttH-LeptonPlusJets.git
  
 git clone https://github.com/cms-ttH/BoostedTTH.git
 
-git checkout tags/CMSSW_7_5_X_2015-02-25-1400 PhysicsTools/JetMCAlgos
+git cms-addpkg PhysicsTools/JetMCAlgos
+
+cp /afs/cern.ch/user/l/lwming/public/74X/BoostedAnalyzer.cc BoostedTTH/BoostedAnalyzer/plugins/BoostedAnalyzer.cc
+
+cp /afs/cern.ch/user/l/lwming/public/74X/GenHFHadronMatcher.cc /PhysicsTools/JetMCAlgos/plugins/GenHFHadronMatcher.cc
+
+cp /afs/cern.ch/user/l/lwming/public/74X/GenTtbarCategorizer.cc /PhysicsTools/JetMCAlgos/plugins/GenTtbarCategorizer.cc
+
+cp /afs/cern.ch/user/l/lwming/public/74X/GenTtbarCategorizer_cfi.py /PhysicsTools/JetMCAlgos/python/GenTtbarCategorizer_cfi.py
 
 git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
 
