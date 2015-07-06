@@ -2111,8 +2111,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     //eve->maxdeta_TagAvgTag_[iSys] = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Tag","Tag");
     //eve->maxdeta_JetAvgTag_[iSys] = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Jet","Tag");
     
-    // double poop = bdtVARS.JetDelta_EtaAvgEta(vvjets,csvV,"Jet","Jet");
-    // cout<<poop;
+
     
     
     eve->median_bb_mass_[iSys]  = bdtVARS.get_median_bb_mass(vvjets,csvV);
