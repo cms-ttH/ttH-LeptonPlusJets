@@ -1895,10 +1895,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       jet0p4.SetPxPyPzE(iJet->px(),iJet->py(),iJet->pz(),iJet->energy());
 
       // Min dR(lep, tag), M(lep, tag)
-      double dR_lep_tag = jet0p4.DeltaR(sum_lepton_vect);
+      double dR_lep_tag = jet0p4.DeltaR(leptonV);
       if( dR_lep_tag<min_dR_tag_lep ){
 	min_dR_tag_lep = dR_lep_tag;
-	TLorentzVector sum_lep_b = sum_lepton_vect + jet0p4;//leptonV + jet0p4;
+	TLorentzVector sum_lep_b = leptonV + jet0p4;//leptonV + jet0p4;
 	mlb_temp = sum_lep_b.M();
       }
 
@@ -2003,7 +2003,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
    
     // Sum 4Vectors of all objects in event
-    TLorentzVector all_objects = sum_lepton_vect + metV;//leptonV + metV;
+   // TLorentzVector all_objects = sum_lepton_vect + metV;//leptonV + metV;
+	TLorentzVector all_objects = leptonV + metV;
 	
     for( int j=0; j<int(jetV.size()); j++ ) all_objects += jetV[j];
 	  
