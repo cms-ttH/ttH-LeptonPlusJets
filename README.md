@@ -43,7 +43,16 @@ cp /afs/cern.ch/user/l/lwming/public/74X/GenTtbarCategorizer_cfi.py PhysicsTools
 
 git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
 
-git clone https://github.com/cms-ttH/ttH-Limits.git ttH/Limits
+### for 74X only
 
+cd HiggsAnalysis/CombinedLimit
+
+git fetch origin
+
+git checkout v6.0.0
+
+cd -
+
+git clone https://github.com/cms-ttH/ttH-Limits.git ttH/Limits
 
 scram b -j 32
