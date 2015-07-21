@@ -138,7 +138,7 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   edm::EDGetTokenT <pat::JetCollection> jetToken;
   edm::EDGetTokenT <pat::METCollection> metToken;
 
-  edm::EDGetTokenT< boosted::HEPTopJetCollection > topJetsToken;
+  edm::EDGetTokenT< boosted::HTTTopJetCollection > topJetsToken;
   edm::EDGetTokenT< boosted::SubFilterJetCollection > subFilterJetsToken;
 
   edm::EDGetTokenT <pat::PackedCandidateCollection> packedpfToken;
@@ -258,7 +258,7 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
   metToken = consumes <pat::METCollection> (edm::InputTag(std::string("slimmedMETs")));
 
-  topJetsToken    = consumes< boosted::HEPTopJetCollection >(edm::InputTag("HEPTopJetsPFMatcher","heptopjets","p"));
+  topJetsToken    = consumes< boosted::HTTTopJetCollection >(edm::InputTag("HTTTopJetsPFMatcher","htttopjets","p"));
   subFilterJetsToken = consumes< boosted::SubFilterJetCollection >(edm::InputTag("CA12JetsCA3FilterjetsPFMatcher","subfilterjets","p"));
 
   packedpfToken = consumes <pat::PackedCandidateCollection> (edm::InputTag(std::string("packedPFCandidates")));
@@ -406,8 +406,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   edm::Handle<std::vector< PileupSummaryInfo > > PupInfo;
   iEvent.getByToken(puInfoToken,PupInfo);
 
-  edm::Handle<boosted::HEPTopJetCollection> h_heptopjet;
-  iEvent.getByToken( topJetsToken,h_heptopjet);
+  edm::Handle<boosted::HTTTopJetCollection> h_htttopjet;
+  iEvent.getByToken( topJetsToken,h_htttopjet);
 
   edm::Handle<boosted::SubFilterJetCollection> h_subfilterjet;
   iEvent.getByToken( subFilterJetsToken,h_subfilterjet );
@@ -1270,11 +1270,11 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   std::vector<bool> isTopTag;
 
-  if( h_heptopjet.isValid() ){
-    boosted::HEPTopJetCollection const &heptopjets_unsorted = *h_heptopjet;
-    boosted::HEPTopJetCollection heptopjets = BoostedUtils::GetSortedByPt(heptopjets_unsorted);
+  if( h_htttopjet.isValid() ){
+    boosted::HTTTopJetCollection const &htttopjets_unsorted = *h_htttopjet;
+    boosted::HTTTopJetCollection htttopjets = BoostedUtils::GetSortedByPt(htttopjets_unsorted);
 
-    for( boosted::HEPTopJetCollection::iterator topJet = heptopjets.begin() ; topJet != heptopjets.end(); ++topJet ){
+    for( boosted::HTTTopJetCollection::iterator topJet = htttopjets.begin() ; topJet != htttopjets.end(); ++topJet ){
 
       bool toptag = BoostedUtils::GetTopTag(*topJet);
       isTopTag.push_back(toptag);
