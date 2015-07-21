@@ -69,7 +69,7 @@
 
 #include "ttH-LeptonPlusJets/AnalysisCode/interface/YggdrasilEventVars.h"
 
-#include "EgammaAnalysis/ElectronTools/interface/EGammaMvaEleEstimatorCSA14.h"
+// #include "EgammaAnalysis/ElectronTools/interface/EGammaMvaEleEstimatorCSA14.h"
 
 #include "MiniAOD/MiniAODHelper/interface/BDTvars.h"
 
@@ -138,8 +138,8 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   edm::EDGetTokenT <pat::JetCollection> jetToken;
   edm::EDGetTokenT <pat::METCollection> metToken;
 
-  edm::EDGetTokenT< boosted::HEPTopJetCollection > topJetsToken;
-  edm::EDGetTokenT< boosted::SubFilterJetCollection > subFilterJetsToken;
+  // edm::EDGetTokenT< boosted::HEPTopJetCollection > topJetsToken;
+  // edm::EDGetTokenT< boosted::SubFilterJetCollection > subFilterJetsToken;
 
   edm::EDGetTokenT <pat::PackedCandidateCollection> packedpfToken;
 
@@ -197,7 +197,7 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   TTree *worldTree;
   yggdrasilEventVars *eve; 
 
-  EGammaMvaEleEstimatorCSA14* myMVATrig;
+  // EGammaMvaEleEstimatorCSA14* myMVATrig;
  
   MiniAODHelper miniAODhelper;
 
@@ -258,8 +258,8 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
   metToken = consumes <pat::METCollection> (edm::InputTag(std::string("slimmedMETs")));
 
-  topJetsToken    = consumes< boosted::HEPTopJetCollection >(edm::InputTag("HEPTopJetsPFMatcher","heptopjets","p"));
-  subFilterJetsToken = consumes< boosted::SubFilterJetCollection >(edm::InputTag("CA12JetsCA3FilterjetsPFMatcher","subfilterjets","p"));
+  // topJetsToken    = consumes< boosted::HEPTopJetCollection >(edm::InputTag("HEPTopJetsPFMatcher","heptopjets","p"));
+  // subFilterJetsToken = consumes< boosted::SubFilterJetCollection >(edm::InputTag("CA12JetsCA3FilterjetsPFMatcher","subfilterjets","p"));
 
   packedpfToken = consumes <pat::PackedCandidateCollection> (edm::InputTag(std::string("packedPFCandidates")));
 
@@ -334,11 +334,11 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
     myManualCatWeigthsTrig.push_back(the_path);
   }
     
-  myMVATrig = new EGammaMvaEleEstimatorCSA14();
-  myMVATrig->initialize("BDT",
-			EGammaMvaEleEstimatorCSA14::kTrig,
-			true,
-			myManualCatWeigthsTrig);
+  // myMVATrig = new EGammaMvaEleEstimatorCSA14();
+  // myMVATrig->initialize("BDT",
+  // 			EGammaMvaEleEstimatorCSA14::kTrig,
+  // 			true,
+  // 			myManualCatWeigthsTrig);
 }
 
 
@@ -406,11 +406,11 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   edm::Handle<std::vector< PileupSummaryInfo > > PupInfo;
   iEvent.getByToken(puInfoToken,PupInfo);
 
-  edm::Handle<boosted::HEPTopJetCollection> h_heptopjet;
-  iEvent.getByToken( topJetsToken,h_heptopjet);
+  // edm::Handle<boosted::HEPTopJetCollection> h_heptopjet;
+  // iEvent.getByToken( topJetsToken,h_heptopjet);
 
-  edm::Handle<boosted::SubFilterJetCollection> h_subfilterjet;
-  iEvent.getByToken( subFilterJetsToken,h_subfilterjet );
+  // edm::Handle<boosted::SubFilterJetCollection> h_subfilterjet;
+  // iEvent.getByToken( subFilterJetsToken,h_subfilterjet );
 
   edm::Handle<GenEventInfoProduct> GenEventInfoHandle;
   iEvent.getByToken(genInfoProductToken,GenEventInfoHandle);
@@ -1010,7 +1010,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     int isPhys14T = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, 2.4, electronID::electronPhys14T) ) ? 1 : 0;
 
 
-    double mvaTrigValue = myMVATrig->mvaValue(*iEle,false);
+    double mvaTrigValue = -99;//myMVATrig->mvaValue(*iEle,false);
 
     bool inCrack = false;
     double scEta = -99;
@@ -1261,151 +1261,151 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   ///// Boosted jet information
   ///////////
 
-  ///// HEP top tagged jet
-  int numTopTags = 0;
-  vvdouble vvjets_topfatJet;
-  vvdouble vvjets_nonW;
-  vvdouble vvjets_W1;
-  vvdouble vvjets_W2;
+  // ///// HEP top tagged jet
+  // int numTopTags = 0;
+  // vvdouble vvjets_topfatJet;
+  // vvdouble vvjets_nonW;
+  // vvdouble vvjets_W1;
+  // vvdouble vvjets_W2;
 
-  std::vector<bool> isTopTag;
+  // std::vector<bool> isTopTag;
 
-  if( h_heptopjet.isValid() ){
-    boosted::HEPTopJetCollection const &heptopjets_unsorted = *h_heptopjet;
-    boosted::HEPTopJetCollection heptopjets = BoostedUtils::GetSortedByPt(heptopjets_unsorted);
+  // if( h_heptopjet.isValid() ){
+  //   boosted::HEPTopJetCollection const &heptopjets_unsorted = *h_heptopjet;
+  //   boosted::HEPTopJetCollection heptopjets = BoostedUtils::GetSortedByPt(heptopjets_unsorted);
 
-    for( boosted::HEPTopJetCollection::iterator topJet = heptopjets.begin() ; topJet != heptopjets.end(); ++topJet ){
+  //   for( boosted::HEPTopJetCollection::iterator topJet = heptopjets.begin() ; topJet != heptopjets.end(); ++topJet ){
 
-      bool toptag = BoostedUtils::GetTopTag(*topJet);
-      isTopTag.push_back(toptag);
+  //     bool toptag = BoostedUtils::GetTopTag(*topJet);
+  //     isTopTag.push_back(toptag);
 
-      pat::Jet ifatJet = topJet->fatjet;
-      vdouble vjets_fatJet;
-      vjets_fatJet.push_back(ifatJet.px());
-      vjets_fatJet.push_back(ifatJet.py());
-      vjets_fatJet.push_back(ifatJet.pz());
-      vjets_fatJet.push_back(ifatJet.energy());
-      vvjets_topfatJet.push_back(vjets_fatJet);
+  //     pat::Jet ifatJet = topJet->fatjet;
+  //     vdouble vjets_fatJet;
+  //     vjets_fatJet.push_back(ifatJet.px());
+  //     vjets_fatJet.push_back(ifatJet.py());
+  //     vjets_fatJet.push_back(ifatJet.pz());
+  //     vjets_fatJet.push_back(ifatJet.energy());
+  //     vvjets_topfatJet.push_back(vjets_fatJet);
 
-      pat::Jet inonW = topJet->nonW;
-      vdouble vjets_nonW;
-      vjets_nonW.push_back(inonW.px());
-      vjets_nonW.push_back(inonW.py());
-      vjets_nonW.push_back(inonW.pz());
-      vjets_nonW.push_back(inonW.energy());
-      vvjets_nonW.push_back(vjets_nonW);
+  //     pat::Jet inonW = topJet->nonW;
+  //     vdouble vjets_nonW;
+  //     vjets_nonW.push_back(inonW.px());
+  //     vjets_nonW.push_back(inonW.py());
+  //     vjets_nonW.push_back(inonW.pz());
+  //     vjets_nonW.push_back(inonW.energy());
+  //     vvjets_nonW.push_back(vjets_nonW);
 
-      pat::Jet iW1 = topJet->W1;
-      vdouble vjets_W1;
-      vjets_W1.push_back(iW1.px());
-      vjets_W1.push_back(iW1.py());
-      vjets_W1.push_back(iW1.pz());
-      vjets_W1.push_back(iW1.energy());
-      vvjets_W1.push_back(vjets_W1);
+  //     pat::Jet iW1 = topJet->W1;
+  //     vdouble vjets_W1;
+  //     vjets_W1.push_back(iW1.px());
+  //     vjets_W1.push_back(iW1.py());
+  //     vjets_W1.push_back(iW1.pz());
+  //     vjets_W1.push_back(iW1.energy());
+  //     vvjets_W1.push_back(vjets_W1);
 
-      pat::Jet iW2 = topJet->W2;
-      vdouble vjets_W2;
-      vjets_W2.push_back(iW2.px());
-      vjets_W2.push_back(iW2.py());
-      vjets_W2.push_back(iW2.pz());
-      vjets_W2.push_back(iW2.energy());
-      vvjets_W2.push_back(vjets_W2);
+  //     pat::Jet iW2 = topJet->W2;
+  //     vdouble vjets_W2;
+  //     vjets_W2.push_back(iW2.px());
+  //     vjets_W2.push_back(iW2.py());
+  //     vjets_W2.push_back(iW2.pz());
+  //     vjets_W2.push_back(iW2.energy());
+  //     vvjets_W2.push_back(vjets_W2);
 
-      // pt and eta requirements on top jet
-      if( !(topJet->fatjet.pt() > 250. && abs(topJet->fatjet.eta()) < 1.8) ) continue;
+  //     // pt and eta requirements on top jet
+  //     if( !(topJet->fatjet.pt() > 250. && abs(topJet->fatjet.eta()) < 1.8) ) continue;
 
-      // pt and eta requirements on subjets
-      if( !( (topJet->nonW.pt()>20 && abs(topJet->nonW.eta())<2.5 ) &&
-  	     (topJet->W1.pt()>20 && abs(topJet->W1.eta())<2.5 ) &&
-  	     (topJet->W2.pt()>20 && abs(topJet->W2.eta())<2.5 ) ) ) continue;
+  //     // pt and eta requirements on subjets
+  //     if( !( (topJet->nonW.pt()>20 && abs(topJet->nonW.eta())<2.5 ) &&
+  // 	     (topJet->W1.pt()>20 && abs(topJet->W1.eta())<2.5 ) &&
+  // 	     (topJet->W2.pt()>20 && abs(topJet->W2.eta())<2.5 ) ) ) continue;
 
-      // must be top-tagged
-      if( !toptag ) continue;
+  //     // must be top-tagged
+  //     if( !toptag ) continue;
 
-      numTopTags++;
-    }
+  //     numTopTags++;
+  //   }
 
-  }
+  // }
 
-  eve->topfatJet_vect_TLV_ = vvjets_topfatJet;
-  eve->nonW_vect_TLV_ = vvjets_nonW;
-  eve->W1_vect_TLV_ = vvjets_W1;
-  eve->W2_vect_TLV_ = vvjets_W2;
-  eve->numTopTags_ = numTopTags;
+  // eve->topfatJet_vect_TLV_ = vvjets_topfatJet;
+  // eve->nonW_vect_TLV_ = vvjets_nonW;
+  // eve->W1_vect_TLV_ = vvjets_W1;
+  // eve->W2_vect_TLV_ = vvjets_W2;
+  // eve->numTopTags_ = numTopTags;
 
-  ///// Higgs tagged jet
-  int numHiggsTags = 0;
-  vvdouble vvjets_higgsfatJet;
-  std::vector<vvdouble> vvjets_higgsfilterjet_all;
-  vvdouble csv_filterjet_all;
-  if( h_subfilterjet.isValid() ){
-    boosted::SubFilterJetCollection const &subfilterjets_unsorted = *h_subfilterjet;
-    boosted::SubFilterJetCollection subfilterjets = BoostedUtils::GetSortedByPt(subfilterjets_unsorted);
+  // ///// Higgs tagged jet
+  // int numHiggsTags = 0;
+  // vvdouble vvjets_higgsfatJet;
+  // std::vector<vvdouble> vvjets_higgsfilterjet_all;
+  // vvdouble csv_filterjet_all;
+  // if( h_subfilterjet.isValid() ){
+  //   boosted::SubFilterJetCollection const &subfilterjets_unsorted = *h_subfilterjet;
+  //   boosted::SubFilterJetCollection subfilterjets = BoostedUtils::GetSortedByPt(subfilterjets_unsorted);
 
-    for( boosted::SubFilterJetCollection::iterator higgsJet = subfilterjets.begin() ; higgsJet != subfilterjets.end(); ++higgsJet ){
+  //   for( boosted::SubFilterJetCollection::iterator higgsJet = subfilterjets.begin() ; higgsJet != subfilterjets.end(); ++higgsJet ){
 
-      pat::Jet ifatJet = higgsJet->fatjet;
-      vdouble vjets_fatJet;
-      vjets_fatJet.push_back(ifatJet.px());
-      vjets_fatJet.push_back(ifatJet.py());
-      vjets_fatJet.push_back(ifatJet.pz());
-      vjets_fatJet.push_back(ifatJet.energy());
-      vvjets_higgsfatJet.push_back(vjets_fatJet);
+  //     pat::Jet ifatJet = higgsJet->fatjet;
+  //     vdouble vjets_fatJet;
+  //     vjets_fatJet.push_back(ifatJet.px());
+  //     vjets_fatJet.push_back(ifatJet.py());
+  //     vjets_fatJet.push_back(ifatJet.pz());
+  //     vjets_fatJet.push_back(ifatJet.energy());
+  //     vvjets_higgsfatJet.push_back(vjets_fatJet);
 
-      vdouble csv_filterjet;
-      vvdouble vvjets_higgsfilterjet;
-      std::vector<pat::Jet> filterjets_tmp = higgsJet->filterjets;
-      int numFiltJets_tmp = filterjets_tmp.size();
-      for( int ijet=0; ijet<numFiltJets_tmp; ijet++ ){
-	pat::Jet ifilterjet = filterjets_tmp[ijet];
-	double csv_ifilterjet = ifilterjet.bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
+  //     vdouble csv_filterjet;
+  //     vvdouble vvjets_higgsfilterjet;
+  //     std::vector<pat::Jet> filterjets_tmp = higgsJet->filterjets;
+  //     int numFiltJets_tmp = filterjets_tmp.size();
+  //     for( int ijet=0; ijet<numFiltJets_tmp; ijet++ ){
+  // 	pat::Jet ifilterjet = filterjets_tmp[ijet];
+  // 	double csv_ifilterjet = ifilterjet.bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
 
-	vdouble vjets_filterjet;
-	vjets_filterjet.push_back(ifilterjet.px());
-	vjets_filterjet.push_back(ifilterjet.py());
-	vjets_filterjet.push_back(ifilterjet.pz());
-	vjets_filterjet.push_back(ifilterjet.energy());
-	vvjets_higgsfilterjet.push_back(vjets_filterjet);
+  // 	vdouble vjets_filterjet;
+  // 	vjets_filterjet.push_back(ifilterjet.px());
+  // 	vjets_filterjet.push_back(ifilterjet.py());
+  // 	vjets_filterjet.push_back(ifilterjet.pz());
+  // 	vjets_filterjet.push_back(ifilterjet.energy());
+  // 	vvjets_higgsfilterjet.push_back(vjets_filterjet);
 	
-	csv_filterjet.push_back(csv_ifilterjet);
+  // 	csv_filterjet.push_back(csv_ifilterjet);
 
-      }
+  //     }
 
-      vvjets_higgsfilterjet_all.push_back(vvjets_higgsfilterjet);
-      csv_filterjet_all.push_back(csv_filterjet);
+  //     vvjets_higgsfilterjet_all.push_back(vvjets_higgsfilterjet);
+  //     csv_filterjet_all.push_back(csv_filterjet);
 
-      // pt and eta requirements on top jet
-      if( !(higgsJet->fatjet.pt() > 250. && abs(higgsJet->fatjet.eta()) < 1.8) ) continue;
+  //     // pt and eta requirements on top jet
+  //     if( !(higgsJet->fatjet.pt() > 250. && abs(higgsJet->fatjet.eta()) < 1.8) ) continue;
 
-      int numBtagFiltJets=0;
-      std::vector<pat::Jet> filterjets = higgsJet->filterjets;
-      int numFiltJets = filterjets.size();
-      for( int ijet=0; ijet<numFiltJets; ijet++ ){
-  	if( verbose_ ){
-  	  printf("\t\t filt jet %2d:\t pT = %.1f,\t eta = %.2f,\t phi = %.2f,\t CSVv2 = %+5.3f,\t CSVv1 = %+5.3f \n",
-  		 ijet, filterjets[ijet].pt(), filterjets[ijet].eta(), filterjets[ijet].phi(), 
-  		 filterjets[ijet].bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags"),
-  		 filterjets[ijet].bDiscriminator("combinedSecondaryVertexBJetTags"));
-  	}
+  //     int numBtagFiltJets=0;
+  //     std::vector<pat::Jet> filterjets = higgsJet->filterjets;
+  //     int numFiltJets = filterjets.size();
+  //     for( int ijet=0; ijet<numFiltJets; ijet++ ){
+  // 	if( verbose_ ){
+  // 	  printf("\t\t filt jet %2d:\t pT = %.1f,\t eta = %.2f,\t phi = %.2f,\t CSVv2 = %+5.3f,\t CSVv1 = %+5.3f \n",
+  // 		 ijet, filterjets[ijet].pt(), filterjets[ijet].eta(), filterjets[ijet].phi(), 
+  // 		 filterjets[ijet].bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags"),
+  // 		 filterjets[ijet].bDiscriminator("combinedSecondaryVertexBJetTags"));
+  // 	}
 
-  	if( !(filterjets[ijet].pt()>20. && abs(filterjets[ijet].eta()) < 2.5) ) continue;
-  	if( !(filterjets[ijet].bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") > 0.814) ) continue;
-  	numBtagFiltJets++;
-      }
+  // 	if( !(filterjets[ijet].pt()>20. && abs(filterjets[ijet].eta()) < 2.5) ) continue;
+  // 	if( !(filterjets[ijet].bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") > 0.814) ) continue;
+  // 	numBtagFiltJets++;
+  //     }
 
-      if( verbose_ ){
-  	printf("\t Higgs jet %2d:\t pT = %.1f,\t eta = %.2f,\t phi = %.2f,\t numFiltJets = %2d,\t numBtagFiltJets = %2d\n",
-  	       int(higgsJet - subfilterjets.begin()), higgsJet->fatjet.pt(), higgsJet->fatjet.eta(), higgsJet->fatjet.phi(), numFiltJets, numBtagFiltJets );
-      }
+  //     if( verbose_ ){
+  // 	printf("\t Higgs jet %2d:\t pT = %.1f,\t eta = %.2f,\t phi = %.2f,\t numFiltJets = %2d,\t numBtagFiltJets = %2d\n",
+  // 	       int(higgsJet - subfilterjets.begin()), higgsJet->fatjet.pt(), higgsJet->fatjet.eta(), higgsJet->fatjet.phi(), numFiltJets, numBtagFiltJets );
+  //     }
 
-      if( numBtagFiltJets>=2 ) numHiggsTags++;
-    }
-  }
+  //     if( numBtagFiltJets>=2 ) numHiggsTags++;
+  //   }
+  // }
 
-  eve->numHiggsTags_ = numHiggsTags;
-  eve->higgsfatJet_vect_TLV_ = vvjets_higgsfatJet;
-  eve->higgsfilterjet_all_vect_TLV_ = vvjets_higgsfilterjet_all;
-  eve->csv_filterjet_all_ = csv_filterjet_all;
+  // eve->numHiggsTags_ = numHiggsTags;
+  // eve->higgsfatJet_vect_TLV_ = vvjets_higgsfatJet;
+  // eve->higgsfilterjet_all_vect_TLV_ = vvjets_higgsfilterjet_all;
+  // eve->csv_filterjet_all_ = csv_filterjet_all;
 
   //-----------
 
