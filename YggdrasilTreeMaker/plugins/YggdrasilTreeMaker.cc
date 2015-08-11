@@ -64,8 +64,8 @@
 
 #include "MiniAOD/MiniAODHelper/interface/MiniAODHelper.h"
 #include "BoostedTTH/BoostedAnalyzer/interface/BoostedUtils.hpp"
-#include "BoostedTTH/BoostedObjects/interface/SubFilterJet.h"
-#include "BoostedTTH/BoostedObjects/interface/HTTTopJet.h"
+#include "MiniAOD/BoostedObjects/interface/SubFilterJet.h"
+#include "MiniAOD/BoostedObjects/interface/HTTTopJet.h"
 
 #include "ttH-LeptonPlusJets/AnalysisCode/interface/YggdrasilEventVars.h"
 

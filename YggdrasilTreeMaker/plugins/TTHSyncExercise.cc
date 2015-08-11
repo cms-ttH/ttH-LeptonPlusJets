@@ -84,11 +84,12 @@
 #include "JetMETCorrections/Objects/interface/JetCorrector.h"
 
 #include "BoostedTTH/BoostedAnalyzer/interface/BoostedUtils.hpp"
-#include "BoostedTTH/BoostedObjects/interface/SubFilterJet.h"
-#include "BoostedTTH/BoostedObjects/interface/HTTTopJet.h"
+#include "MiniAOD/BoostedObjects/interface/SubFilterJet.h"
+#include "MiniAOD/BoostedObjects/interface/HTTTopJet.h"
 
 #include "MiniAOD/MiniAODHelper/interface/MiniAODHelper.h"
-
+#include "MiniAOD/MiniAODHelper/interface/TopTagger.h"
+#include "MiniAOD/MiniAODHelper/interface/HiggsTagger.h"
 //
 // class declaration
 //
@@ -209,6 +210,7 @@ class TTHSyncExercise : public edm::EDAnalyzer {
   TH1D* h_muon_selection;
 
   MiniAODHelper miniAODhelper;
+  TopTagger toptagger = TopTagger(TopTag::Likelihood, TopTag::CSV, "toplikelihoodtaggerhistos.root");//
 
   // ofstream syncOutputFile;
 };
@@ -350,6 +352,7 @@ TTHSyncExercise::TTHSyncExercise(const edm::ParameterSet& iConfig):
   bool isData = !true;
 
   miniAODhelper.SetUp(era, insample_, iAnalysisType, isData);
+  // toptagger = TopTagger(TopTag::Likelihood, TopTag::CSV, "toplikelihoodtaggerhistos.root");
 
   // syncOutputFile.open("ttHSyncEx1_LJ.txt");
 }
@@ -841,26 +844,33 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   ///// Boosted jet information
 
   ///// HEP top tagged jet
+  // TopTagger toptagger = TopTagger(TopTag::Likelihood, TopTag::CSV, "toplikelihoodtaggerhistos.root");
   int numTopTags = 0;
+  vector<boosted::HTTTopJet> syncTopJets;
   if( h_htttopjet.isValid() ){
     boosted::HTTTopJetCollection const &htttopjets_unsorted = *h_htttopjet;
     boosted::HTTTopJetCollection htttopjets = BoostedUtils::GetSortedByPt(htttopjets_unsorted);
 
     for( boosted::HTTTopJetCollection::iterator topJet = htttopjets.begin() ; topJet != htttopjets.end(); ++topJet ){
       // pt and eta requirements on top jet
-      if( !(topJet->fatjet.pt() > 250. && abs(topJet->fatjet.eta()) < 1.8) ) continue;
+      if( !(topJet->fatjet.pt() > 200. && abs(topJet->fatjet.eta()) < 2) ) continue;
 
       // pt and eta requirements on subjets
-      if( !( (topJet->nonW.pt()>20 && abs(topJet->nonW.eta())<2.5 ) &&
-	     (topJet->W1.pt()>20 && abs(topJet->W1.eta())<2.5 ) &&
-	     (topJet->W2.pt()>20 && abs(topJet->W2.eta())<2.5 ) ) ) continue;
+      if( !( (topJet->nonW.pt()>20 && abs(topJet->nonW.eta())<2.4 ) &&
+	     (topJet->W1.pt()>20 && abs(topJet->W1.eta())<2.4 ) &&
+	     (topJet->W2.pt()>20 && abs(topJet->W2.eta())<2.4 ) ) ) continue;
 
-      bool toptag = BoostedUtils::GetTopTag(*topJet);
+      //////
+      if(toptagger.GetTopTaggerOutput(*topJet)>-1){
+	numTopTags++;
+	syncTopJets.push_back(*topJet);
+      }
 
-      // must be top-tagged
-      if( !toptag ) continue;
+      // bool toptag = BoostedUtils::GetTopTag(*topJet);
+      // // must be top-tagged
+      // if( !toptag ) continue;
+      // numTopTags++;
 
-      numTopTags++;
     }
 
   }
@@ -873,7 +883,17 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
     for( boosted::SubFilterJetCollection::iterator higgsJet = subfilterjets.begin() ; higgsJet != subfilterjets.end(); ++higgsJet ){
       // pt and eta requirements on top jet
-      if( !(higgsJet->fatjet.pt() > 250. && abs(higgsJet->fatjet.eta()) < 1.8) ) continue;
+      if( !(higgsJet->fatjet.pt() > 200. && abs(higgsJet->fatjet.eta()) < 2) ) continue;
+
+      //remove overlap with topjets
+      bool overlapping=false;
+      for(auto tj=syncTopJets.begin(); tj!=syncTopJets.end(); tj++){
+	if(BoostedUtils::DeltaR(tj->fatjet,higgsJet->fatjet)<1.5){
+	  overlapping=true;
+	  break;
+	}
+      }
+      if(overlapping) continue;
 
       int numBtagFiltJets=0;
       std::vector<pat::Jet> filterjets = higgsJet->filterjets;
@@ -886,7 +906,7 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 	// 	 filterjets[ijet].bDiscriminator("combinedSecondaryVertexBJetTags"));
 	// }
 
-	if( !(filterjets[ijet].pt()>20. && abs(filterjets[ijet].eta()) < 2.5) ) continue;
+	if( !(filterjets[ijet].pt()>20. && abs(filterjets[ijet].eta()) < 2.4) ) continue;
 	if( !(filterjets[ijet].bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.89) ) continue;
 	numBtagFiltJets++;
       }
@@ -1075,10 +1095,15 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   double jet3_pt = ( numJets>=3 ) ? selectedJets.at(2).pt() : -99;
   double jet4_pt = ( numJets>=4 ) ? selectedJets.at(3).pt() : -99;
 
-  double jet1_CSVv2 = ( numJets>=1 ) ? selectedJets.at(0).bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
-  double jet2_CSVv2 = ( numJets>=2 ) ? selectedJets.at(1).bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
-  double jet3_CSVv2 = ( numJets>=3 ) ? selectedJets.at(2).bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
-  double jet4_CSVv2 = ( numJets>=4 ) ? selectedJets.at(3).bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
+  // double jet1_CSVv2 = ( numJets>=1 ) ? selectedJets.at(0).bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
+  // double jet2_CSVv2 = ( numJets>=2 ) ? selectedJets.at(1).bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
+  // double jet3_CSVv2 = ( numJets>=3 ) ? selectedJets.at(2).bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
+  // double jet4_CSVv2 = ( numJets>=4 ) ? selectedJets.at(3).bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
+
+  double jet1_CSVv2 = ( numJets>=1 ) ? miniAODhelper.GetJetCSV(selectedJets.at(0), "pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
+  double jet2_CSVv2 = ( numJets>=2 ) ? miniAODhelper.GetJetCSV(selectedJets.at(1), "pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
+  double jet3_CSVv2 = ( numJets>=3 ) ? miniAODhelper.GetJetCSV(selectedJets.at(2), "pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
+  double jet4_CSVv2 = ( numJets>=4 ) ? miniAODhelper.GetJetCSV(selectedJets.at(3), "pfCombinedInclusiveSecondaryVertexV2BJetTags") : -99;
 
   int n_jets = numJets;
   int n_btags = numTags;
