@@ -264,7 +264,7 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   packedpfToken = consumes <pat::PackedCandidateCollection> (edm::InputTag(std::string("packedPFCandidates")));
 
   beamspotToken = consumes <reco::BeamSpot> (edm::InputTag(std::string("offlineBeamSpot")));
-  rhoToken = consumes <double> (edm::InputTag(std::string("fixedGridRhoAll")));
+  rhoToken = consumes <double> (edm::InputTag(std::string("fixedGridRhoFastjetAll")));
   mcparicleToken = consumes <reco::GenParticleCollection> (edm::InputTag(std::string("prunedGenParticles")));
   puInfoToken = consumes <std::vector< PileupSummaryInfo > > (edm::InputTag(std::string("addPileupInfo")));
 
@@ -402,6 +402,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   edm::Handle<double> rhoHandle;
   iEvent.getByToken(rhoToken,rhoHandle);
+  ////------- set up rho for lepton effArea Isolation correction
+  double rho_event = ( (rhoHandle.isValid()) ) ? *rhoHandle : -99;
+  miniAODhelper.SetRho(rho_event);
 
   edm::Handle<std::vector< PileupSummaryInfo > > PupInfo;
   iEvent.getByToken(puInfoToken,PupInfo);
@@ -426,6 +429,29 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   bool passDoubleElectronTrigger = false;
   bool passDoubleMuonTrigger = false;
   bool passElectronMuonTrigger = false;
+  bool passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1 = false;
+  
+  bool passHLT_IsoMu20_v = false;
+  bool passHLT_IsoMu20_eta2p1_v = false;
+  bool passHLT_IsoMu24_eta2p1_v = false;
+
+  bool passHLT_Ele27_WP85_Gsf_v = false;
+  bool passHLT_Ele27_eta2p1_WPLoose_Gsf_v = false;
+  bool passHLT_Ele27_eta2p1_WP75_Gsf_v = false;
+
+  bool passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v = false;
+  bool passHLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v = false;
+
+  bool passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v = false;
+
+  bool passHLT_Mu30_TkMu11_v = false;
+  bool passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v = false;
+  bool passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v = false;
+  bool passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v = false;
+
+  bool passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v = false;
+
+  bool passHLT_Ele25WP60_SC4_Mass55_v = false;
 
   if( triggerResults.isValid() ){
     std::vector<std::string> triggerNames = hlt_config_.triggerNames();
@@ -439,6 +465,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       int accept = triggerResults->accept(hltIndex);
 
       if( accept ){
+      //cout<<pathName<<endl;
 	if( pathName=="HLT_Ele27_eta2p1_WP85_Gsf_v1" ) passSingleElectronTrigger = true;
 	if( pathName=="HLT_IsoMu24_eta2p1_IterTrk02_v1" ) passSingleMuonTrigger = true;
 	if( pathName=="HLT_Ele23_Ele12_CaloId_TrackId_Iso_v1" ) passDoubleElectronTrigger = true;
@@ -447,6 +474,35 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	    pathName=="HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v1" ) passDoubleMuonTrigger = true;
 	if( pathName=="HLT_Mu23_TrkIsoVVL_Ele12_Gsf_CaloId_TrackId_Iso_MediumWP_v1" ||
 	    pathName=="HLT_Mu8_TrkIsoVVL_Ele23_Gsf_CaloId_TrackId_Iso_MediumWP_v1" ) passElectronMuonTrigger = true;
+      	if( pathName=="HLT_Ele27_eta2p1_WP85_Gsf_HT200_v1" )passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1 = true;
+	
+	
+	if( pathName=="HLT_IsoMu20_v1")passHLT_IsoMu20_v = true;
+	if( pathName=="HLT_IsoMu20_eta2p1_v1")passHLT_IsoMu20_eta2p1_v = true;
+	if( pathName=="HLT_IsoMu24_eta2p1_v1")passHLT_IsoMu24_eta2p1_v = true;
+	// if( pathName=="HLT_IsoMu24_eta2p1_v")cout<<" v ";
+	// if( pathName=="HLT_IsoMu24_eta2p1_v1")cout<<" 1 ";
+	// if( pathName=="HLT_IsoMu24_eta2p1_v2")cout<<" 2" ;
+	
+	if( pathName=="HLT_Ele27_WP85_Gsf_v1")passHLT_Ele27_WP85_Gsf_v = true;
+	if( pathName=="HLT_Ele27_eta2p1_WPLoose_Gsf_v1")passHLT_Ele27_eta2p1_WPLoose_Gsf_v = true;
+	if( pathName=="HLT_Ele27_eta2p1_WP75_Gsf_v1")passHLT_Ele27_eta2p1_WP75_Gsf_v = true;
+	
+	if( pathName=="HLT_Ele27_eta2p1_WP85_Gsf_HT200_v1")passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v = true;
+	if( pathName=="HLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v1")passHLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v = true;
+	
+	if( pathName=="HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v1")passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v = true;
+	
+	if( pathName=="HLT_Mu30_TkMu11_v1")passHLT_Mu30_TkMu11_v = true;
+	if( pathName=="HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v1")passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v = true;
+	if( pathName=="HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v1")passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v = true;
+	if( pathName=="HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v1")passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v = true;
+	
+	if( pathName=="HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v1")passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v = true;
+	
+	if( pathName=="HLT_Ele25WP60_SC4_Mass55_v1")passHLT_Ele25WP60_SC4_Mass55_v = true;
+	
+	
       }
     }
   }
@@ -530,11 +586,13 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   if( verbose_ ) printf("\t BeamSpot: x = %.2f,\t y = %.2f,\t z = %.2f \n", BSx, BSy, BSz );
 
-  int numpv=0;
+  int numpv=0; int iPV=0;
   bool firstGoodPV = false;
   reco::Vertex vertex;
   if( vtxHandle.isValid() ){
     for( reco::VertexCollection::const_iterator vtx = vtxs.begin(); vtx!=vtxs.end(); ++vtx ){
+      
+      iPV++;
       bool isGood = ( !(vtx->isFake()) &&
 		      (vtx->ndof() >= 4.0) &&
 		      (abs(vtx->z()) <= 24.0) &&
@@ -543,7 +601,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 		      
       if( !isGood ) continue;
 
-      if( numpv==0 ){
+      if( iPV==1 ){
 	firstGoodPV = true;
 	vertex = (*vtx);
       }
@@ -666,22 +724,16 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   // Do jets stuff
   std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets(*pfjets);
-  std::vector<pat::Jet> rawJets_ID = miniAODhelper.GetSelectedJets(rawJets,0.,999,jetID::jetLoose,'-');
-  std::vector<pat::Jet> jetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons_loose, rawJets_ID);
-  std::vector<pat::Jet> jetsNoEle = miniAODhelper.RemoveOverlaps(selectedElectrons_loose, jetsNoMu);
-  std::vector<pat::Jet> correctedJets_noSys = miniAODhelper.GetCorrectedJets(jetsNoEle, iEvent, iSetup);
-  std::vector<pat::Jet> selectedJets_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 30., 2.4, jetID::none, '-' );
-  std::vector<pat::Jet> selectedJets_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 30., 2.4, jetID::none, 'M' );
+ // std::vector<pat::Jet> rawJets_ID = miniAODhelper.GetSelectedJets(rawJets,0.,999,jetID::jetLoose,'-');
+ // std::vector<pat::Jet> jetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons_loose, rawJets_ID);
+ // std::vector<pat::Jet> jetsNoEle = miniAODhelper.RemoveOverlaps(selectedElectrons_loose, jetsNoMu);
+  std::vector<pat::Jet> correctedJets_noSys = miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup);
+  std::vector<pat::Jet> selectedJets_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 30., 2.4, jetID::jetLoose, '-' );
+  std::vector<pat::Jet> selectedJets_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 30., 2.4, jetID::jetLoose, 'M' );
 
-  std::vector<pat::Jet> selectedJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 20., 2.4, jetID::none, '-' );
-  std::vector<pat::Jet> selectedJets_loose_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 20., 2.4, jetID::none, 'M' );
+  std::vector<pat::Jet> selectedJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 20., 3.0, jetID::jetLoose, '-' );
+  std::vector<pat::Jet> selectedJets_loose_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 20., 3.0, jetID::jetLoose, 'M' );
 
-
-  std::vector<pat::Jet> rawTempJets = miniAODhelper.GetUncorrectedJets(*pftempjets);
-  std::vector<pat::Jet> tempJetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons_loose, rawTempJets);
-  std::vector<pat::Jet> tempJetsNoEle = miniAODhelper.RemoveOverlaps(selectedElectrons_loose, tempJetsNoMu);
-  std::vector<pat::Jet> correctedTempJets_noSys = miniAODhelper.GetCorrectedJets(tempJetsNoEle, iEvent, iSetup);
-  std::vector<pat::Jet> selectedTempJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedTempJets_noSys, 20., 2.4, jetID::none, '-' );
 
 
 
@@ -733,6 +785,29 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->passDoubleElectronTrigger_ = ( passDoubleElectronTrigger ) ? 1 : 0;
   eve->passDoubleMuonTrigger_     = ( passDoubleMuonTrigger ) ? 1 : 0;
   eve->passElectronMuonTrigger_   = ( passElectronMuonTrigger ) ? 1 : 0;
+  eve->passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1_ = ( passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1 ) ? 1 : 0;
+  
+  eve->passHLT_IsoMu20_v_ =  ( passHLT_IsoMu20_v) ? 1 : 0;
+  eve->passHLT_IsoMu20_eta2p1_v_ = ( passHLT_IsoMu20_eta2p1_v ) ? 1 : 0;
+  eve->passHLT_IsoMu24_eta2p1_v_ = ( passHLT_IsoMu24_eta2p1_v ) ? 1 : 0;
+  
+  eve->passHLT_Ele27_WP85_Gsf_v_ = ( passHLT_Ele27_WP85_Gsf_v ) ? 1 : 0;
+  eve->passHLT_Ele27_eta2p1_WPLoose_Gsf_v_ = ( passHLT_Ele27_eta2p1_WPLoose_Gsf_v ) ? 1 : 0;
+  eve->passHLT_Ele27_eta2p1_WP75_Gsf_v_ = ( passHLT_Ele27_eta2p1_WP75_Gsf_v ) ? 1 : 0;
+  
+  eve->passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v_ = ( passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v ) ? 1 : 0;
+  eve->passHLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v_ = ( passHLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v ) ? 1 : 0;
+  
+  eve->passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v_ = ( passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v ) ? 1 : 0;
+  
+  eve->passHLT_Mu30_TkMu11_v_ = ( passHLT_Mu30_TkMu11_v ) ? 1 : 0;
+  eve->passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v_ = ( passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v ) ? 1 : 0;
+  eve->passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v_ = ( passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v ) ? 1 : 0;
+  eve->passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v_ = ( passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v ) ? 1 : 0;
+  
+  eve->passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v_ = ( passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v ) ? 1 : 0;
+  
+  eve->passHLT_Ele25WP60_SC4_Mass55_v_ = ( passHLT_Ele25WP60_SC4_Mass55_v ) ? 1 : 0;
 
 
   bool matchSingleMuTrigger = false;
@@ -1486,12 +1561,12 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     ///
     ////////
 
-    std::vector<pat::Jet> correctedJets = ( !(iSys>=5 && iSys<=8) ) ? correctedJets_noSys : miniAODhelper.GetCorrectedJets(jetsNoEle, iEvent, iSetup, iSysType);
-    std::vector<pat::Jet> selectedJets_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_noSys_unsorted : miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::none, '-' );
+    std::vector<pat::Jet> correctedJets = ( !(iSys>=5 && iSys<=8) ) ? correctedJets_noSys : miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, iSysType);
+    std::vector<pat::Jet> selectedJets_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_noSys_unsorted : miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::jetLoose, '-' );
 
 
     // Get CSVM tagged jet collection
-    std::vector<pat::Jet> selectedJets_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::none, 'M' );
+    std::vector<pat::Jet> selectedJets_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, 'M' );
 
     // Get nontagged jet collection
     std::vector<pat::Jet> selectedJets_untag_unsorted = selectedJets_tag_unsorted;//miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, 'M' ); 
@@ -1504,9 +1579,13 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   
     // Sort jet collections by pT
-    std::vector<pat::Jet> selectedJets       = miniAODhelper.GetSortedByPt( selectedJets_unsorted );
-    std::vector<pat::Jet> selectedJets_tag   = miniAODhelper.GetSortedByPt( selectedJets_tag_unsorted );
-    std::vector<pat::Jet> selectedJets_untag = miniAODhelper.GetSortedByPt( selectedJets_untag_unsorted );
+    std::vector<pat::Jet> selectedJets_uncleaned       = miniAODhelper.GetSortedByPt( selectedJets_unsorted );
+    std::vector<pat::Jet> selectedJets_tag_uncleaned   = miniAODhelper.GetSortedByPt( selectedJets_tag_unsorted );
+    std::vector<pat::Jet> selectedJets_untag_uncleaned = miniAODhelper.GetSortedByPt( selectedJets_untag_unsorted );
+    
+    std::vector<pat::Jet> selectedJets        = miniAODhelper.GetDeltaRCleanedJets( selectedJets_uncleaned,selectedMuons_loose,selectedElectrons_loose,0.4);
+    std::vector<pat::Jet> selectedJets_tag    = miniAODhelper.GetDeltaRCleanedJets( selectedJets_tag_uncleaned,selectedMuons_loose,selectedElectrons_loose,0.4);
+    std::vector<pat::Jet> selectedJets_untag = miniAODhelper.GetDeltaRCleanedJets( selectedJets_untag_uncleaned,selectedMuons_loose,selectedElectrons_loose,0.4);
 
     //if( mySample.isTTJets ) splitEvent = miniAODhelper.ttPlusHFKeepEvent( mcparticles, selectedJets );
     //if( !splitEvent ) continue;
@@ -1520,6 +1599,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     // Get numJets, numTags
     int numJet = int( selectedJets.size() );
     int numTag = int( selectedJets_tag.size() );
+    
+   
 
          
     // Get Corrected MET
@@ -1571,10 +1652,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     vint jet_genParentId_vect;
     vint jet_genGrandParentId_vect;
 
-
+int jcntn=0;
     // Loop over selected jets
     for( std::vector<pat::Jet>::const_iterator iJet = selectedJets.begin(); iJet != selectedJets.end(); iJet++ ){ 
-
+jcntn++;
       jet_flavour_vect.push_back(iJet->partonFlavour());
 
       int genPartonId=-99, genPartonMotherId=-99, genPartonGrandMotherId=-99;
@@ -1591,6 +1672,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       jet_genId_vect.push_back(genPartonId);
       jet_genParentId_vect.push_back(genPartonMotherId);
       jet_genGrandParentId_vect.push_back(genPartonGrandMotherId);
+      
+      
 
       // DR(lepton system, jet)
       double dR_lep_jet = reco::deltaR(sum_lepton_vect.Eta(),sum_lepton_vect.Phi(),iJet->eta(),iJet->phi());
@@ -1615,10 +1698,11 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       jet_vtx3DSig.push_back(iJet->userFloat("vtx3DSig"));
 
       // Get CSV discriminant, check if passes Med WP 
-      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
+      double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
       csvV.push_back(myCSV);
-      int csvM0 = ( myCSV > 0.814 ) ? 1 : 0;
-      if( myCSV>0.814 ){
+    
+      int csvM0 = ( myCSV > 0.890 ) ? 1 : 0;
+      if( myCSV>0.890 ){
 	numtag += 1;
 	sum_btag_disc_btags += myCSV;
       }
@@ -1626,9 +1710,11 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	numuntag += 1;
 	sum_btag_disc_non_btags += myCSV;
       }
+      
+      
 
       jet_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
-      jet_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") );
+      jet_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") );
 
       // Second Loop over selected jets
       for( std::vector<pat::Jet>::const_iterator jJet = iJet; jJet != selectedJets.end(); jJet++ ){ 
@@ -1639,7 +1725,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	// Get second jet 4Vector and check bTag discriminant
 	TLorentzVector jet1p4;
 	jet1p4.SetPxPyPzE(jJet->px(),jJet->py(),jJet->pz(),jJet->energy());
-	int csvM1 = ( jJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") > 0.814 ) ? 1 : 0;
+	int csvM1 = ( jJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.890 ) ? 1 : 0;
 
 	// Third loop over selected jets
 	for( std::vector<pat::Jet>::const_iterator kJet = jJet; kJet != selectedJets.end(); kJet++ ){ 
@@ -1650,7 +1736,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	  // Get third jet 4Vector and chekc bTag discriminant
 	  TLorentzVector jet2p4;
 	  jet2p4.SetPxPyPzE(kJet->px(),kJet->py(),kJet->pz(),kJet->energy());
-	  int csvM2 = ( kJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") > 0.814 ) ? 1 : 0;
+	  int csvM2 = ( kJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.890 ) ? 1 : 0;
 
 	  // Get sum of three jet 4Vectors
 	  TLorentzVector sum_jet = jet0p4 + jet1p4 + jet2p4;
@@ -1680,10 +1766,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 
     // Add loose jet container
-    std::vector<pat::Jet> selectedJets_loose_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::none, '-' );
+    std::vector<pat::Jet> selectedJets_loose_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 3.0, jetID::jetLoose, '-' );
     std::vector<pat::Jet> selectedJets_loose = miniAODhelper.GetSortedByPt( selectedJets_loose_unsorted );
 
-    std::vector<pat::Jet> selectedJets_loose_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::none, 'M' );
+    std::vector<pat::Jet> selectedJets_loose_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 3.0, jetID::jetLoose, 'M' );
 
     vvdouble vvjets_loose;
     std::vector<double> csvV_loose;
@@ -1714,13 +1800,13 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       vjets_loose.push_back(iJet->energy());
       jet_all_vect_TLV.push_back(vjets_loose);
 
-      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
+      double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
       jet_all_CSV.push_back(myCSV);
 
       jet_all_flavour.push_back(iJet->partonFlavour());
 
       jet_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
-      jet_loose_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") );
+      jet_loose_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") );
 
       // MHT
       mht_px += - iJet->px();
@@ -1750,83 +1836,13 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
       // Get CSV discriminant, check if passes Med WP 
       csvV_loose.push_back(myCSV);
-      if( myCSV>0.814 ) numTag_loose++;
+      if( myCSV>0.890 ) numTag_loose++;
     }
 
 
 
 
-    // Add temp loose jet container
-    std::vector<pat::Jet> selectedTempJets_loose_unsorted = selectedTempJets_loose_noSys_unsorted;
-    std::vector<pat::Jet> selectedTempJets_loose = miniAODhelper.GetSortedByPt( selectedTempJets_loose_unsorted );
-
-    vvdouble vvjets_temp_loose;
-    std::vector<double> csvV_temp_loose;
-    vint jet_flavour_vect_temp_loose;
-    vecTLorentzVector jetV_temp_loose;
-
-    // Loop over selected jets
-    for( std::vector<pat::Jet>::const_iterator iJet = selectedTempJets_loose.begin(); iJet != selectedTempJets_loose.end(); iJet++ ){ 
-
-      vdouble vjets_temp_loose;
-      vjets_temp_loose.push_back(iJet->px());
-      vjets_temp_loose.push_back(iJet->py());
-      vjets_temp_loose.push_back(iJet->pz());
-      vjets_temp_loose.push_back(iJet->energy());
-
-      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
-      // jet_temp_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
-      // jet_temp_loose_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") );
-
-      jet_flavour_vect_temp_loose.push_back(iJet->partonFlavour());
-
-      TLorentzVector jet0p4;	  
-      jet0p4.SetPxPyPzE(iJet->px(),iJet->py(),iJet->pz(),iJet->energy());
-      jetV_temp_loose.push_back(jet0p4);
-
-      // make vvdouble version of vecTLorentzVector
-      vvjets_temp_loose.push_back(vjets_temp_loose);
-
-      // Get CSV discriminant
-      csvV_temp_loose.push_back(myCSV);
-    }
-
-
-
-
-
-    // Add no cc loose jet container
-    std::vector<pat::Jet> selectedJets_loose_nocc = miniAODhelper.GetSortedByPt( *pfjets );
-
-    vvdouble vvjets_nocc_loose;
-    std::vector<double> csvV_nocc_loose;
-    std::vector<double> jet_nocc_loose_combinedMVABJetTags;
-    std::vector<double> jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags;
-
-    vint jet_flavour_vect_nocc_loose;
-
-    // Loop over selected jets
-    for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_loose_nocc.begin(); iJet != selectedJets_loose_nocc.end(); iJet++ ){ 
-
-      vdouble vjets_nocc_loose;
-      vjets_nocc_loose.push_back(iJet->px());
-      vjets_nocc_loose.push_back(iJet->py());
-      vjets_nocc_loose.push_back(iJet->pz());
-      vjets_nocc_loose.push_back(iJet->energy());
-
-      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
-      jet_nocc_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
-      jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags") );
-
-      jet_flavour_vect_nocc_loose.push_back(iJet->partonFlavour());
-
-      // make vvdouble version of vecTLorentzVector
-      vvjets_nocc_loose.push_back(vjets_nocc_loose);
-
-      // Get CSV discriminant
-      csvV_nocc_loose.push_back(myCSV);
-    }
-
+ 
 
 
   /// DIL specific, doesn't make sense in current scope
@@ -1881,7 +1897,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_tag.begin(); iJet != selectedJets_tag.end(); iJet++ ){ 
 
       // Get bTag Value
-      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
+      double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
 
       // Compute Deviation from Avg bTag
       double dev = myCSV - ave_btag_disc_btags;
@@ -1960,7 +1976,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_untag.begin(); iJet != selectedJets_untag.end(); iJet++ ){ 
 
       // Get CSV discriminant
-      double myCSV = iJet->bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags");
+      double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
 
       // Compute deviation form Avg bTag Disc
       double dev = myCSV - ave_btag_disc_non_btags;
@@ -2177,18 +2193,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     eve->jet_loose_flavour_[iSys]  = jet_flavour_vect_loose;
 
 
-    // temp jets
-    eve->jet_temp_loose_vect_TLV_[iSys] = vvjets_temp_loose;
-    eve->jet_temp_loose_CSV_[iSys]      = csvV_temp_loose;
-    eve->jet_temp_loose_flavour_[iSys]  = jet_flavour_vect_temp_loose;
-
-    // no cc jets
-    eve->jet_nocc_loose_vect_TLV_[iSys] = vvjets_nocc_loose;
-    eve->jet_nocc_loose_CSV_[iSys]      = csvV_nocc_loose;
-    eve->jet_nocc_loose_combinedMVABJetTags_[iSys] = jet_nocc_loose_combinedMVABJetTags;
-    eve->jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags_[iSys] = jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags;
-    eve->jet_nocc_loose_flavour_[iSys]  = jet_flavour_vect_nocc_loose;
-
+   
 
 
     double csvWgtHF=1, csvWgtLF=1, csvWgtCF=1;

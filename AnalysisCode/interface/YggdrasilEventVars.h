@@ -69,6 +69,29 @@ struct yggdrasilEventVars{
   int passDoubleElectronTrigger_;
   int passDoubleMuonTrigger_;
   int passElectronMuonTrigger_;
+  int passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1_;
+  
+  int passHLT_IsoMu20_v_;
+  int passHLT_IsoMu20_eta2p1_v_;
+  int passHLT_IsoMu24_eta2p1_v_;
+
+  int passHLT_Ele27_WP85_Gsf_v_;
+  int passHLT_Ele27_eta2p1_WPLoose_Gsf_v_;
+  int passHLT_Ele27_eta2p1_WP75_Gsf_v_;
+
+  int passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v_;
+  int passHLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v_;
+
+  int passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v_;
+
+  int passHLT_Mu30_TkMu11_v_;
+  int passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v_;
+  int passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v_;
+  int passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v_;
+
+  int passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v_;
+
+  int passHLT_Ele25WP60_SC4_Mass55_v_;
 
   int run_;
   int lumi_;
@@ -89,6 +112,7 @@ struct yggdrasilEventVars{
   int numTightElectrons_;
   int numLooseMuons_;
   int numLooseElectrons_;
+  
 
   Int_t   numPVs_;
   Int_t   numSys_;
@@ -354,6 +378,30 @@ void yggdrasilEventVars::initialize(){
   passDoubleElectronTrigger_ = -99;
   passDoubleMuonTrigger_     = -99;
   passElectronMuonTrigger_   = -99;
+  
+  passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1_ = -99;
+  
+  passHLT_IsoMu20_v_ = -99;
+  passHLT_IsoMu20_eta2p1_v_ = -99;
+  passHLT_IsoMu24_eta2p1_v_ = -99;
+
+  passHLT_Ele27_WP85_Gsf_v_ = -99;
+  passHLT_Ele27_eta2p1_WPLoose_Gsf_v_ = -99;
+  passHLT_Ele27_eta2p1_WP75_Gsf_v_ = -99;
+
+  passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v_ = -99;
+  passHLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v_ = -99;
+
+  passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v_ = -99;
+
+  passHLT_Mu30_TkMu11_v_ = -99;
+  passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v_ = - 99;
+  passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v_ = -99;
+  passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v_ = -99;
+
+  passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v_ = -99;
+
+  passHLT_Ele25WP60_SC4_Mass55_v_ = -99;
 
   run_  = -99;
   lumi_ = -99;
