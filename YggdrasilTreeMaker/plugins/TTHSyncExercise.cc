@@ -210,7 +210,7 @@ class TTHSyncExercise : public edm::EDAnalyzer {
   TH1D* h_muon_selection;
 
   MiniAODHelper miniAODhelper;
-  TopTagger toptagger = TopTagger(TopTag::Likelihood, TopTag::CSV, "toplikelihoodtaggerhistos.root");//
+  TopTagger toptagger;
 
   // ofstream syncOutputFile;
 };
@@ -352,7 +352,7 @@ TTHSyncExercise::TTHSyncExercise(const edm::ParameterSet& iConfig):
   bool isData = !true;
 
   miniAODhelper.SetUp(era, insample_, iAnalysisType, isData);
-  // toptagger = TopTagger(TopTag::Likelihood, TopTag::CSV, "toplikelihoodtaggerhistos.root");
+  toptagger = TopTagger(TopTag::Likelihood, TopTag::CSV, "toplikelihoodtaggerhistos.root");
 
   // syncOutputFile.open("ttHSyncEx1_LJ.txt");
 }
@@ -784,13 +784,17 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
 
   // Jet selection
-  std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets(*pfjets);
-  // std::vector<pat::Jet> rawJets_ID = miniAODhelper.GetSelectedJets(rawJets, 0., 999, jetID::jetLoose, '-' );
+  std::vector<pat::Jet> Jets_ID = miniAODhelper.GetSelectedJets(*pfjets, 0., 999, jetID::jetLoose, '-' );
+  std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets(Jets_ID);
   // std::vector<pat::Jet> jetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons, rawJets_ID);
   // std::vector<pat::Jet> jetsNoEle = miniAODhelper.RemoveOverlaps(selectedElectrons, jetsNoMu);
   std::vector<pat::Jet> correctedJets = miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup);
-  std::vector<pat::Jet> selectedJets_unsorted = miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::jetLoose, '-' );
-  std::vector<pat::Jet> selectedJets_tag_unsorted = miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, 'M' );
+  // std::vector<pat::Jet> selectedJets_unsorted = miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::jetLoose, '-' );
+  // std::vector<pat::Jet> selectedJets_tag_unsorted = miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, 'M' );
+
+  std::vector<pat::Jet> selectedJets_unsorted = miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::none, '-' );
+  std::vector<pat::Jet> selectedJets_tag_unsorted = miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::none, 'M' );
+
   // std::vector<pat::Jet> selectedJets_unsorted = miniAODhelper.GetSelectedJets(*pfjets, 25., 2.4, jetID::none, '-' );
   // std::vector<pat::Jet> selectedJets_tag_unsorted = miniAODhelper.GetSelectedJets( *pfjets, 25., 2.4, jetID::none, 'M' );
 
@@ -844,7 +848,6 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   ///// Boosted jet information
 
   ///// HEP top tagged jet
-  // TopTagger toptagger = TopTagger(TopTag::Likelihood, TopTag::CSV, "toplikelihoodtaggerhistos.root");
   int numTopTags = 0;
   vector<boosted::HTTTopJet> syncTopJets;
   if( h_htttopjet.isValid() ){
