@@ -1,3 +1,7 @@
+// Description: Quickly move from Yggdrasil Trees or Express Trees to BDTs
+
+
+
 #include "TFile.h"
 #include "TChain.h"
 #include "TH1.h"
@@ -27,6 +31,8 @@
 #include "TLorentzVector.h"
 #include "Math/Interpolator.h"
 
+#include <time.h>
+
 
 #ifdef __MAKECINT__
 #pragma link C++ class std::vector< TLorentzVector >+; 
@@ -40,22 +46,17 @@
 
 #if !defined(__CINT__) && !defined(__MAKECINT__)
 
-
 #include "ttH-LeptonPlusJets/AnalysisCode/interface/YggdrasilEventVars.h"
 
 #endif
 
 
-//*****************************************************************************
+
+
 typedef std::vector< TLorentzVector >          vecTLorentzVector;
 typedef std::vector<int>                       vint;
 typedef std::vector<double>                    vdouble;
 typedef std::vector<std::vector<double> >      vvdouble;
-
-int getTopSystem(TLorentzVector leptonV, TLorentzVector metV, vecTLorentzVector jetsV, vdouble btagV,
-		 double &minChi, TLorentzVector &hadW, TLorentzVector &lepW, TLorentzVector &hadB, TLorentzVector &lepB, TLorentzVector &hadT, TLorentzVector &lepT);
-
-
 
 
 void fillCSVhistos(TFile *fileHF, TFile *fileLF);
@@ -66,21 +67,23 @@ TH1D* h_csv_wgt_hf[9][6];
 TH1D* c_csv_wgt_hf[9][6];
 TH1D* h_csv_wgt_lf[9][4][3];
 
-//*****************************************************************************
+
+
+
 
 void yggdrasil_treeReader_13TeV(  int SampleType=2,int SplitType =2, int maxNentries=-1, int Njobs=1, int jobN=1 ) {
 
 int insample=1;
 
-  TFile* f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_hf_IT_FlatSF.root").c_str());
-  TFile* f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_lf_IT_FlatSF.root").c_str());
+clock_t t;
+t = clock();
+
+
+  TFile* f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_hf_IT_FlatSF_2015_07_27.root").c_str());
+  TFile* f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_lf_IT_FlatSF_2015_07_27.root").c_str());
 
   fillCSVhistos(f_CSVwgt_HF, f_CSVwgt_LF);
-
-
   
-
-
   std::cout << "   ===> load the root files! " << std::endl;
 
 std::string sampleName = "TTJets";
@@ -93,7 +96,7 @@ if(SampleType == 2){
  }
 if(SampleType == 1){
 	if(SplitType == 9) sampleName = "ttH";
-	if(SplitType == 1) sampleName = "ttH_hbb";
+	if(SplitType == 1) sampleName = "ttH_hbb_err"; //Sometimes hbb is not seperated from ttH samples. 
 	if(SplitType == 2) sampleName = "ttH_hww";
 	if(SplitType == 3) sampleName = "ttH_htt";
 	if(SplitType == 4) sampleName = "ttH_hgluglu";
@@ -104,43 +107,40 @@ if(SampleType == 1){
 	if(SplitType == 10) sampleName = "ttH_hss";
 	if(SplitType == 11) sampleName = "ttH_hmumu";
 } 
-if(SampleType == 3) sampleName = "ttZ";
-if(SampleType == 4) sampleName = "ttW";
+if(SampleType == 3) sampleName ="ttH_hbb";
+if(SampleType == 4) sampleName = "ttZ";
+if(SampleType == 5) sampleName = "ttW";
 
-  std::string sampleType = ( insample>=0 ) ? "mc" : "data";
+ 
   std::string str_jobN;
   std::stringstream stream;
   stream << jobN;
   str_jobN = stream.str();
 
+  std::string treefilename ="/eos/uscms/store/user/sflowers/treeMaker/Spring15_Sep3/TT_TuneCUETP8M1_13TeV-powheg-pythia8/Spring15DR-PU20bx25_MCRUN2_74_V9-v1_yggdrasilTree_v1/150911_144050/0000/*.root";
 
-std::string treefilename = "/eos/uscms/store/user/sflowers/treeMaker/June18_BDTvars_ttX_56csvV/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/Phys14DR-PU20bx25_PHYS14_25_V1-v1_yggdrasilTree_v1/150622_003128/0000/*.root";
-if(SampleType == 1)treefilename = "/eos/uscms/store/user/sflowers/treeMaker/June18_BDTvars_ttX_56csvV/TTbarH_M-125_13TeV_amcatnlo-pythia8-tauola/Phys14DR-PU20bx25_tsg_PHYS14_25_V1-v2_v1_yggdrasilTree_v1/150622_003226/0000/*.root";
-if(SampleType == 3)treefilename = "/eos/uscms/store/user/sflowers/treeMaker/June18_BDTvars_ttX_56csvV/TTZJets_Tune4C_13TeV-madgraph-tauola/Phys14DR-PU20bx25_PHYS14_25_V1-v1_yggdrasilTree_v1/150622_003650/0000/*.root";
-if(SampleType == 4)treefilename = "/eos/uscms/store/user/sflowers/treeMaker/June18_BDTvars_ttX_56csvV/TTWJets_Tune4C_13TeV-madgraph-tauola/Phys14DR-PU20bx25_PHYS14_25_V1-v1_yggdrasilTree_v1/150622_003542/0000/*.root";
-
+  if(SampleType == 4)treefilename = "/eos/uscms/store/user/sflowers/treeMaker/June18_BDTvars_ttX_56csvV/TTZJets_Tune4C_13TeV-madgraph-tauola/Phys14DR-PU20bx25_PHYS14_25_V1-v1_yggdrasilTree_v1/150622_003650/0000/*.root";
+  if(SampleType == 5)treefilename = "/eos/uscms/store/user/sflowers/treeMaker/June18_BDTvars_ttX_56csvV/TTWJets_Tune4C_13TeV-madgraph-tauola/Phys14DR-PU20bx25_PHYS14_25_V1-v1_yggdrasilTree_v1/150622_003542/0000/*.root";
+  if(SampleType == 1)treefilename ="/eos/uscms/store/user/sflowers/treeMaker/Spring15_Sep3/ttHJetToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8/Spring15DR-PU20bx25_tsg_MCRUN2_74_V9-v2_v1_yggdrasilTree_v1/150903_112801/0000/*root";
+  if(SampleType == 3)treefilename ="/eos/uscms/store/user/sflowers/treeMaker/Spring15_Sep3/ttHTobb_M125_13TeV_powheg_pythia8/Spring15DR-PU20bx25_tsg_MCRUN2_74_V9-v2_v1_yggdrasilTree_v1/150903_112621/0000/*.root";
+  
 
   std::string s_end = "_" + str_jobN + ".root";
   if( Njobs==1 ) s_end = ".root";
+  
+  cout<<sampleName<<" *** "<<endl;
 
-std::string histofilename = "/eos/uscms/store/user/sflowers/TreeReader/June30_June18Trees/" + sampleName + s_end;
-
-
+  std::string histofilename = "/eos/uscms/store/user/sflowers/TreeReader/Spring15_Sep15Trees/Test/" + sampleName + s_end;
+  
   std::cout << "  treefilename  = " << treefilename.c_str() << std::endl;
   std::cout << "  histofilename = " << histofilename.c_str() << std::endl;
 
   TChain *chain = new TChain("ttHTreeMaker/worldTree");
   chain->Add(treefilename.c_str());
-
-
-
-  //////////////////////////////////////////////////////////////////////////
-  ///  Reader information
-  //////////////////////////////////////////////////////////////////////////
-
-
- 
-
+  
+  ////////////////////////////////////
+  
+  
   std::vector<std::string> cat_labels;
   cat_labels.push_back("4j2t"); //0
   cat_labels.push_back("5j2t"); //1
@@ -151,26 +151,21 @@ std::string histofilename = "/eos/uscms/store/user/sflowers/TreeReader/June30_Ju
   cat_labels.push_back("4j4t"); //6
   cat_labels.push_back("5j4t"); //7
   cat_labels.push_back("6j4t"); //8
-  cat_labels.push_back("4j1t");
-  cat_labels.push_back("5j1t");
-  cat_labels.push_back("6j1t");
-  //cat_labels.push_back("Incl");
-
+  
   int NumCat = int(cat_labels.size());
 
-  TMVA::Reader *ttH_ttbb_reader_6j4t = new TMVA::Reader("!Color");
-  TMVA::Reader *ttH_ttbb_reader_6j3t = new TMVA::Reader("!Color");
-  TMVA::Reader *ttH_ttbb_reader_5j4t = new TMVA::Reader("!Color");
-  TMVA::Reader *reader_final10v16_8TeV_BDT[NumCat];
-  TMVA::Reader *reader_NewMay10_optimized_BDT[NumCat];
+  TMVA::Reader *reader_Spring15_KITreoptimized_BDT[NumCat];
+  TMVA::Reader *reader_Splitting_1_1[NumCat];
+  TMVA::Reader *reader_Splitting_1_2[NumCat];
   
   for( int c=0; c<NumCat; c++ ){
-	  reader_final10v16_8TeV_BDT[c] = new TMVA::Reader("!Color:Silent");
-	  reader_NewMay10_optimized_BDT[c] = new TMVA::Reader("!Color:Silent");
+	  reader_Spring15_KITreoptimized_BDT[c] = new TMVA::Reader("!Color:Silent");
+	  reader_Splitting_1_1[c] = new TMVA::Reader("!Color:Silent");
+	  reader_Splitting_1_2[c] = new TMVA::Reader("!Color:Silent");
   }
-
-
-
+	  
+  ///BDT Variables
+ 
   Float_t numJets_float; // due to a bug the reader only takes floats
   Float_t numTags_float;
 
@@ -207,6 +202,11 @@ std::string histofilename = "/eos/uscms/store/user/sflowers/TreeReader/June30_Ju
   Float_t fourth_highest_btag;
   Float_t fifth_highest_CSV;
   Float_t sixth_highest_CSV;
+  
+  Float_t CSV_Average;
+  Float_t Deta_JetsAverage;
+  Float_t Deta_JetsAverageIC;
+  
   //Float_t dijet_mass_of_everything;
 
   Float_t MHT;
@@ -229,10 +229,6 @@ std::string histofilename = "/eos/uscms/store/user/sflowers/TreeReader/June30_Ju
   Float_t tagged_dijet_mass_closest_to_125;
 
   
-  Float_t ttH_ttbb_reader_Output_5j4t = 0;
-  Float_t ttH_ttbb_reader_Output_6j3t = 0;
-  Float_t ttH_ttbb_reader_Output_6j4t = 0;
-
   Float_t bhmv2 = 0.;
   Float_t maxeta_jet_jet = 0.;			 
   Float_t maxeta_jet_tag = 0.;			 
@@ -246,2232 +242,1114 @@ std::string histofilename = "/eos/uscms/store/user/sflowers/TreeReader/June30_Ju
   Float_t pt_all_jets_over_E_all_jets = 0.;
 
   
-
-
-  //8TeV BDTs 
+  //Weights Locations
+  
+  TString BDTWgtDIR_Spring15 = "/uscms_data/d3/flowers1/May2015/CMSSW_7_4_4_patch4/src/ttH-LeptonPlusJets/AnalysisCode/macros/V3_KIT_weights/";
+  TString BDTWgtDIR_Splitting_1_1 = "/uscms_data/d3/flowers1/May2015/CMSSW_7_4_4_patch4/src/ttH-LeptonPlusJets/AnalysisCode/macros/TRAINHOUSE74X/SplittingWeights/Train_1_1/";
+  TString BDTWgtDIR_Splitting_1_2 = "/uscms_data/d3/flowers1/May2015/CMSSW_7_4_4_patch4/src/ttH-LeptonPlusJets/AnalysisCode/macros/TRAINHOUSE74X/SplittingWeights/Train_1_2/";
   
   
-  //weights location
-  TString BDTWgtDIR_ttH_ttbb = "/uscms_data/d3/flowers1/May2015/CMSSW_7_2_3/src/ttH-LeptonPlusJets/AnalysisCode/macros/oldTRAINHOUSE/SeanWeights/";
-  TString BDTWgtDIR = "/uscms_data/d3/flowers1/May2015/ForRobin/FreightWeights_minusttHttbb/";
-  TString BDTWgtDIR_NewMay10 = "/uscms_data/d3/flowers1/May2015/CMSSW_7_2_3/src/ttH-LeptonPlusJets/AnalysisCode/macros/TRAINHOUSE/NewJune29_optimized_weights/";
-  //ttH_ttbb BDTs
-  
-
-  
-  // 6j4t ttbb/ttH reader:
-  
-  ttH_ttbb_reader_6j4t->AddVariable( "avg_dr_tagged_jets", &avg_dr_tagged_jets);		
-  ttH_ttbb_reader_6j4t->AddVariable( "sphericity", &sphericity);			
-  ttH_ttbb_reader_6j4t->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags);		
-  ttH_ttbb_reader_6j4t->AddVariable( "closest_tagged_dijet_mass", &closest_tagged_dijet_mass);	
-  ttH_ttbb_reader_6j4t->AddVariable( "h3", &h3);				
-  ttH_ttbb_reader_6j4t->AddVariable( "invariant_mass_of_everything", &invariant_mass_of_everything );	
-  ttH_ttbb_reader_6j4t->AddVariable( "best_higgs_mass", &best_higgs_mass); 		
-  ttH_ttbb_reader_6j4t->AddVariable( "dRbb", &dRbb);  				
-  ttH_ttbb_reader_6j4t->AddVariable( "maxeta_jet_tag", &maxeta_jet_tag);			
-  ttH_ttbb_reader_6j4t->AddVariable( "maxeta_tag_tag", &maxeta_tag_tag);			
-  ttH_ttbb_reader_6j4t->AddVariable( "abs(dEta_leptop_bb)", &abs_dEta_leptop_bb);		
-  ttH_ttbb_reader_6j4t->AddVariable( "abs(dEta_hadtop_bb)", &abs_dEta_hadtop_bb);		
-  ttH_ttbb_reader_6j4t->AddVariable( "dEta_fn", &dEta_fn); 			
-  ttH_ttbb_reader_6j4t->AddVariable( "median_bb_mass", &median_bb_mass);			
-  ttH_ttbb_reader_6j4t->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets);	
-  ttH_ttbb_reader_6j4t->BookMVA( "BDT method", BDTWgtDIR_ttH_ttbb + "640203/TMVAClassification_BDT.weights.xml");
- 
-  // 5j4t ttbb/ttH reader:
-
-  ttH_ttbb_reader_5j4t->AddVariable( "avg_dr_tagged_jets", &avg_dr_tagged_jets);
-  ttH_ttbb_reader_5j4t->AddVariable( "maxeta_tag_tag", &maxeta_tag_tag);
-  ttH_ttbb_reader_5j4t->AddVariable( "h1", &h1);
-  ttH_ttbb_reader_5j4t->AddVariable( "h3", &h3);
-  ttH_ttbb_reader_5j4t->AddVariable( "all_sum_pt_with_met", &all_sum_pt_with_met);
-  ttH_ttbb_reader_5j4t->AddVariable( "tagged_dijet_mass_closest_to_125", &tagged_dijet_mass_closest_to_125);
-  ttH_ttbb_reader_5j4t->AddVariable( "MET", &MET);
-  ttH_ttbb_reader_5j4t->AddVariable( "aplanarity", &aplanarity);
-  ttH_ttbb_reader_5j4t->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets);
-  ttH_ttbb_reader_5j4t->AddVariable( "fourth_highest_btag", &fourth_highest_btag);
-  ttH_ttbb_reader_5j4t->BookMVA( "BDT method", BDTWgtDIR_ttH_ttbb + "540000/TMVAClassification_BDT.weights.xml");
-
-
-
-  // 6j3t ttbb/ttH reader:
-
-  ttH_ttbb_reader_6j3t->AddVariable( "sphericity", &sphericity);
-  ttH_ttbb_reader_6j3t->AddVariable( "h3", &h3);
-  ttH_ttbb_reader_6j3t->AddVariable( "maxeta_jet_jet", &maxeta_jet_jet);
-  ttH_ttbb_reader_6j3t->AddVariable( "maxeta_jet_tag", &maxeta_jet_tag);
-  ttH_ttbb_reader_6j3t->AddVariable( "maxeta_tag_tag", &maxeta_tag_tag);
-  ttH_ttbb_reader_6j3t->AddVariable( "abs(dEta_leptop_bb)", &abs_dEta_leptop_bb);
-  ttH_ttbb_reader_6j3t->AddVariable( "abs(dEta_hadtop_bb)", &abs_dEta_hadtop_bb);
-  ttH_ttbb_reader_6j3t->AddVariable( "dEta_fn", &dEta_fn);
-  ttH_ttbb_reader_6j3t->AddVariable( "M3", &M3);
-  ttH_ttbb_reader_6j3t->AddVariable( "min_dr_tagged_jets", &min_dr_tagged_jets);
-  ttH_ttbb_reader_6j3t->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets);
-  ttH_ttbb_reader_6j3t->AddVariable( "aplanarity", &aplanarity);
-  ttH_ttbb_reader_6j3t->AddVariable( "h1", &h1);
-  ttH_ttbb_reader_6j3t->AddVariable( "tagged_dijet_mass_closest_to_125", &tagged_dijet_mass_closest_to_125);
-  ttH_ttbb_reader_6j3t->AddVariable( "third_jet_pt", &third_jet_pt);
-  ttH_ttbb_reader_6j3t->BookMVA( "BDT method", BDTWgtDIR_ttH_ttbb + "630000/TMVAClassification_BDT.weights.xml");
-  
-  
- 
-  //Final BDTs (using 8TeV variable list)
-  
-  // 6j2t
-  reader_final10v16_8TeV_BDT[2]->AddVariable( "all_sum_pt_with_met", &all_sum_pt_with_met );
-  reader_final10v16_8TeV_BDT[2]->AddVariable( "HT", &HT );
-  reader_final10v16_8TeV_BDT[2]->AddVariable( "sphericity", &sphericity );
-  reader_final10v16_8TeV_BDT[2]->AddVariable( "dr_between_lep_and_closest_jet", &dr_between_lep_and_closest_jet );
-  reader_final10v16_8TeV_BDT[2]->AddVariable( "h2", &h2 );
-  reader_final10v16_8TeV_BDT[2]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_final10v16_8TeV_BDT[2]->AddVariable( "fourth_highest_btag", &fourth_highest_btag );
-  reader_final10v16_8TeV_BDT[2]->AddVariable( "maxeta_jet_jet", &maxeta_jet_jet );
-  reader_final10v16_8TeV_BDT[2]->AddVariable( "Mlb", &Mlb );
-  reader_final10v16_8TeV_BDT[2]->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets );
-  reader_final10v16_8TeV_BDT[2]->BookMVA( "BDT method", BDTWgtDIR + "623/TMVAClassification_BDT.weights.xml");
-
-  // 4j3t
-  reader_final10v16_8TeV_BDT[3]->AddVariable( "MET", &MET );
-  reader_final10v16_8TeV_BDT[3]->AddVariable( "first_jet_pt", &first_jet_pt );
-  reader_final10v16_8TeV_BDT[3]->AddVariable( "second_jet_pt", &second_jet_pt );
-  reader_final10v16_8TeV_BDT[3]->AddVariable( "third_jet_pt", &third_jet_pt );
-  reader_final10v16_8TeV_BDT[3]->AddVariable( "fourth_jet_pt", &fourth_jet_pt );
-  reader_final10v16_8TeV_BDT[3]->AddVariable( "all_sum_pt_with_met", &all_sum_pt_with_met );
-  reader_final10v16_8TeV_BDT[3]->AddVariable( "HT", &HT );
-  reader_final10v16_8TeV_BDT[3]->AddVariable( "MHT", &MHT );
-  reader_final10v16_8TeV_BDT[3]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_final10v16_8TeV_BDT[3]->AddVariable( "M3", &M3 );
-  reader_final10v16_8TeV_BDT[3]->BookMVA( "BDT method", BDTWgtDIR + "433/TMVAClassification_BDT.weights.xml");
-
-  // 5j3t
-  reader_final10v16_8TeV_BDT[4]->AddVariable( "first_jet_pt", &first_jet_pt );
-  reader_final10v16_8TeV_BDT[4]->AddVariable( "second_jet_pt", &second_jet_pt );
-  reader_final10v16_8TeV_BDT[4]->AddVariable( "third_jet_pt", &third_jet_pt );
-  reader_final10v16_8TeV_BDT[4]->AddVariable( "fourth_jet_pt", &fourth_jet_pt );
-  reader_final10v16_8TeV_BDT[4]->AddVariable( "all_sum_pt_with_met", &all_sum_pt_with_met );
-  reader_final10v16_8TeV_BDT[4]->AddVariable( "HT", &HT );
-  reader_final10v16_8TeV_BDT[4]->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags );
-  reader_final10v16_8TeV_BDT[4]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_final10v16_8TeV_BDT[4]->AddVariable( "fourth_highest_btag", &fourth_highest_btag );
-  reader_final10v16_8TeV_BDT[4]->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets );
-  reader_final10v16_8TeV_BDT[4]->BookMVA( "BDT method", BDTWgtDIR + "533/TMVAClassification_BDT.weights.xml");
-
-  // 6j3t
-  reader_final10v16_8TeV_BDT[5]->AddVariable( "h0", &h0 );
-  reader_final10v16_8TeV_BDT[5]->AddVariable( "all_sum_pt_with_met", &all_sum_pt_with_met );
-  reader_final10v16_8TeV_BDT[5]->AddVariable( "sphericity", &sphericity );
-  reader_final10v16_8TeV_BDT[5]->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags );
-  reader_final10v16_8TeV_BDT[5]->AddVariable( "second_highest_btag", &second_highest_btag );
-  reader_final10v16_8TeV_BDT[5]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_final10v16_8TeV_BDT[5]->AddVariable( "fourth_highest_btag", &fourth_highest_btag );
-  reader_final10v16_8TeV_BDT[5]->AddVariable( "maxeta_jet_jet", &maxeta_jet_jet );
-  reader_final10v16_8TeV_BDT[5]->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets );
-  //reader_final10v16_8TeV_BDT[5]->AddVariable( "ttH_ttbb_reader_Output_6j3t", &ttH_ttbb_reader_Output_6j3t);
-  reader_final10v16_8TeV_BDT[5]->BookMVA( "BDT method", BDTWgtDIR + "633/TMVAClassification_BDT.weights.xml");
-
-
-  // 4j4t
-  reader_final10v16_8TeV_BDT[6]->AddVariable( "first_jet_pt", &first_jet_pt );
-  reader_final10v16_8TeV_BDT[6]->AddVariable( "second_jet_pt", &second_jet_pt );
-  reader_final10v16_8TeV_BDT[6]->AddVariable( "fourth_jet_pt", &fourth_jet_pt );
-  reader_final10v16_8TeV_BDT[6]->AddVariable( "all_sum_pt_with_met", &all_sum_pt_with_met );
-  reader_final10v16_8TeV_BDT[6]->AddVariable( "HT", &HT );
-  reader_final10v16_8TeV_BDT[6]->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags );
-  reader_final10v16_8TeV_BDT[6]->AddVariable( "second_highest_btag", &second_highest_btag );
-  reader_final10v16_8TeV_BDT[6]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_final10v16_8TeV_BDT[6]->AddVariable( "fourth_highest_btag", &fourth_highest_btag );
-  reader_final10v16_8TeV_BDT[6]->AddVariable( "M3", &M3 );
-  reader_final10v16_8TeV_BDT[6]->BookMVA( "BDT method", BDTWgtDIR + "443/TMVAClassification_BDT.weights.xml");
-
-  // 5j4t
-  reader_final10v16_8TeV_BDT[7]->AddVariable( "all_sum_pt_with_met", &all_sum_pt_with_met );
-  reader_final10v16_8TeV_BDT[7]->AddVariable( "avg_dr_tagged_jets", &avg_dr_tagged_jets );
-  reader_final10v16_8TeV_BDT[7]->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags );
-  reader_final10v16_8TeV_BDT[7]->AddVariable( "dev_from_avg_disc_btags", &dev_from_avg_disc_btags );
-  reader_final10v16_8TeV_BDT[7]->AddVariable( "lowest_btag", &lowest_btag );
-  reader_final10v16_8TeV_BDT[7]->AddVariable( "second_highest_btag", &second_highest_btag );//new
-  reader_final10v16_8TeV_BDT[7]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_final10v16_8TeV_BDT[7]->AddVariable( "maxeta_jet_tag", &maxeta_jet_tag );
-  reader_final10v16_8TeV_BDT[7]->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets );
-  //reader_final10v16_8TeV_BDT[7]->AddVariable("ttH_ttbb_reader_Output_5j4t", &ttH_ttbb_reader_Output_5j4t);
-  reader_final10v16_8TeV_BDT[7]->BookMVA( "BDT method", BDTWgtDIR + "543/TMVAClassification_BDT.weights.xml");
-
-  // 6j4t
-  reader_final10v16_8TeV_BDT[8]->AddVariable( "avg_dr_tagged_jets", &avg_dr_tagged_jets );
-  reader_final10v16_8TeV_BDT[8]->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags );
-  reader_final10v16_8TeV_BDT[8]->AddVariable( "closest_tagged_dijet_mass", &closest_tagged_dijet_mass );
-  reader_final10v16_8TeV_BDT[8]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_final10v16_8TeV_BDT[8]->AddVariable( "fourth_highest_btag", &fourth_highest_btag );
-  reader_final10v16_8TeV_BDT[8]->AddVariable( "maxeta_tag_tag", &maxeta_tag_tag );
-  reader_final10v16_8TeV_BDT[8]->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets );
-  //reader_final10v16_8TeV_BDT[8]->AddVariable( "ttH_ttbb_reader_Output_6j4t", &ttH_ttbb_reader_Output_6j4t);
-  reader_final10v16_8TeV_BDT[8]->AddVariable( "best_higgs_mass", &best_higgs_mass );
-  reader_final10v16_8TeV_BDT[8]->AddVariable( "dEta_fn", &dEta_fn );
-  reader_final10v16_8TeV_BDT[8]->BookMVA( "BDT method", BDTWgtDIR + "643/TMVAClassification_BDT.weights.xml");
-
-
-
-
-  ///// NEW VARIABLE MAY 10 BDTS (Used in reference analysis)
-  
-  // 5j4t
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "aplanarity", &aplanarity );
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "third_jet_pt", &third_jet_pt);
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "fourth_jet_pt", &fourth_jet_pt);
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "h1", &h1);
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "avg_dr_tagged_jets", &avg_dr_tagged_jets );
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "sphericity", &sphericity);
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags );
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "dev_from_avg_disc_btags", &dev_from_avg_disc_btags );
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "h2", &h2);
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "h3", &h3);
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "fourth_highest_btag", &fourth_highest_btag );//new
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "maxeta_jet_jet", &maxeta_jet_jet );
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "maxeta_jet_tag", &maxeta_jet_tag );
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "maxeta_tag_tag", &maxeta_tag_tag );
-  reader_NewMay10_optimized_BDT[7]->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets );
-  //reader_NewMay10_optimized_BDT[7]->AddVariable("ttH_ttbb_reader_Output_5j4t", &ttH_ttbb_reader_Output_5j4t);
-  reader_NewMay10_optimized_BDT[7]->BookMVA( "BDT method", BDTWgtDIR_NewMay10 + "543/TMVAClassification_BDT.weights.xml");
-
-  // 6j4t
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "avg_dr_tagged_jets", &avg_dr_tagged_jets );
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags );
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "h2", &h2);
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "h3", &h3);
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "second_highest_btag", &second_highest_btag);
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "fourth_highest_btag", &fourth_highest_btag );
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "maxeta_jet_jet", &maxeta_jet_jet );
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "maxeta_jet_tag", &maxeta_jet_tag );
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "maxeta_tag_tag", &maxeta_tag_tag );
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets );
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "tagged_dijet_mass_closest_to_125", &tagged_dijet_mass_closest_to_125 );
-  reader_NewMay10_optimized_BDT[8]->AddVariable( "dEta_fn", &dEta_fn );
-  
-  reader_NewMay10_optimized_BDT[8]->BookMVA( "BDT method", BDTWgtDIR_NewMay10 + "643/TMVAClassification_BDT.weights.xml");
-  
-  // 6j2t
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "first_jet_pt", &first_jet_pt );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "second_jet_pt", &second_jet_pt );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "fourth_jet_pt", &fourth_jet_pt );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "h0", &h0 );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "h1", &h1 );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "all_sum_pt_with_met", &all_sum_pt_with_met );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "HT", &HT );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "h3", &h3 );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "fourth_highest_btag", &fourth_highest_btag );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "fifth_highest_CSV", &fifth_highest_CSV);
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "maxeta_jet_jet", &maxeta_jet_jet );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "Mlb", &Mlb );
-  reader_NewMay10_optimized_BDT[2]->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets );
-  reader_NewMay10_optimized_BDT[2]->BookMVA( "BDT method", BDTWgtDIR_NewMay10 + "623/TMVAClassification_BDT.weights.xml");
-
-  // 5j3t
- 
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "second_jet_pt", &second_jet_pt );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "third_jet_pt", &third_jet_pt );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "fourth_jet_pt", &fourth_jet_pt );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "all_sum_pt_with_met", &all_sum_pt_with_met );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "HT", &HT );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "avg_dr_tagged_jets", &avg_dr_tagged_jets );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "dev_from_avg_disc_btags", &dev_from_avg_disc_btags );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "h3", &h3 );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "second_highest_btag", &second_highest_btag );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "maxeta_jet_jet", &maxeta_jet_jet );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "maxeta_jet_tag", &maxeta_jet_tag );
-  reader_NewMay10_optimized_BDT[4]->AddVariable( "maxeta_tag_tag", &maxeta_tag_tag );
-  reader_NewMay10_optimized_BDT[4]->BookMVA( "BDT method", BDTWgtDIR_NewMay10 + "533/TMVAClassification_BDT.weights.xml");
-
-  // 6j3t
-  
-  
-  
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "third_jet_pt", &third_jet_pt );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "fourth_jet_pt", &fourth_jet_pt );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "all_sum_pt_with_met", &all_sum_pt_with_met );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "HT", &HT );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "avg_dr_tagged_jets", &avg_dr_tagged_jets );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "dev_from_avg_disc_btags", &dev_from_avg_disc_btags );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "h3", &h3 );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "second_highest_btag", &second_highest_btag );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "fourth_highest_btag", &fourth_highest_btag );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "maxeta_jet_tag", &maxeta_jet_tag );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "maxeta_tag_tag", &maxeta_tag_tag );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "min_dr_tagged_jets", &min_dr_tagged_jets );
-  reader_NewMay10_optimized_BDT[5]->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets );
-  //reader_NewMay10_optimized_BDT[5]->AddVariable( "ttH_ttbb_reader_Output_6j3t", &ttH_ttbb_reader_Output_6j3t);
-  reader_NewMay10_optimized_BDT[5]->BookMVA( "BDT method", BDTWgtDIR_NewMay10 + "633/TMVAClassification_BDT.weights.xml");
-  
-
-
-  // 4j4t
-  
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "h1", &h1 );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "avg_dr_tagged_jets", &avg_dr_tagged_jets );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "sphericity", &sphericity);
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "dev_from_avg_disc_btags", &dev_from_avg_disc_btags );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "h2", &h2 );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "closest_tagged_dijet_mass", &closest_tagged_dijet_mass );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "h3", &h3 );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "second_highest_btag", &second_highest_btag );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "fourth_highest_btag", &fourth_highest_btag );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "maxeta_jet_jet", &maxeta_jet_jet );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "min_dr_tagged_jets", &min_dr_tagged_jets );
-  reader_NewMay10_optimized_BDT[6]->AddVariable( "pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets );
-  reader_NewMay10_optimized_BDT[6]->BookMVA( "BDT method", BDTWgtDIR_NewMay10 + "443/TMVAClassification_BDT.weights.xml");
-  
-  //4j3t
-  
-  
-  reader_NewMay10_optimized_BDT[3]->AddVariable( "first_jet_pt", &first_jet_pt );
-  reader_NewMay10_optimized_BDT[3]->AddVariable( "second_jet_pt", &second_jet_pt );
-  reader_NewMay10_optimized_BDT[3]->AddVariable( "third_jet_pt", &third_jet_pt );
-  reader_NewMay10_optimized_BDT[3]->AddVariable( "all_sum_pt_with_met", &all_sum_pt_with_met );
-  reader_NewMay10_optimized_BDT[3]->AddVariable( "HT", &HT );
-  reader_NewMay10_optimized_BDT[3]->AddVariable( "avg_btag_disc_btags", &avg_btag_disc_btags );
-  reader_NewMay10_optimized_BDT[3]->AddVariable( "dev_from_avg_disc_btags", &dev_from_avg_disc_btags );
-  reader_NewMay10_optimized_BDT[3]->AddVariable( "second_highest_btag", &second_highest_btag );
-  reader_NewMay10_optimized_BDT[3]->AddVariable( "third_highest_btag", &third_highest_btag );
-  reader_NewMay10_optimized_BDT[3]->AddVariable( "invariant_mass_of_everything", &invariant_mass_of_everything );
-  reader_NewMay10_optimized_BDT[3]->BookMVA( "BDT method", BDTWgtDIR_NewMay10 + "433/TMVAClassification_BDT.weights.xml");
-
-
   /////////////
 
+//KITBDTS
 
 
+  //4j3t
+  
+  //reader_Spring15_KITreoptimized_BDT[3]->AddVariable("CSV_Average", &CSV_Average);
+  reader_Spring15_KITreoptimized_BDT[3]->AddVariable("BDTOhio_v2_input_h1", &h1);
+  //reader_Spring15_KITreoptimized_BDT[3]->AddVariable("HT", &HT);
+  reader_Spring15_KITreoptimized_BDT[3]->AddVariable("BDTOhio_v2_input_avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Spring15_KITreoptimized_BDT[3]->AddVariable("BDTOhio_v2_input_sphericity", &sphericity);
+  //reader_Spring15_KITreoptimized_BDT[3]->AddVariable("avg_btag_disc_btags", &avg_btag_disc_btags);
+  //reader_Spring15_KITreoptimized_BDT[3]->AddVariable("dev_from_avg_disc_btags", &dev_from_avg_disc_btags);
+  reader_Spring15_KITreoptimized_BDT[3]->AddVariable("BDTOhio_v2_input_third_highest_btag", &third_highest_btag);
+  reader_Spring15_KITreoptimized_BDT[3]->AddVariable("BDTOhio_v2_input_HT",&HT);
+  reader_Spring15_KITreoptimized_BDT[3]->AddVariable("BDTOhio_v2_input_dev_from_avg_disc_btags", &dev_from_avg_disc_btags);
+  reader_Spring15_KITreoptimized_BDT[3]->AddVariable("BDTOhio_v2_input_M3", &M3);
+  reader_Spring15_KITreoptimized_BDT[3]->AddVariable("BDTOhio_v2_input_min_dr_tagged_jets", &min_dr_tagged_jets);
+  reader_Spring15_KITreoptimized_BDT[3]->AddVariable("Evt_CSV_Average", &CSV_Average);
+  reader_Spring15_KITreoptimized_BDT[3]->BookMVA("BDT method", BDTWgtDIR_Spring15 + "weights_Final_43_KITV3.xml");
+  
+    
+  //4j4t
+  
+  reader_Spring15_KITreoptimized_BDT[6]->AddVariable("BDTOhio_v2_input_h1", &h1);
+  reader_Spring15_KITreoptimized_BDT[6]->AddVariable("BDTOhio_v2_input_avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Spring15_KITreoptimized_BDT[6]->AddVariable("BDTOhio_v2_input_sphericity", &sphericity);
+  //reader_Spring15_KITreoptimized_BDT[6]->AddVariable("dev_from_avg_disc_btags", &dev_from_avg_disc_btags);
+  reader_Spring15_KITreoptimized_BDT[6]->AddVariable("BDTOhio_v2_input_avg_btag_disc_btags", &avg_btag_disc_btags);
+  reader_Spring15_KITreoptimized_BDT[6]->AddVariable("BDTOhio_v2_input_h2", &h2);
+  reader_Spring15_KITreoptimized_BDT[6]->AddVariable("BDTOhio_v2_input_closest_tagged_dijet_mass", &closest_tagged_dijet_mass);
+  reader_Spring15_KITreoptimized_BDT[6]->AddVariable("BDTOhio_v2_input_second_highest_btag", &second_highest_btag);
+  reader_Spring15_KITreoptimized_BDT[6]->AddVariable("BDTOhio_v2_input_fourth_highest_btag", &fourth_highest_btag);
+  reader_Spring15_KITreoptimized_BDT[6]->AddVariable("BDTOhio_v2_input_maxeta_jet_jet", &maxeta_jet_jet);
+  reader_Spring15_KITreoptimized_BDT[6]->AddVariable("BDTOhio_v2_input_pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets);
+  reader_Spring15_KITreoptimized_BDT[6]->BookMVA("BDT method", BDTWgtDIR_Spring15 + "weights_Final_44_KITV3.xml");
+  
+  
+  //5j3t
+  
+  reader_Spring15_KITreoptimized_BDT[4]->AddVariable("BDTOhio_v2_input_h1", &h1);
+  //reader_Spring15_KITreoptimized_BDT[4]->AddVariable("HT", &HT);
+  reader_Spring15_KITreoptimized_BDT[4]->AddVariable("BDTOhio_v2_input_avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Spring15_KITreoptimized_BDT[4]->AddVariable("BDTOhio_v2_input_sphericity", &sphericity);
+  //reader_Spring15_KITreoptimized_BDT[4]->AddVariable("dev_from_avg_disc_btags", &dev_from_avg_disc_btags);
+  //reader_Spring15_KITreoptimized_BDT[4]->AddVariable("h3", &h3);
+  reader_Spring15_KITreoptimized_BDT[4]->AddVariable("BDTOhio_v2_input_third_highest_btag", &third_highest_btag);
+  reader_Spring15_KITreoptimized_BDT[4]->AddVariable("BDTOhio_v2_input_h3", &h3);
+  reader_Spring15_KITreoptimized_BDT[4]->AddVariable("BDTOhio_v2_input_HT", &HT);
+  reader_Spring15_KITreoptimized_BDT[4]->AddVariable("BDTOhio_v2_input_dev_from_avg_disc_btags", &dev_from_avg_disc_btags);
+  reader_Spring15_KITreoptimized_BDT[4]->AddVariable("BDTOhio_v2_input_fourth_highest_btag", &fourth_highest_btag);
+  reader_Spring15_KITreoptimized_BDT[4]->BookMVA("BDT method", BDTWgtDIR_Spring15 + "weights_Final_53_KITV3.xml");
+  
+  
+  //5j4t
+    reader_Spring15_KITreoptimized_BDT[7]->AddVariable("BDTOhio_v2_input_avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Spring15_KITreoptimized_BDT[7]->AddVariable("BDTOhio_v2_input_HT", &HT);
+ reader_Spring15_KITreoptimized_BDT[7]->AddVariable("BDTOhio_v2_input_M3", &M3);
+   reader_Spring15_KITreoptimized_BDT[7]->AddVariable("BDTOhio_v2_input_fifth_highest_CSV", &fifth_highest_CSV);
+//  reader_Spring15_KITreoptimized_BDT[7]->AddVariable("avg_btag_disc_btags", &avg_btag_disc_btags);
+  reader_Spring15_KITreoptimized_BDT[7]->AddVariable("BDTOhio_v2_input_fourth_highest_btag", &fourth_highest_btag);
 
+  reader_Spring15_KITreoptimized_BDT[7]->AddVariable("Evt_Deta_JetsAverage", &Deta_JetsAverage);
+ reader_Spring15_KITreoptimized_BDT[7]->AddVariable("BDTOhio_v2_input_avg_btag_disc_btags", &avg_btag_disc_btags);
+  reader_Spring15_KITreoptimized_BDT[7]->BookMVA("BDT method", BDTWgtDIR_Spring15 + "weights_Final_54_KITV3.xml");
+  
 
-  //////////////////////////////////////////////////////////////////////////
-  ///  Tree branches/leaves
-  //////////////////////////////////////////////////////////////////////////
-
-  yggdrasilEventVars *eve=0;
-  chain->SetBranchAddress("eve.", &eve );
-
-  //////////////////////////////////////////////////////////////////////////
-  ///  Histogram making
-  //////////////////////////////////////////////////////////////////////////
-
-
-  TFile histofile(histofilename.c_str(),"recreate");
-  histofile.cd();
-
-
-  double NpvMin = 0-0.5;
-  double NpvMax = 50+0.5;
-  int NpvBins = int( NpvMax - NpvMin + 0.0001 );
-
-  int NjetMin_full = 4;
-  int NjetMax_full = 10;
-  int NjetBins_full = NjetMax_full - NjetMin_full + 1;
-
-  int NjetMin = 4;
-  int NjetMax = 6;
-  int NjetBins = NjetMax - NjetMin + 1;
-  int NtagMin = 2;
-  int NtagMax = 4;
-  int NtagBins = NtagMax - NtagMin + 1;
-
-  int NtagMin_full = 2;
-  int NtagMax_full = 7;
-  int NtagBins_full = NtagMax_full - NtagMin_full + 1;
-
-
-  int NjetMin_loose = 0;
-  int NjetMax_loose = 5;
-  int NjetBins_loose = NjetMax_loose - NjetMin_loose + 1;
-
-  int NtagMin_loose = 0;
-  int NtagMax_loose = 2;
-  int NtagBins_loose = NtagMax_loose - NtagMin_loose + 1;
-
-  double metmax   = 500.;
-  double lepPtMax = 300.;
-  double jetptmax = 500.;
-  double htmax    = 2000.;
-  double massmax  = 500.;
-  double m3max    = 1000.;
-  double massmax_sumTop = 2000.;
-
-  int NmetBins   = int( metmax/20. + 0.0001 );
-  int NlepPtBins = int( lepPtMax/10. + 0.0001 );
-  int NjetptBins = int( jetptmax/10. + 0.0001 );
-  int NhtBins    = int( htmax/50. + 0.0001 );
-  int NmassBins  = int( massmax/10. + 0.0001 );
-  int Nm3Bins    = int( m3max/10. + 0.0001 );
-  int NmassBins_sumTop  = int( massmax/10. + 0.0001 );
-
-
-  // double max_jet_leadCandDistFromPV = 4.;
-  // double max_jet_minPVDist = 0.1;
-
-  // int Nbins_CFMlpANN = 20;
-
-  int NcsvBins = 44;
-
-
-  std::vector<std::string> sys_cat_labels;
-  sys_cat_labels.push_back("");               //0
-  sys_cat_labels.push_back("_lepIdSFUp");     //1
-  sys_cat_labels.push_back("_lepIdSFDown");   //2
-  sys_cat_labels.push_back("_PUUp");          //3
-  sys_cat_labels.push_back("_PUDown");        //4
-  sys_cat_labels.push_back("_JERUp");         //5
-  sys_cat_labels.push_back("_JERDown");       //6
-  sys_cat_labels.push_back("_JESUp");         //7
-  sys_cat_labels.push_back("_JESDown");       //8
-  sys_cat_labels.push_back("_CSVLFUp");       //9
-  sys_cat_labels.push_back("_CSVLFDown");     //10
-  sys_cat_labels.push_back("_CSVHFUp");       //11
-  sys_cat_labels.push_back("_CSVHFDown");     //12
-  sys_cat_labels.push_back("_CSVHFStats1Up");     //13
-  sys_cat_labels.push_back("_CSVHFStats1Down");   //14
-  sys_cat_labels.push_back("_CSVHFStats2Up");     //15
-  sys_cat_labels.push_back("_CSVHFStats2Down");   //16
-  sys_cat_labels.push_back("_CSVLFStats1Up");     //17
-  sys_cat_labels.push_back("_CSVLFStats1Down");   //18
-  sys_cat_labels.push_back("_CSVLFStats2Up");     //19
-  sys_cat_labels.push_back("_CSVLFStats2Down");   //20
+  
+  //6j2t
+  
+  reader_Spring15_KITreoptimized_BDT[2]->AddVariable("BDTOhio_v2_input_h1", &h1);
+  //reader_Spring15_KITreoptimized_BDT[2]->AddVariable("HT", &HT);
+  reader_Spring15_KITreoptimized_BDT[2]->AddVariable("BDTOhio_v2_input_avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Spring15_KITreoptimized_BDT[2]->AddVariable("BDTOhio_v2_input_sphericity", &sphericity);
+  //reader_Spring15_KITreoptimized_BDT[2]->AddVariable("h3", &h3);
+  reader_Spring15_KITreoptimized_BDT[2]->AddVariable("BDTOhio_v2_input_third_highest_btag", &third_highest_btag);
+  reader_Spring15_KITreoptimized_BDT[2]->AddVariable("BDTOhio_v2_input_h3", &h3);
+  reader_Spring15_KITreoptimized_BDT[2]->AddVariable("BDTOhio_v2_input_HT", &HT);
+  reader_Spring15_KITreoptimized_BDT[2]->AddVariable("BDTOhio_v2_input_Mlb", &Mlb);
+  //reader_Spring15_KITreoptimized_BDT[2]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Spring15_KITreoptimized_BDT[2]->AddVariable("BDTOhio_v2_input_fifth_highest_CSV", &fifth_highest_CSV);
+  reader_Spring15_KITreoptimized_BDT[2]->AddVariable("BDTOhio_v2_input_fourth_highest_btag", &fourth_highest_btag);
+  //reader_Spring15_KITreoptimized_BDT[2]->AddVariable("Mlb", &Mlb);
+  reader_Spring15_KITreoptimized_BDT[2]->BookMVA("BDT method", BDTWgtDIR_Spring15 + "weights_Final_62_KITV3.xml");
+  
+  
+  //6j3t
+  
+  reader_Spring15_KITreoptimized_BDT[5]->AddVariable("BDTOhio_v2_input_h1", &h1);
+  //reader_Spring15_KITreoptimized_BDT[5]->AddVariable("HT", &HT);
+  reader_Spring15_KITreoptimized_BDT[5]->AddVariable("BDTOhio_v2_input_avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  
+  //reader_Spring15_KITreoptimized_BDT[5]->AddVariable("h3", &h3);
+  reader_Spring15_KITreoptimized_BDT[5]->AddVariable("BDTOhio_v2_input_third_highest_btag", &third_highest_btag);
+  reader_Spring15_KITreoptimized_BDT[5]->AddVariable("BDTOhio_v2_input_HT", &HT);
+  reader_Spring15_KITreoptimized_BDT[5]->AddVariable("BDTOhio_v2_input_pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets);
+  reader_Spring15_KITreoptimized_BDT[5]->AddVariable("BDTOhio_v2_input_fifth_highest_CSV", &fifth_highest_CSV);
+  
+  reader_Spring15_KITreoptimized_BDT[5]->AddVariable("BDTOhio_v2_input_fourth_highest_btag", &fourth_highest_btag);
+  reader_Spring15_KITreoptimized_BDT[5]->AddVariable("BDTOhio_v2_input_min_dr_tagged_jets", &min_dr_tagged_jets);
+  //reader_Spring15_KITreoptimized_BDT[5]->AddVariable("pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets);
+  reader_Spring15_KITreoptimized_BDT[5]->BookMVA("BDT method", BDTWgtDIR_Spring15 + "weights_Final_63_KITV3.xml");
+  
+  
+  //6j4t
+  
+ // reader_Spring15_KITreoptimized_BDT[8]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Spring15_KITreoptimized_BDT[8]->AddVariable("BDTOhio_v2_input_h2", &h2);
+  reader_Spring15_KITreoptimized_BDT[8]->AddVariable("BDTOhio_v2_input_avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Spring15_KITreoptimized_BDT[8]->AddVariable("BDTOhio_v2_input_third_highest_btag", &third_highest_btag);
+  reader_Spring15_KITreoptimized_BDT[8]->AddVariable("BDTOhio_v2_input_M3", &M3);
+   reader_Spring15_KITreoptimized_BDT[8]->AddVariable("BDTOhio_v2_input_fifth_highest_CSV", &fifth_highest_CSV);
+  reader_Spring15_KITreoptimized_BDT[8]->AddVariable("BDTOhio_v2_input_fourth_highest_btag", &fourth_highest_btag);
  
-  sys_cat_labels.push_back("_CSVCErr1Up");     //21
-  sys_cat_labels.push_back("_CSVCErr1Down");   //22
-  sys_cat_labels.push_back("_CSVCErr2Up");     //23
-  sys_cat_labels.push_back("_CSVCErr2Down");   //24
-   sys_cat_labels.push_back("_Q2scaleUp");     //25
-  sys_cat_labels.push_back("_Q2scaleDown");   //26
-  sys_cat_labels.push_back("_topPtcorrUp");   //27
-  sys_cat_labels.push_back("_topPtcorrDown"); //28
+  //reader_Spring15_KITreoptimized_BDT[8]->AddVariable("M3", &M3);
+  reader_Spring15_KITreoptimized_BDT[8]->AddVariable("BDTOhio_v2_input_best_higgs_mass", &best_higgs_mass);
+  reader_Spring15_KITreoptimized_BDT[8]->AddVariable("BDTOhio_v2_input_dEta_fn", &dEta_fn);
+  reader_Spring15_KITreoptimized_BDT[8]->BookMVA("BDT method", BDTWgtDIR_Spring15 + "weights_Final_64_KITV3.xml");
   
 
 
-  int NumSysCat = int(sys_cat_labels.size());
-
-
-  //////////////////////////////////////////////////////////////////////////
-  ///  Histograms
-  //////////////////////////////////////////////////////////////////////////
-
-
-
-  TH1::SetDefaultSumw2();
-
-  //
-  // Event level information
-  //
-  TH1D* h_wgt_lepSF[NumSysCat];
-  TH1D* h_wgt_PU[NumSysCat];
-  TH1D* h_wgt_csvSF[NumSysCat];
-
-  TH1D* h_category_yield[NumSysCat];
-  TH1D* h_category_yield_noCSV[NumSysCat];
-  TH1D* h_category_yield_newCSV[NumSysCat];
-  TH1D* h_category_yield_looseNewCSV[NumSysCat];
-  TH1D* h_category_yield_looseNewCSV_nomCSV[NumSysCat];
-  TH1D* h_category_yield_looseNewCSV_newCSV[NumSysCat];
-
-  TH1D* h_numPV_cat[NumCat][NumSysCat];
-  TH1D* h_numPV[NumSysCat];
-  TH1D* h_numJet[NumSysCat];
-  TH1D* h_numTag[NumSysCat];
-  TH2D* h_numJet_numTag[NumSysCat];
-
-  TH1D* h_NumBmatch[NumCat][NumSysCat];
-
-  TH1D* h_numLooseJet[NumSysCat];
-  TH1D* h_numLooseTag[NumSysCat];
-
-
-  // ttH, Higgs specific histograms
-  TH1D* h_higgsDecayType[NumCat][NumSysCat];
-  TH2D* h_category_yield_higgsDecayType[NumSysCat];
-
-
-
-  //
-  // Lepton plots
-  //
-  TH1D* h_lepton_pt[NumCat][NumSysCat];
-  TH1D* h_lepton_phi[NumCat][NumSysCat];
-  TH1D* h_lepton_eta[NumCat][NumSysCat];
-  TH1D* h_lepton_relIso[NumCat][NumSysCat];
-
-
-  // 
-  // Jet plots
-  //
-
-  // all jets combined
-  TH1D* h_jet_pt[NumCat][NumSysCat];
-  TH1D* h_jet_pt_noCSV[NumCat][NumSysCat];
-  TH1D* h_jet_pt_newCSV[NumCat][NumSysCat];
-  TH1D* h_jet_pt_looseNewCSV[NumCat][NumSysCat];
-  TH1D* h_jet_pt_looseNewCSV_nomCSV[NumCat][NumSysCat];
-  TH1D* h_jet_pt_looseNewCSV_newCSV[NumCat][NumSysCat];
-
-  TH1D* h_jet_eta[NumCat][NumSysCat];
-  TH1D* h_jet_eta_noCSV[NumCat][NumSysCat];
-  TH1D* h_jet_eta_newCSV[NumCat][NumSysCat];
-  TH1D* h_jet_eta_looseNewCSV[NumCat][NumSysCat];
-  TH1D* h_jet_eta_looseNewCSV_nomCSV[NumCat][NumSysCat];
-  TH1D* h_jet_eta_looseNewCSV_newCSV[NumCat][NumSysCat];
-
-  TH1D* h_jet_csv[NumCat][NumSysCat];
-  TH1D* h_jet_csv_noCSV[NumCat][NumSysCat];
-  TH1D* h_jet_csv_newCSV[NumCat][NumSysCat];
-  TH1D* h_jet_csv_looseNewCSV[NumCat][NumSysCat];
-  TH1D* h_jet_csv_looseNewCSV_nomCSV[NumCat][NumSysCat];
-  TH1D* h_jet_csv_looseNewCSV_newCSV[NumCat][NumSysCat];
-
-  TH1D* h_jet_loose_pt[NumCat][NumSysCat];
-  TH1D* h_jet_loose_pt_noCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_pt_newCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_pt_looseNewCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_pt_looseNewCSV_nomCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_pt_looseNewCSV_newCSV[NumCat][NumSysCat];
-
-  TH1D* h_jet_loose_eta[NumCat][NumSysCat];
-  TH1D* h_jet_loose_eta_noCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_eta_newCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_eta_looseNewCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_eta_looseNewCSV_nomCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_eta_looseNewCSV_newCSV[NumCat][NumSysCat];
-
-  TH1D* h_jet_loose_csv[NumCat][NumSysCat];
-  TH1D* h_jet_loose_csv_noCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_csv_newCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_csv_looseNewCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_csv_looseNewCSV_nomCSV[NumCat][NumSysCat];
-  TH1D* h_jet_loose_csv_looseNewCSV_newCSV[NumCat][NumSysCat];
-
-
-  TH1D* h_tag_jet_pt[NumCat][NumSysCat];
-  TH1D* h_untag_jet_pt[NumCat][NumSysCat];
-
-  TH1D* h_jet_pt_noTopPt[NumCat][NumSysCat];
-  TH1D* h_jet_pt_noTopPt_noCSV[NumCat][NumSysCat];
-
-  TH1D* h_jet_csv_noTopPt[NumCat][NumSysCat];
-  TH1D* h_jet_csv_noTopPt_noCSV[NumCat][NumSysCat];
-
-
-  TH1D* h_maxDEta_jet_aveJetEta[NumCat][NumSysCat];
-  TH1D* h_maxDEta_tag_aveJetEta[NumCat][NumSysCat];
-  TH1D* h_maxDEta_tag_aveTagEta[NumCat][NumSysCat];
-
-  TH1D* h_jet_aveJetEta[NumCat][NumSysCat];
-  TH1D* h_jet_aveTagEta[NumCat][NumSysCat];
-
-  // single jet specific plots
-
-  TH1D* h_jet_pt_1_noCSV[NumCat][NumSysCat];
-  TH1D* h_jet_pt_1_noTopPt[NumCat][NumSysCat];
-  TH1D* h_jet_pt_1_noTopPt_noCSV[NumCat][NumSysCat];
-
-  TH1D* h_jet_pt_1[NumCat][NumSysCat];
-  TH1D* h_jet_pt_2[NumCat][NumSysCat];
-  TH1D* h_jet_pt_3[NumCat][NumSysCat];
-  TH1D* h_jet_pt_4[NumCat][NumSysCat];
-
-  TH1D* h_jet_eta_1[NumCat][NumSysCat];
-  TH1D* h_jet_eta_2[NumCat][NumSysCat];
-  TH1D* h_jet_eta_3[NumCat][NumSysCat];
-  TH1D* h_jet_eta_4[NumCat][NumSysCat];
-
-  TH1D* h_jet_tag_pt_1[NumCat][NumSysCat];
-  TH1D* h_jet_tag_pt_2[NumCat][NumSysCat];
-  TH1D* h_jet_tag_pt_3[NumCat][NumSysCat];
-  TH1D* h_jet_tag_pt_4[NumCat][NumSysCat];
-
-  TH1D* h_jet_untag_pt_1[NumCat][NumSysCat];
-  TH1D* h_jet_untag_pt_2[NumCat][NumSysCat];
-  TH1D* h_jet_untag_pt_3[NumCat][NumSysCat];
-  TH1D* h_jet_untag_pt_4[NumCat][NumSysCat];
-
-  TH1D* h_jet_csv_1[NumCat][NumSysCat];
-  TH1D* h_jet_csv_2[NumCat][NumSysCat];
-  TH1D* h_jet_csv_3[NumCat][NumSysCat];
-  TH1D* h_jet_csv_4[NumCat][NumSysCat];
-  TH1D* h_jet_csv_5[NumCat][NumSysCat];
-  TH1D* h_jet_csv_6[NumCat][NumSysCat];
+  //BDTs for checking even/odd splitting. 
   
-  TH1D* h_first_jet_pt[NumCat][NumSysCat];
-  TH1D* h_second_jet_pt[NumCat][NumSysCat];
-  TH1D* h_third_jet_pt[NumCat][NumSysCat];
-  TH1D* h_fourth_jet_pt[NumCat][NumSysCat];
 
-
-
-TH1D* h_NumCount;
-
-
-
-  //
-  // Info from multiple objects
-  //
-  TH1D* h_HT[NumCat][NumSysCat];
-  TH1D* h_all_sum_pt[NumCat][NumSysCat];
-  TH1D* h_all_sum_pt_with_met[NumCat][NumSysCat];
-  TH1D* h_invariant_mass_of_everything[NumCat][NumSysCat];
-
-  TH1D* h_M3[NumCat][NumSysCat];
-  TH1D* h_M3_1tag[NumCat][NumSysCat];
-  TH1D* h_Mlb[NumCat][NumSysCat];
-
-  TH1D* h_met_pt[NumCat][NumSysCat];
-  TH1D* h_met_phi[NumCat][NumSysCat];
-  TH1D* h_met[NumCat][NumSysCat];
-  TH1D* h_mht_pt[NumCat][NumSysCat];
-  TH1D* h_mht_phi[NumCat][NumSysCat];
-  TH1D* h_mht[NumCat][NumSysCat];
-
-  TH1D* h_transverse_mass_met[NumCat][NumSysCat];
-  TH2D* h_transverse_mass_met_vs_met[NumCat][NumSysCat];
-  TH1D* h_transverse_mass_mht[NumCat][NumSysCat];
-  TH2D* h_transverse_mass_mht_vs_mht[NumCat][NumSysCat];
-
-  TH1D* h_min_dR_lep_jet[NumCat][NumSysCat];
-  TH1D* h_min_dR_tag_tag[NumCat][NumSysCat];
-  TH1D* h_ave_dR_tag_tag[NumCat][NumSysCat];
-
-  TH1D* h_ave_mass_tag_tag[NumCat][NumSysCat];
-  TH1D* h_ave_mass_untag_untag[NumCat][NumSysCat];
-
-
-  TH1D* h_leptonicW_mass[NumCat][NumSysCat];
-  TH1D* h_hadronicW_mass[NumCat][NumSysCat];
-  TH1D* h_leptonicT_mass[NumCat][NumSysCat];
-  TH1D* h_hadronicT_mass[NumCat][NumSysCat];
-
-  TH1D* h_hadronicW_pT[NumCat][NumSysCat];
-  TH2D* h_hadronicW_pT_mass[NumCat][NumSysCat];
-
-  TH1D* h_leptonicT_pT[NumCat][NumSysCat];
-  TH2D* h_leptonicT_pT_mass[NumCat][NumSysCat];
-  TH1D* h_hadronicT_pT[NumCat][NumSysCat];
-  TH2D* h_hadronicT_pT_mass[NumCat][NumSysCat];
-
-  TH1D* h_lepT_hadT_DeltaR[NumCat][NumSysCat];
-  TH1D* h_lepT_hadT_Angle[NumCat][NumSysCat];
-
-
-  TH1D* h_sumTop_pT[NumCat][NumSysCat];
-  TH1D* h_sumTop_mass[NumCat][NumSysCat];
-  TH2D* h_sumTop_pT_mass[NumCat][NumSysCat];
-
-  TH1D* h_minChi2_getTopSystem[NumCat][NumSysCat];
-
-  TH2D* h_leptonicW_mass_minChi2_getTopSystem[NumCat][NumSysCat];
-  TH2D* h_hadronicW_mass_minChi2_getTopSystem[NumCat][NumSysCat];
-  TH2D* h_leptonicT_mass_minChi2_getTopSystem[NumCat][NumSysCat];
-  TH2D* h_hadronicT_mass_minChi2_getTopSystem[NumCat][NumSysCat];
-
-
-
-
-  TH1D* h_aplanarity[NumCat][NumSysCat];
-  TH1D* h_sphericity[NumCat][NumSysCat];
-  TH1D* h_avg_btag_disc_non_btags[NumCat][NumSysCat];
-  TH1D* h_avg_btag_disc_btags[NumCat][NumSysCat];
-  TH1D* h_dev_from_avg_disc_btags[NumCat][NumSysCat];
-  TH1D* h_lowest_btag[NumCat][NumSysCat];
-  TH1D* h_closest_tagged_dijet_mass[NumCat][NumSysCat];
-
-  TH1D* h_h0[NumCat][NumSysCat];
-  TH1D* h_h1[NumCat][NumSysCat];
-  TH1D* h_h2[NumCat][NumSysCat];
-  TH1D* h_h3[NumCat][NumSysCat];
-  TH1D* h_h4[NumCat][NumSysCat];
-
+  //4j3t
+  reader_Splitting_1_1[3]->AddVariable("CSV_Average", &CSV_Average);
+  reader_Splitting_1_1[3]->AddVariable("h1", &h1);
+  reader_Splitting_1_1[3]->AddVariable("HT",&HT);
+  reader_Splitting_1_1[3]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_1[3]->AddVariable("sphericity", &sphericity);
+  reader_Splitting_1_1[3]->AddVariable("dev_from_avg_disc_btags", &dev_from_avg_disc_btags);
+  reader_Splitting_1_1[3]->AddVariable("third_highest_btag", &third_highest_btag);
+  reader_Splitting_1_1[3]->AddVariable("M3", &M3);
+  reader_Splitting_1_1[3]->AddVariable("min_dr_tagged_jets", &min_dr_tagged_jets);
+  reader_Splitting_1_1[3]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_1 + "433/TMVAClassification_BDT.weights.xml");
+  //4j4t
+  reader_Splitting_1_1[6]->AddVariable("h1", &h1);
+  reader_Splitting_1_1[6]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_1[6]->AddVariable("sphericity", &sphericity);
+  reader_Splitting_1_1[6]->AddVariable("avg_btag_disc_btags", &avg_btag_disc_btags);
+  reader_Splitting_1_1[6]->AddVariable("h2", &h2);
+  reader_Splitting_1_1[6]->AddVariable("closest_tagged_dijet_mass", &closest_tagged_dijet_mass);
+  reader_Splitting_1_1[6]->AddVariable("second_highest_btag", &second_highest_btag);
+  reader_Splitting_1_1[6]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_1[6]->AddVariable("maxeta_jet_jet", &maxeta_jet_jet);
+  reader_Splitting_1_1[6]->AddVariable("pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets);
+  reader_Splitting_1_1[6]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_1 + "443/TMVAClassification_BDT.weights.xml");
+  //5j3t
+  reader_Splitting_1_1[4]->AddVariable("h1", &h1);
+  reader_Splitting_1_1[4]->AddVariable("HT", &HT);
+  reader_Splitting_1_1[4]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_1[4]->AddVariable("sphericity", &sphericity);
+  reader_Splitting_1_1[4]->AddVariable("dev_from_avg_disc_btags", &dev_from_avg_disc_btags);
+  reader_Splitting_1_1[4]->AddVariable("h3", &h3);
+  reader_Splitting_1_1[4]->AddVariable("third_highest_btag", &third_highest_btag);
+  reader_Splitting_1_1[4]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_1[4]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_1 + "533/TMVAClassification_BDT.weights.xml");
+  //5j4t
+  reader_Splitting_1_1[7]->AddVariable("HT", &HT);
+  reader_Splitting_1_1[7]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_1[7]->AddVariable("avg_btag_disc_btags", &avg_btag_disc_btags);
+  reader_Splitting_1_1[7]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_1[7]->AddVariable("fifth_highest_CSV", &fifth_highest_CSV);
+  reader_Splitting_1_1[7]->AddVariable("Deta_JetsAverage", &Deta_JetsAverage);
+  reader_Splitting_1_1[7]->AddVariable("M3", &M3);
+  reader_Splitting_1_1[7]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_1 + "543/TMVAClassification_BDT.weights.xml");
+  //6j2t
+  reader_Splitting_1_1[2]->AddVariable("h1", &h1);
+  reader_Splitting_1_1[2]->AddVariable("HT", &HT);
+  reader_Splitting_1_1[2]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_1[2]->AddVariable("sphericity", &sphericity);
+  reader_Splitting_1_1[2]->AddVariable("h3", &h3);
+  reader_Splitting_1_1[2]->AddVariable("third_highest_btag", &third_highest_btag);
+  reader_Splitting_1_1[2]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_1[2]->AddVariable("fifth_highest_CSV", &fifth_highest_CSV);
+  reader_Splitting_1_1[2]->AddVariable("Mlb", &Mlb);
+  reader_Splitting_1_1[2]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_1 + "623/TMVAClassification_BDT.weights.xml");
+  //6j3t
+  reader_Splitting_1_1[5]->AddVariable("h1", &h1);
+  reader_Splitting_1_1[5]->AddVariable("HT", &HT);
+  reader_Splitting_1_1[5]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_1[5]->AddVariable("third_highest_btag", &third_highest_btag);
+  reader_Splitting_1_1[5]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_1[5]->AddVariable("fifth_highest_CSV", &fifth_highest_CSV);
+  reader_Splitting_1_1[5]->AddVariable("min_dr_tagged_jets", &min_dr_tagged_jets);
+  reader_Splitting_1_1[5]->AddVariable("pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets);
+  reader_Splitting_1_1[5]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_1 + "633/TMVAClassification_BDT.weights.xml");
+  //6j4t
+  reader_Splitting_1_1[8]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_1[8]->AddVariable("h2", &h2);
+  reader_Splitting_1_1[8]->AddVariable("third_highest_btag", &third_highest_btag);
+  reader_Splitting_1_1[8]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_1[8]->AddVariable("fifth_highest_CSV", &fifth_highest_CSV);
+  reader_Splitting_1_1[8]->AddVariable("M3", &M3);
+  reader_Splitting_1_1[8]->AddVariable("best_higgs_mass", &best_higgs_mass);
+  reader_Splitting_1_1[8]->AddVariable("dEta_fn", &dEta_fn);
+  reader_Splitting_1_1[8]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_1 + "643/TMVAClassification_BDT.weights.xml");
   
-  // 
-  // Best Higgs Mass and related variables
-  //
-  TH1D* h_best_higgs_mass[NumCat][NumSysCat];
-  TH1D* h_minChi2[NumCat][NumSysCat];
-  TH1D* h_dRbb[NumCat][NumSysCat];
+  //4j3t
+  reader_Splitting_1_2[3]->AddVariable("CSV_Average", &CSV_Average);
+  reader_Splitting_1_2[3]->AddVariable("h1", &h1);
+  reader_Splitting_1_2[3]->AddVariable("HT",&HT);
+  reader_Splitting_1_2[3]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_2[3]->AddVariable("sphericity", &sphericity);
+  reader_Splitting_1_2[3]->AddVariable("dev_from_avg_disc_btags", &dev_from_avg_disc_btags);
+  reader_Splitting_1_2[3]->AddVariable("third_highest_btag", &third_highest_btag);
+  reader_Splitting_1_2[3]->AddVariable("M3", &M3);
+  reader_Splitting_1_2[3]->AddVariable("min_dr_tagged_jets", &min_dr_tagged_jets);
+  reader_Splitting_1_2[3]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_2 + "433/TMVAClassification_BDT.weights.xml");
+  //4j4t
+  reader_Splitting_1_2[6]->AddVariable("h1", &h1);
+  reader_Splitting_1_2[6]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_2[6]->AddVariable("sphericity", &sphericity);
+  reader_Splitting_1_2[6]->AddVariable("avg_btag_disc_btags", &avg_btag_disc_btags);
+  reader_Splitting_1_2[6]->AddVariable("h2", &h2);
+  reader_Splitting_1_2[6]->AddVariable("closest_tagged_dijet_mass", &closest_tagged_dijet_mass);
+  reader_Splitting_1_2[6]->AddVariable("second_highest_btag", &second_highest_btag);
+  reader_Splitting_1_2[6]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_2[6]->AddVariable("maxeta_jet_jet", &maxeta_jet_jet);
+  reader_Splitting_1_2[6]->AddVariable("pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets);
+  reader_Splitting_1_2[6]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_2 + "443/TMVAClassification_BDT.weights.xml");
+  //5j3t
+  reader_Splitting_1_2[4]->AddVariable("h1", &h1);
+  reader_Splitting_1_2[4]->AddVariable("HT", &HT);
+  reader_Splitting_1_2[4]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_2[4]->AddVariable("sphericity", &sphericity);
+  reader_Splitting_1_2[4]->AddVariable("dev_from_avg_disc_btags", &dev_from_avg_disc_btags);
+  reader_Splitting_1_2[4]->AddVariable("h3", &h3);
+  reader_Splitting_1_2[4]->AddVariable("third_highest_btag", &third_highest_btag);
+  reader_Splitting_1_2[4]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_2[4]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_2 + "533/TMVAClassification_BDT.weights.xml");
+  //5j4t
+  reader_Splitting_1_2[7]->AddVariable("HT", &HT);
+  reader_Splitting_1_2[7]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_2[7]->AddVariable("avg_btag_disc_btags", &avg_btag_disc_btags);
+  reader_Splitting_1_2[7]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_2[7]->AddVariable("fifth_highest_CSV", &fifth_highest_CSV);
+  reader_Splitting_1_2[7]->AddVariable("Deta_JetsAverage", &Deta_JetsAverage);
+  reader_Splitting_1_2[7]->AddVariable("M3", &M3);
+  reader_Splitting_1_2[7]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_2 + "543/TMVAClassification_BDT.weights.xml");
+  //6j2t
+  reader_Splitting_1_2[2]->AddVariable("h1", &h1);
+  reader_Splitting_1_2[2]->AddVariable("HT", &HT);
+  reader_Splitting_1_2[2]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_2[2]->AddVariable("sphericity", &sphericity);
+  reader_Splitting_1_2[2]->AddVariable("h3", &h3);
+  reader_Splitting_1_2[2]->AddVariable("third_highest_btag", &third_highest_btag);
+  reader_Splitting_1_2[2]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_2[2]->AddVariable("fifth_highest_CSV", &fifth_highest_CSV);
+  reader_Splitting_1_2[2]->AddVariable("Mlb", &Mlb);
+  reader_Splitting_1_2[2]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_2 + "623/TMVAClassification_BDT.weights.xml");
+  //6j3t
+  reader_Splitting_1_2[5]->AddVariable("h1", &h1);
+  reader_Splitting_1_2[5]->AddVariable("HT", &HT);
+  reader_Splitting_1_2[5]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_2[5]->AddVariable("third_highest_btag", &third_highest_btag);
+  reader_Splitting_1_2[5]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_2[5]->AddVariable("fifth_highest_CSV", &fifth_highest_CSV);
+  reader_Splitting_1_2[5]->AddVariable("min_dr_tagged_jets", &min_dr_tagged_jets);
+  reader_Splitting_1_2[5]->AddVariable("pt_all_jets_over_E_all_jets", &pt_all_jets_over_E_all_jets);
+  reader_Splitting_1_2[5]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_2 + "633/TMVAClassification_BDT.weights.xml");
+  //6j4t
+  reader_Splitting_1_2[8]->AddVariable("avg_dr_tagged_jets", &avg_dr_tagged_jets);
+  reader_Splitting_1_2[8]->AddVariable("h2", &h2);
+  reader_Splitting_1_2[8]->AddVariable("third_highest_btag", &third_highest_btag);
+  reader_Splitting_1_2[8]->AddVariable("fourth_highest_btag", &fourth_highest_btag);
+  reader_Splitting_1_2[8]->AddVariable("fifth_highest_CSV", &fifth_highest_CSV);
+  reader_Splitting_1_2[8]->AddVariable("M3", &M3);
+  reader_Splitting_1_2[8]->AddVariable("best_higgs_mass", &best_higgs_mass);
+  reader_Splitting_1_2[8]->AddVariable("dEta_fn", &dEta_fn);
+  reader_Splitting_1_2[8]->BookMVA("BDT method", BDTWgtDIR_Splitting_1_2 + "643/TMVAClassification_BDT.weights.xml");
+  
 
-  TH1D* h_bhmv2[NumCat][NumSysCat];
-  TH1D* h_maxeta_jet_jet[NumCat][NumSysCat];       
-  TH1D* h_maxeta_jet_tag[NumCat][NumSysCat];       
-  TH1D* h_maxeta_tag_tag[NumCat][NumSysCat];       
-  TH1D* h_abs_dEta_leptop_bb[NumCat][NumSysCat];   
-  TH1D* h_abs_dEta_hadtop_bb[NumCat][NumSysCat];   
-  TH1D* h_dEta_fn[NumCat][NumSysCat];	      
-  TH1D* h_abs_bb_eta[NumCat][NumSysCat];	      
-  TH1D* h_angle_tops_bb[NumCat][NumSysCat];        
-  TH1D* h_median_bb_mass[NumCat][NumSysCat];       
-  TH1D* h_pt_all_jets_over_E_all_jets[NumCat][NumSysCat];
 
-  TH1D* h_tagged_dijet_mass_closest_to_125[NumCat][NumSysCat];
+
+ 
   
+ 
+  /////////////
+ 
   
-  
-  
-  TH1D* h_ttH_ttbb_Reader_Output_6j4t[NumSysCat];
-  TH1D* h_ttH_ttbb_Reader_Output_5j4t[NumSysCat];
-  TH1D* h_ttH_ttbb_Reader_Output_6j3t[NumSysCat];
-  
-  TH1D* h_Reader_Output_6j2t_final[NumSysCat];
-  TH1D* h_Reader_Output_4j3t_final[NumSysCat];
-  TH1D* h_Reader_Output_5j3t_final[NumSysCat];
-  TH1D* h_Reader_Output_6j3t_final[NumSysCat];
-  TH1D* h_Reader_Output_4j4t_final[NumSysCat];
-  TH1D* h_Reader_Output_5j4t_final[NumSysCat];
-  TH1D* h_Reader_Output_6j4t_final[NumSysCat];
-  
-    TH1D* h_Reader_Output_6j2t_final_May10_optimized[NumSysCat];
-    TH1D* h_Reader_Output_5j3t_final_May10_optimized[NumSysCat];
-    TH1D* h_Reader_Output_6j3t_final_May10_optimized[NumSysCat];
-    TH1D* h_Reader_Output_5j4t_final_May10_optimized[NumSysCat];
-    TH1D* h_Reader_Output_6j4t_final_May10_optimized[NumSysCat];
-    TH1D* h_Reader_Output_4j4t_final_May10_optimized[NumSysCat];
-    TH1D* h_Reader_Output_4j3t_final_May10_optimized[NumSysCat];
+	yggdrasilEventVars *eve=0;
+    chain->SetBranchAddress("eve.", &eve );
+	
+    TFile histofile(histofilename.c_str(),"recreate");
+    histofile.cd();
+	
+	///////Systematics/////
+	
+    std::vector<std::string> sys_cat_labels;
+    sys_cat_labels.push_back("");               //0
+    sys_cat_labels.push_back("_lepIdSFUp");     //1
+    sys_cat_labels.push_back("_lepIdSFDown");   //2
+    sys_cat_labels.push_back("_PUUp");          //3
+    sys_cat_labels.push_back("_PUDown");        //4
+    sys_cat_labels.push_back("_JERUp");         //5
+    sys_cat_labels.push_back("_JERDown");       //6
+    sys_cat_labels.push_back("_JESUp");         //7
+    sys_cat_labels.push_back("_JESDown");       //8
+    sys_cat_labels.push_back("_CSVLFUp");       //9
+    sys_cat_labels.push_back("_CSVLFDown");     //10
+    sys_cat_labels.push_back("_CSVHFUp");       //11
+    sys_cat_labels.push_back("_CSVHFDown");     //12
+    sys_cat_labels.push_back("_CSVHFStats1Up");     //13
+    sys_cat_labels.push_back("_CSVHFStats1Down");   //14
+    sys_cat_labels.push_back("_CSVHFStats2Up");     //15
+    sys_cat_labels.push_back("_CSVHFStats2Down");   //16
+    sys_cat_labels.push_back("_CSVLFStats1Up");     //17
+    sys_cat_labels.push_back("_CSVLFStats1Down");   //18
+    sys_cat_labels.push_back("_CSVLFStats2Up");     //19
+    sys_cat_labels.push_back("_CSVLFStats2Down");   //20
+ 
+    sys_cat_labels.push_back("_CSVCErr1Up");     //21
+    sys_cat_labels.push_back("_CSVCErr1Down");   //22
+    sys_cat_labels.push_back("_CSVCErr2Up");     //23
+    sys_cat_labels.push_back("_CSVCErr2Down");   //24
+     sys_cat_labels.push_back("_Q2scaleUp");     //25
+    sys_cat_labels.push_back("_Q2scaleDown");   //26
+    sys_cat_labels.push_back("_topPtcorrUp");   //27
+    sys_cat_labels.push_back("_topPtcorrDown"); //28
+	
+	 int NumSysCat = int(sys_cat_labels.size());
+	 
+	 //Histos//
+	 
+	 TH1::SetDefaultSumw2();
+
+	 TH1D* h_BDT_Output_IncludeWgt[NumCat][NumSysCat];
+	 TH1D* h_BDT_Output_IncludeWgt_even[NumCat][NumSysCat];
+	 TH1D* h_BDT_Output_IncludeWgt_odd[NumCat][NumSysCat];
+	 
+	 TH1D* h_LeadJetPt_IncludeWgt[NumCat][NumSysCat];
+	 TH1D* h_LeadJetCSV_IncludeWgt[NumCat][NumSysCat];
+	
+	 TH1D* h_BDT_Output_NoWgt[NumCat][NumSysCat];
+	 TH1D* h_LeadJetPt_NoWgt[NumCat][NumSysCat];
+	 TH1D* h_LeadJetCSV_NoWgt[NumCat][NumSysCat];
+	 
+	 
+     TH1D* h_SplittingOutput_1_1[NumCat][NumSysCat];
+     TH1D* h_SplittingOutput_1_2[NumCat][NumSysCat];
+     TH1D* h_SplittingOutput_1_1_Train[NumCat][NumSysCat];
+     TH1D* h_SplittingOutput_1_2_Train[NumCat][NumSysCat];
+	 
+	 
+	 
+
+	 //Variable Histos//
+
+     TH1D* h_first_jet_pt[NumCat][NumSysCat]; 
+     TH1D* h_min_dr_tagged_jets[NumCat][NumSysCat];
+     TH1D* h_avg_dr_tagged_jets[NumCat][NumSysCat];
+     TH1D* h_aplanarity[NumCat][NumSysCat];
+     TH1D* h_sphericity[NumCat][NumSysCat];
+     //TH1D* h_avg_btag_disc_non_btags[NumCat][NumSysCat];
+     TH1D* h_second_jet_pt[NumCat][NumSysCat];
+    // TH1D* h_dr_between_lep_and_closest_jet[NumCat][NumSysCat];
+     TH1D* h_h0[NumCat][NumSysCat];
+     TH1D* h_avg_btag_disc_btags[NumCat][NumSysCat];
+     TH1D* h_dev_from_avg_disc_btags[NumCat][NumSysCat];
+     TH1D* h_third_jet_pt[NumCat][NumSysCat];
+     TH1D* h_fourth_jet_pt[NumCat][NumSysCat];
+     //TH1D* h_avg_tagged_dijet_mass[NumCat][NumSysCat];
+     TH1D* h_h1[NumCat][NumSysCat];
+     TH1D* h_h2[NumCat][NumSysCat];
+     TH1D* h_all_sum_pt_with_met[NumCat][NumSysCat];
+     TH1D* h_closest_tagged_dijet_mass[NumCat][NumSysCat];
+     TH1D* h_h3[NumCat][NumSysCat];
+    // TH1D* h_h4[NumCat][NumSysCat];
+    // TH1D* h_first_highest_btag[NumCat][NumSysCat];
+     TH1D* h_second_highest_btag[NumCat][NumSysCat];
+     TH1D* h_third_highest_btag[NumCat][NumSysCat];
+     TH1D* h_fourth_highest_btag[NumCat][NumSysCat];
+     TH1D* h_fifth_highest_CSV[NumCat][NumSysCat];
+     //TH1D* h_sixth_highest_CSV[NumCat][NumSysCat];
+     TH1D* h_invariant_mass_of_everything[NumCat][NumSysCat];
+     TH1D* h_Mlb[NumCat][NumSysCat];
+     TH1D* h_tagged_dijet_mass_closest_to_125[NumCat][NumSysCat];
+     TH1D* h_maxeta_jet_jet[NumCat][NumSysCat];		 
+     TH1D* h_maxeta_jet_tag[NumCat][NumSysCat];		 
+     TH1D* h_maxeta_tag_tag[NumCat][NumSysCat];			 
+     TH1D* h_dEta_fn[NumCat][NumSysCat];			 
+     TH1D* h_pt_all_jets_over_E_all_jets[NumCat][NumSysCat];  
+     TH1D* h_HT[NumCat][NumSysCat];
+	 
+	 
+  /////Special histos for KIT binning
+	
+ 	TH1F *h1_6j2t_KIT[NumSysCat];
+ 	TH1F *avg_dr_tagged_jets_6j2t_KIT[NumSysCat];
+ 	TH1F *sphericity_6j2t_KIT[NumSysCat];
+ 	TH1F *third_highest_btag_6j2t_KIT[NumSysCat];
+ 	TH1F *h3_6j2t_KIT[NumSysCat];
+ 	TH1F *HT_6j2t_KIT[NumSysCat];
+ 	TH1F *Mlb_6j2t_KIT[NumSysCat];
+ 	TH1F *fifth_highest_CSV_6j2t_KIT[NumSysCat];
+ 	TH1F *fourth_highest_btag_6j2t_KIT[NumSysCat];
+ 	TH1F *h1_4j3t_KIT[NumSysCat];
+ 	TH1F *avg_dr_tagged_jets_4j3t_KIT[NumSysCat];
+ 	TH1F *sphericity_4j3t_KIT[NumSysCat];
+ 	TH1F *third_highest_btag_4j3t_KIT[NumSysCat];
+ 	TH1F *HT_4j3t_KIT[NumSysCat];
+ 	TH1F *dev_from_avg_disc_btags_4j3t_KIT[NumSysCat];
+ 	TH1F *M3_4j3t_KIT[NumSysCat];
+ 	TH1F *min_dr_tagged_jets_4j3t_KIT[NumSysCat];
+ 	TH1F *Evt_CSV_Average_4j3t_KIT[NumSysCat];
+ 	TH1F *h1_5j3t_KIT[NumSysCat];
+ 	TH1F *avg_dr_tagged_jets_5j3t_KIT[NumSysCat];
+ 	TH1F *sphericity_5j3t_KIT[NumSysCat];
+ 	TH1F *third_highest_btag_5j3t_KIT[NumSysCat];
+ 	TH1F *h3_5j3t_KIT[NumSysCat];
+ 	TH1F *HT_5j3t_KIT[NumSysCat];
+ 	TH1F *dev_from_avg_disc_btags_5j3t_KIT[NumSysCat];
+ 	TH1F *fourth_highest_btag_5j3t_KIT[NumSysCat];
+ 	TH1F *h1_6j3t_KIT[NumSysCat];
+ 	TH1F *avg_dr_tagged_jets_6j3t_KIT[NumSysCat];
+ 	TH1F *third_highest_btag_6j3t_KIT[NumSysCat];
+ 	TH1F *HT_6j3t_KIT[NumSysCat];
+ 	TH1F *pt_all_jets_over_E_all_jets_6j3t_KIT[NumSysCat];
+ 	TH1F *fifth_highest_CSV_6j3t_KIT[NumSysCat];
+ 	TH1F *fourth_highest_btag_6j3t_KIT[NumSysCat];
+ 	TH1F *min_dr_tagged_jets_6j3t_KIT[NumSysCat];
+ 	TH1F *h1_4j4t_KIT[NumSysCat];
+ 	TH1F *avg_dr_tagged_jets_4j4t_KIT[NumSysCat];
+ 	TH1F *sphericity_4j4t_KIT[NumSysCat];
+ 	TH1F *avg_btag_disc_btags_4j4t_KIT[NumSysCat];
+ 	TH1F *h2_4j4t_KIT[NumSysCat];
+ 	TH1F *closest_tagged_dijet_mass_4j4t_KIT[NumSysCat];
+ 	TH1F *second_highest_btag_4j4t_KIT[NumSysCat];
+ 	TH1F *fourth_highest_btag_4j4t_KIT[NumSysCat];
+ 	TH1F *maxeta_jet_jet_4j4t_KIT[NumSysCat];
+ 	TH1F *pt_all_jets_over_E_all_jets_4j4t_KIT[NumSysCat];
+ 	TH1F *avg_dr_tagged_jets_5j4t_KIT[NumSysCat];
+ 	TH1F *HT_5j4t_KIT[NumSysCat];
+ 	TH1F *M3_5j4t_KIT[NumSysCat];
+ 	TH1F *fifth_highest_CSV_5j4t_KIT[NumSysCat];
+ 	TH1F *fourth_highest_btag_5j4t_KIT[NumSysCat];
+ 	TH1F *Evt_Deta_JetsAverage_5j4t_KIT[NumSysCat];
+ 	TH1F *avg_btag_disc_btags_5j4t_KIT[NumSysCat];
+ 	TH1F *h2_6j4t_KIT[NumSysCat];
+ 	TH1F *avg_dr_tagged_jets_6j4t_KIT[NumSysCat];
+ 	TH1F *third_highest_btag_6j4t_KIT[NumSysCat];
+ 	TH1F *M3_6j4t_KIT[NumSysCat];
+ 	TH1F *fifth_highest_CSV_6j4t_KIT[NumSysCat];
+ 	TH1F *fourth_highest_btag_6j4t_KIT[NumSysCat];
+ 	TH1F *best_higgs_mass_6j4t_KIT[NumSysCat];
+ 	TH1F *dEta_fn_6j4t_KIT[NumSysCat];
+     
+	////// 
+	
+	TH1D *h_NumCount;
+	TH1D *h_NumCountRaw;
+	
+	h_NumCount = new TH1D("h_NumCount","h_NumCount",10,0,10);
+	h_NumCountRaw = new TH1D("h_NumCountRaw","h_NumCountRaw",10,0,10);
+	 
+
+	 ///
+	 
+	 double jetptmax = 500.;
+	 int NjetptBins = int ( jetptmax/10. + 0.0001);
+	 double massmax = 500. ;
+	 int NmassBins = int( massmax/10. + 0.0001);
+	 int NcsvBins = 44;
+	 double htmax = 2000;
+	 int NhtBins = int ( htmax/50. + 0.0001 );
+	 
+	 
+     for( int b=0; b<NumSysCat; b++ ){
+		 for( int c=0; c<NumCat; c++ ){ 
+         std::string suffix = "_" + cat_labels[c];
+         suffix += sys_cat_labels[b];
+  	
+	h_BDT_Output_IncludeWgt[c][b] = new TH1D((std::string("h_BDT_Output_IncludeWgt" + suffix)).c_str(),(std::string("BDT_Output" + suffix)).c_str(),20,-1,1);
+	h_BDT_Output_IncludeWgt_even[c][b] = new TH1D((std::string("h_BDT_Output_IncludeWgt_even" + suffix)).c_str(),(std::string("BDT_Output_even" + suffix)).c_str(),20,-1,1);
+	h_BDT_Output_IncludeWgt_odd[c][b] = new TH1D((std::string("h_BDT_Output_IncludeWgt_odd" + suffix)).c_str(),(std::string("BDT_Output_odd" + suffix)).c_str(),20,-1,1);
+  	
+    h_SplittingOutput_1_1[c][b] = new TH1D((std::string("h_SplittingOutput_1_1" + suffix)).c_str(),"h_SplittingOutput_1_1",20,-1,1);
+    h_SplittingOutput_1_2[c][b] = new TH1D((std::string("h_SplittingOutput_1_2" + suffix)).c_str(),"h_SplittingOutput_1_2",20,-1,1);
     
-    // For Neg Weight Testing// You can delete afterward
-    
-    TH1D *h_BDT_6j2t_IgnoreWgt[NumSysCat];
-    TH1D *h_BDT_6j2t_IncludeWgt[NumSysCat];
-    TH1D *h_BDT_6j2t_PosWgt[NumSysCat];
-    TH1D *h_BDT_6j2t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j2t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j2t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j2t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j2t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j2t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j2t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j2t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j2t_NegWgt[NumSysCat];
-    TH1D *h_BDT_4j3t_IgnoreWgt[NumSysCat];
-    TH1D *h_BDT_4j3t_IncludeWgt[NumSysCat];
-    TH1D *h_BDT_4j3t_PosWgt[NumSysCat];
-    TH1D *h_BDT_4j3t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetPt_4j3t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetPt_4j3t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetPt_4j3t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetPt_4j3t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_4j3t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_4j3t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_4j3t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_4j3t_NegWgt[NumSysCat];
-    TH1D *h_BDT_5j3t_IgnoreWgt[NumSysCat];
-    TH1D *h_BDT_5j3t_IncludeWgt[NumSysCat];
-    TH1D *h_BDT_5j3t_PosWgt[NumSysCat];
-    TH1D *h_BDT_5j3t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetPt_5j3t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetPt_5j3t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetPt_5j3t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetPt_5j3t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_5j3t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_5j3t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_5j3t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_5j3t_NegWgt[NumSysCat];
-    TH1D *h_BDT_6j3t_IgnoreWgt[NumSysCat];
-    TH1D *h_BDT_6j3t_IncludeWgt[NumSysCat];
-    TH1D *h_BDT_6j3t_PosWgt[NumSysCat];
-    TH1D *h_BDT_6j3t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j3t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j3t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j3t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j3t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j3t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j3t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j3t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j3t_NegWgt[NumSysCat];
-    TH1D *h_BDT_4j4t_IgnoreWgt[NumSysCat];
-    TH1D *h_BDT_4j4t_IncludeWgt[NumSysCat];
-    TH1D *h_BDT_4j4t_PosWgt[NumSysCat];
-    TH1D *h_BDT_4j4t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetPt_4j4t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetPt_4j4t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetPt_4j4t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetPt_4j4t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_4j4t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_4j4t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_4j4t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_4j4t_NegWgt[NumSysCat];
-    TH1D *h_BDT_5j4t_IgnoreWgt[NumSysCat];
-    TH1D *h_BDT_5j4t_IncludeWgt[NumSysCat];
-    TH1D *h_BDT_5j4t_PosWgt[NumSysCat];
-    TH1D *h_BDT_5j4t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetPt_5j4t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetPt_5j4t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetPt_5j4t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetPt_5j4t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_5j4t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_5j4t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_5j4t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_5j4t_NegWgt[NumSysCat];
-    TH1D *h_BDT_6j4t_IgnoreWgt[NumSysCat];
-    TH1D *h_BDT_6j4t_IncludeWgt[NumSysCat];
-    TH1D *h_BDT_6j4t_PosWgt[NumSysCat];
-    TH1D *h_BDT_6j4t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j4t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j4t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j4t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetPt_6j4t_NegWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j4t_IgnoreWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j4t_IncludeWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j4t_PosWgt[NumSysCat];
-    TH1D *h_LeadJetCSV_6j4t_NegWgt[NumSysCat];
-    
-
-
-  
-
-
-
-h_NumCount = new TH1D("NumCount","NumCount",50,0,50);
-
-  for( int b=0; b<NumSysCat; b++ ){
-
-    std::string short_suffix = sys_cat_labels[b];
+	h_SplittingOutput_1_1_Train[c][b] = new TH1D((std::string("h_SplittingOutput_1_1_Train" + suffix)).c_str(),"h_SplittingOutput_1_1_Train",20,-1,1);
+    h_SplittingOutput_1_2_Train[c][b] = new TH1D((std::string("h_SplittingOutput_1_2_Train" + suffix)).c_str(),"h_SplittingOutput_1_2_Train",20,-1,1);
 	
-    h_ttH_ttbb_Reader_Output_6j4t[b] = new TH1D((std::string("h_ttH_ttbb_Reader_Output_6j4t" + short_suffix)).c_str(),"ttH ttbb BDT 6j4t",20,-1,1);
-	h_ttH_ttbb_Reader_Output_6j3t[b] = new TH1D((std::string("h_ttH_ttbb_Reader_Output_6j3t" + short_suffix)).c_str(),"ttH ttbb BDT 6j3t",20,-1,1);
-	h_ttH_ttbb_Reader_Output_5j4t[b] = new TH1D((std::string("h_ttH_ttbb_Reader_Output_5j4t" + short_suffix)).c_str(),"ttH ttbb BDt 5j4t",20,-1,1);
-
-
-	h_Reader_Output_6j2t_final[b] = new TH1D((std::string("h_Reader_Output_6j2t_final" + short_suffix)).c_str(),"Final BDT 6j2t",20,-1,1);
-	h_Reader_Output_4j3t_final[b] = new TH1D((std::string("h_Reader_Output_4j3t_final" + short_suffix)).c_str(),"Final BDT 4j3t",20,-1,1);
-	h_Reader_Output_5j3t_final[b] = new TH1D((std::string("h_Reader_Output_5j3t_final" + short_suffix)).c_str(),"Final BDT 5j3t",20,-1,1);
-	h_Reader_Output_6j3t_final[b] = new TH1D((std::string("h_Reader_Output_6j3t_final" + short_suffix)).c_str(),"Final BDT 6j3t",20,-1,1);
-	h_Reader_Output_4j4t_final[b] = new TH1D((std::string("h_Reader_Output_4j4t_final" + short_suffix)).c_str(),"Final BDT 4j4t",20,-1,1);
-	h_Reader_Output_5j4t_final[b] = new TH1D((std::string("h_Reader_Output_5j4t_final" + short_suffix)).c_str(),"Final BDT 5j4t",20,-1,1);
-	h_Reader_Output_6j4t_final[b] = new TH1D((std::string("h_Reader_Output_6j4t_final" + short_suffix)).c_str(),"Final BDT 6j4t",20,-1,1);
 	
-
+	h_LeadJetPt_IncludeWgt[c][b] = new TH1D((std::string("h_LeadJetPt_IncludeWgt" + suffix)).c_str(),(std::string("LeadJetPt" + suffix)).c_str(),20,0.0,500.0);
+  	h_LeadJetCSV_IncludeWgt[c][b] = new TH1D((std::string("h_LeadJetCSV_IncludeWgt" + suffix)).c_str(),(std::string("LeadjetCSV" + suffix)).c_str(),20,0.0,1.0);
 	
-	h_Reader_Output_6j2t_final_May10_optimized[b] = new TH1D((std::string("h_Reader_Output_6j2t_final_May10_optimized" + short_suffix)).c_str(),"final_May10_optimized BDT 6j2t",20,-1,1);
-	h_Reader_Output_5j3t_final_May10_optimized[b] = new TH1D((std::string("h_Reader_Output_5j3t_final_May10_optimized" + short_suffix)).c_str(),"final_May10_optimized BDT 5j3t",20,-1,1);
-	h_Reader_Output_6j3t_final_May10_optimized[b] = new TH1D((std::string("h_Reader_Output_6j3t_final_May10_optimized" + short_suffix)).c_str(),"final_May10_optimized BDT 6j3t",20,-1,1);
-	h_Reader_Output_5j4t_final_May10_optimized[b] = new TH1D((std::string("h_Reader_Output_5j4t_final_May10_optimized" + short_suffix)).c_str(),"final_May10_optimized BDT 5j4t",20,-1,1);
-	h_Reader_Output_6j4t_final_May10_optimized[b] = new TH1D((std::string("h_Reader_Output_6j4t_final_May10_optimized" + short_suffix)).c_str(),"final_May10_optimized BDT 6j4t",20,-1,1);
-	h_Reader_Output_4j4t_final_May10_optimized[b] = new TH1D((std::string("h_Reader_Output_4j4t_final_May10_optimized" + short_suffix)).c_str(),"final_May10_optimized BDT 4j4t",20,-1,1);
-	h_Reader_Output_4j3t_final_May10_optimized[b] = new TH1D((std::string("h_Reader_Output_4j3t_final_May10_optimized" + short_suffix)).c_str(),"final_May10_optimized BDT 4j3t",20,-1,1);
+	h_BDT_Output_NoWgt[c][b] = new TH1D((std::string("h_BDT_Output_NoWgt" + suffix)).c_str(),(std::string("BDT_Output" + suffix)).c_str(),20,-1,1);
+  	h_LeadJetPt_NoWgt[c][b] = new TH1D((std::string("h_LeadJetPt_NoWgt" + suffix)).c_str(),(std::string("LeadJetPt" + suffix)).c_str(),20,0.0,500.0);
+  	h_LeadJetCSV_NoWgt[c][b] = new TH1D((std::string("h_LeadJetCSV_NoWgt" + suffix)).c_str(),(std::string("LeadjetCSV" + suffix)).c_str(),20,0.0,1.0);
 	
-	h_BDT_6j2t_IgnoreWgt[b] = new TH1D((std::string("h_BDT_6j2t_IgnoreWgt" + short_suffix)).c_str(),"h_BDT_6j2t_IgnoreWgt",20,-1,1);
-	h_BDT_6j2t_IncludeWgt[b] = new TH1D((std::string("h_BDT_6j2t_IncludeWgt" + short_suffix)).c_str(),"h_BDT_6j2t_IncludeWgt",20,-1,1);
-	h_BDT_6j2t_PosWgt[b] = new TH1D((std::string("h_BDT_6j2t_PosWgt" + short_suffix)).c_str(),"h_BDT_6j2t_PosWgt",20,-1,1);
-	h_BDT_6j2t_NegWgt[b] = new TH1D((std::string("h_BDT_6j2t_NegWgt" + short_suffix)).c_str(),"h_BDT_6j2t_NegWgt",20,-1,1);
-	h_LeadJetPt_6j2t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetPt_6j2t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j2t_IgnoreWgt",20,0.0,500.0);
-	h_LeadJetPt_6j2t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetPt_6j2t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j2t_IncludeWgt",20,0.0,500.0);
-	h_LeadJetPt_6j2t_PosWgt[b] = new TH1D((std::string("h_LeadJetPt_6j2t_PosWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j2t_PosWgt",20,0.0,500.0);
-	h_LeadJetPt_6j2t_NegWgt[b] = new TH1D((std::string("h_LeadJetPt_6j2t_NegWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j2t_NegWgt",20,0.0,500.0);
-	h_LeadJetCSV_6j2t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j2t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j2t_IgnoreWgt",20,0.0,1.0);
-	h_LeadJetCSV_6j2t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j2t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j2t_IncludeWgt",20,0.0,1.0);
-	h_LeadJetCSV_6j2t_PosWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j2t_PosWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j2t_PosWgt",20,0.0,1.0);
-	h_LeadJetCSV_6j2t_NegWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j2t_NegWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j2t_NegWgt",20,0.0,1.0);
-	h_BDT_4j3t_IgnoreWgt[b] = new TH1D((std::string("h_BDT_4j3t_IgnoreWgt" + short_suffix)).c_str(),"h_BDT_4j3t_IgnoreWgt",20,-1,1);
-	h_BDT_4j3t_IncludeWgt[b] = new TH1D((std::string("h_BDT_4j3t_IncludeWgt" + short_suffix)).c_str(),"h_BDT_4j3t_IncludeWgt",20,-1,1);
-	h_BDT_4j3t_PosWgt[b] = new TH1D((std::string("h_BDT_4j3t_PosWgt" + short_suffix)).c_str(),"h_BDT_4j3t_PosWgt",20,-1,1);
-	h_BDT_4j3t_NegWgt[b] = new TH1D((std::string("h_BDT_4j3t_NegWgt" + short_suffix)).c_str(),"h_BDT_4j3t_NegWgt",20,-1,1);
-	h_LeadJetPt_4j3t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetPt_4j3t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetPt_4j3t_IgnoreWgt",20,0.0,500.0);
-	h_LeadJetPt_4j3t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetPt_4j3t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetPt_4j3t_IncludeWgt",20,0.0,500.0);
-	h_LeadJetPt_4j3t_PosWgt[b] = new TH1D((std::string("h_LeadJetPt_4j3t_PosWgt" + short_suffix)).c_str(),"h_LeadJetPt_4j3t_PosWgt",20,0.0,500.0);
-	h_LeadJetPt_4j3t_NegWgt[b] = new TH1D((std::string("h_LeadJetPt_4j3t_NegWgt" + short_suffix)).c_str(),"h_LeadJetPt_4j3t_NegWgt",20,0.0,500.0);
-	h_LeadJetCSV_4j3t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetCSV_4j3t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetCSV_4j3t_IgnoreWgt",20,0.0,1.0);
-	h_LeadJetCSV_4j3t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetCSV_4j3t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetCSV_4j3t_IncludeWgt",20,0.0,1.0);
-	h_LeadJetCSV_4j3t_PosWgt[b] = new TH1D((std::string("h_LeadJetCSV_4j3t_PosWgt" + short_suffix)).c_str(),"h_LeadJetCSV_4j3t_PosWgt",20,0.0,1.0);
-	h_LeadJetCSV_4j3t_NegWgt[b] = new TH1D((std::string("h_LeadJetCSV_4j3t_NegWgt" + short_suffix)).c_str(),"h_LeadJetCSV_4j3t_NegWgt",20,0.0,1.0);
-	h_BDT_5j3t_IgnoreWgt[b] = new TH1D((std::string("h_BDT_5j3t_IgnoreWgt" + short_suffix)).c_str(),"h_BDT_5j3t_IgnoreWgt",20,-1,1);
-	h_BDT_5j3t_IncludeWgt[b] = new TH1D((std::string("h_BDT_5j3t_IncludeWgt" + short_suffix)).c_str(),"h_BDT_5j3t_IncludeWgt",20,-1,1);
-	h_BDT_5j3t_PosWgt[b] = new TH1D((std::string("h_BDT_5j3t_PosWgt" + short_suffix)).c_str(),"h_BDT_5j3t_PosWgt",20,-1,1);
-	h_BDT_5j3t_NegWgt[b] = new TH1D((std::string("h_BDT_5j3t_NegWgt" + short_suffix)).c_str(),"h_BDT_5j3t_NegWgt",20,-1,1);
-	h_LeadJetPt_5j3t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetPt_5j3t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetPt_5j3t_IgnoreWgt",20,0.0,500.0);
-	h_LeadJetPt_5j3t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetPt_5j3t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetPt_5j3t_IncludeWgt",20,0.0,500.0);
-	h_LeadJetPt_5j3t_PosWgt[b] = new TH1D((std::string("h_LeadJetPt_5j3t_PosWgt" + short_suffix)).c_str(),"h_LeadJetPt_5j3t_PosWgt",20,0.0,500.0);
-	h_LeadJetPt_5j3t_NegWgt[b] = new TH1D((std::string("h_LeadJetPt_5j3t_NegWgt" + short_suffix)).c_str(),"h_LeadJetPt_5j3t_NegWgt",20,0.0,500.0);
-	h_LeadJetCSV_5j3t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetCSV_5j3t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetCSV_5j3t_IgnoreWgt",20,0.0,1.0);
-	h_LeadJetCSV_5j3t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetCSV_5j3t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetCSV_5j3t_IncludeWgt",20,0.0,1.0);
-	h_LeadJetCSV_5j3t_PosWgt[b] = new TH1D((std::string("h_LeadJetCSV_5j3t_PosWgt" + short_suffix)).c_str(),"h_LeadJetCSV_5j3t_PosWgt",20,0.0,1.0);
-	h_LeadJetCSV_5j3t_NegWgt[b] = new TH1D((std::string("h_LeadJetCSV_5j3t_NegWgt" + short_suffix)).c_str(),"h_LeadJetCSV_5j3t_NegWgt",20,0.0,1.0);
-	h_BDT_6j3t_IgnoreWgt[b] = new TH1D((std::string("h_BDT_6j3t_IgnoreWgt" + short_suffix)).c_str(),"h_BDT_6j3t_IgnoreWgt",20,-1,1);
-	h_BDT_6j3t_IncludeWgt[b] = new TH1D((std::string("h_BDT_6j3t_IncludeWgt" + short_suffix)).c_str(),"h_BDT_6j3t_IncludeWgt",20,-1,1);
-	h_BDT_6j3t_PosWgt[b] = new TH1D((std::string("h_BDT_6j3t_PosWgt" + short_suffix)).c_str(),"h_BDT_6j3t_PosWgt",20,-1,1);
-	h_BDT_6j3t_NegWgt[b] = new TH1D((std::string("h_BDT_6j3t_NegWgt" + short_suffix)).c_str(),"h_BDT_6j3t_NegWgt",20,-1,1);
-	h_LeadJetPt_6j3t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetPt_6j3t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j3t_IgnoreWgt",20,0.0,500.0);
-	h_LeadJetPt_6j3t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetPt_6j3t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j3t_IncludeWgt",20,0.0,500.0);
-	h_LeadJetPt_6j3t_PosWgt[b] = new TH1D((std::string("h_LeadJetPt_6j3t_PosWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j3t_PosWgt",20,0.0,500.0);
-	h_LeadJetPt_6j3t_NegWgt[b] = new TH1D((std::string("h_LeadJetPt_6j3t_NegWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j3t_NegWgt",20,0.0,500.0);
-	h_LeadJetCSV_6j3t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j3t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j3t_IgnoreWgt",20,0.0,1.0);
-	h_LeadJetCSV_6j3t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j3t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j3t_IncludeWgt",20,0.0,1.0);
-	h_LeadJetCSV_6j3t_PosWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j3t_PosWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j3t_PosWgt",20,0.0,1.0);
-	h_LeadJetCSV_6j3t_NegWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j3t_NegWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j3t_NegWgt",20,0.0,1.0);
-	h_BDT_4j4t_IgnoreWgt[b] = new TH1D((std::string("h_BDT_4j4t_IgnoreWgt" + short_suffix)).c_str(),"h_BDT_4j4t_IgnoreWgt",20,-1,1);
-	h_BDT_4j4t_IncludeWgt[b] = new TH1D((std::string("h_BDT_4j4t_IncludeWgt" + short_suffix)).c_str(),"h_BDT_4j4t_IncludeWgt",20,-1,1);
-	h_BDT_4j4t_PosWgt[b] = new TH1D((std::string("h_BDT_4j4t_PosWgt" + short_suffix)).c_str(),"h_BDT_4j4t_PosWgt",20,-1,1);
-	h_BDT_4j4t_NegWgt[b] = new TH1D((std::string("h_BDT_4j4t_NegWgt" + short_suffix)).c_str(),"h_BDT_4j4t_NegWgt",20,-1,1);
-	h_LeadJetPt_4j4t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetPt_4j4t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetPt_4j4t_IgnoreWgt",20,0.0,500.0);
-	h_LeadJetPt_4j4t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetPt_4j4t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetPt_4j4t_IncludeWgt",20,0.0,500.0);
-	h_LeadJetPt_4j4t_PosWgt[b] = new TH1D((std::string("h_LeadJetPt_4j4t_PosWgt" + short_suffix)).c_str(),"h_LeadJetPt_4j4t_PosWgt",20,0.0,500.0);
-	h_LeadJetPt_4j4t_NegWgt[b] = new TH1D((std::string("h_LeadJetPt_4j4t_NegWgt" + short_suffix)).c_str(),"h_LeadJetPt_4j4t_NegWgt",20,0.0,500.0);
-	h_LeadJetCSV_4j4t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetCSV_4j4t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetCSV_4j4t_IgnoreWgt",20,0.0,1.0);
-	h_LeadJetCSV_4j4t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetCSV_4j4t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetCSV_4j4t_IncludeWgt",20,0.0,1.0);
-	h_LeadJetCSV_4j4t_PosWgt[b] = new TH1D((std::string("h_LeadJetCSV_4j4t_PosWgt" + short_suffix)).c_str(),"h_LeadJetCSV_4j4t_PosWgt",20,0.0,1.0);
-	h_LeadJetCSV_4j4t_NegWgt[b] = new TH1D((std::string("h_LeadJetCSV_4j4t_NegWgt" + short_suffix)).c_str(),"h_LeadJetCSV_4j4t_NegWgt",20,0.0,1.0);
-	h_BDT_5j4t_IgnoreWgt[b] = new TH1D((std::string("h_BDT_5j4t_IgnoreWgt" + short_suffix)).c_str(),"h_BDT_5j4t_IgnoreWgt",20,-1,1);
-	h_BDT_5j4t_IncludeWgt[b] = new TH1D((std::string("h_BDT_5j4t_IncludeWgt" + short_suffix)).c_str(),"h_BDT_5j4t_IncludeWgt",20,-1,1);
-	h_BDT_5j4t_PosWgt[b] = new TH1D((std::string("h_BDT_5j4t_PosWgt" + short_suffix)).c_str(),"h_BDT_5j4t_PosWgt",20,-1,1);
-	h_BDT_5j4t_NegWgt[b] = new TH1D((std::string("h_BDT_5j4t_NegWgt" + short_suffix)).c_str(),"h_BDT_5j4t_NegWgt",20,-1,1);
-	h_LeadJetPt_5j4t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetPt_5j4t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetPt_5j4t_IgnoreWgt",20,0.0,500.0);
-	h_LeadJetPt_5j4t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetPt_5j4t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetPt_5j4t_IncludeWgt",20,0.0,500.0);
-	h_LeadJetPt_5j4t_PosWgt[b] = new TH1D((std::string("h_LeadJetPt_5j4t_PosWgt" + short_suffix)).c_str(),"h_LeadJetPt_5j4t_PosWgt",20,0.0,500.0);
-	h_LeadJetPt_5j4t_NegWgt[b] = new TH1D((std::string("h_LeadJetPt_5j4t_NegWgt" + short_suffix)).c_str(),"h_LeadJetPt_5j4t_NegWgt",20,0.0,500.0);
-	h_LeadJetCSV_5j4t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetCSV_5j4t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetCSV_5j4t_IgnoreWgt",20,0.0,1.0);
-	h_LeadJetCSV_5j4t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetCSV_5j4t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetCSV_5j4t_IncludeWgt",20,0.0,1.0);
-	h_LeadJetCSV_5j4t_PosWgt[b] = new TH1D((std::string("h_LeadJetCSV_5j4t_PosWgt" + short_suffix)).c_str(),"h_LeadJetCSV_5j4t_PosWgt",20,0.0,1.0);
-	h_LeadJetCSV_5j4t_NegWgt[b] = new TH1D((std::string("h_LeadJetCSV_5j4t_NegWgt" + short_suffix)).c_str(),"h_LeadJetCSV_5j4t_NegWgt",20,0.0,1.0);
-	h_BDT_6j4t_IgnoreWgt[b] = new TH1D((std::string("h_BDT_6j4t_IgnoreWgt" + short_suffix)).c_str(),"h_BDT_6j4t_IgnoreWgt",20,-1,1);
-	h_BDT_6j4t_IncludeWgt[b] = new TH1D((std::string("h_BDT_6j4t_IncludeWgt" + short_suffix)).c_str(),"h_BDT_6j4t_IncludeWgt",20,-1,1);
-	h_BDT_6j4t_PosWgt[b] = new TH1D((std::string("h_BDT_6j4t_PosWgt" + short_suffix)).c_str(),"h_BDT_6j4t_PosWgt",20,-1,1);
-	h_BDT_6j4t_NegWgt[b] = new TH1D((std::string("h_BDT_6j4t_NegWgt" + short_suffix)).c_str(),"h_BDT_6j4t_NegWgt",20,-1,1);
-	h_LeadJetPt_6j4t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetPt_6j4t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j4t_IgnoreWgt",20,0.0,500.0);
-	h_LeadJetPt_6j4t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetPt_6j4t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j4t_IncludeWgt",20,0.0,500.0);
-	h_LeadJetPt_6j4t_PosWgt[b] = new TH1D((std::string("h_LeadJetPt_6j4t_PosWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j4t_PosWgt",20,0.0,500.0);
-	h_LeadJetPt_6j4t_NegWgt[b] = new TH1D((std::string("h_LeadJetPt_6j4t_NegWgt" + short_suffix)).c_str(),"h_LeadJetPt_6j4t_NegWgt",20,0.0,500.0);
-	h_LeadJetCSV_6j4t_IgnoreWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j4t_IgnoreWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j4t_IgnoreWgt",20,0.0,1.0);
-	h_LeadJetCSV_6j4t_IncludeWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j4t_IncludeWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j4t_IncludeWgt",20,0.0,1.0);
-	h_LeadJetCSV_6j4t_PosWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j4t_PosWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j4t_PosWgt",20,0.0,1.0);
-	h_LeadJetCSV_6j4t_NegWgt[b] = new TH1D((std::string("h_LeadJetCSV_6j4t_NegWgt" + short_suffix)).c_str(),"h_LeadJetCSV_6j4t_NegWgt",20,0.0,1.0);
-		
-		
-
-    h_wgt_lepSF[b] = new TH1D((std::string("h_wgt_lepSF" + short_suffix)).c_str(), ";lepton scale factor", 100, 0.5, 1.5 );
-    h_wgt_PU[b]    = new TH1D((std::string("h_wgt_PU" + short_suffix)).c_str(), ";PU weight", 200, 0., 2.0 );
-    h_wgt_csvSF[b]    = new TH1D((std::string("h_wgt_csvSF" + short_suffix)).c_str(), ";CSV SF weight", 200, 0., 2.0 );
-
-    h_category_yield[b] = new TH1D((std::string("h_category_yield" + short_suffix)).c_str(), ";category", NumCat, 0, NumCat );
-    h_category_yield_noCSV[b] = new TH1D((std::string("h_category_yield_noCSV" + short_suffix)).c_str(), ";category", NumCat, 0, NumCat );
-    h_category_yield_newCSV[b] = new TH1D((std::string("h_category_yield_newCSV" + short_suffix)).c_str(), ";category", NumCat, 0, NumCat );
-    h_category_yield_looseNewCSV[b] = new TH1D((std::string("h_category_yield_looseNewCSV" + short_suffix)).c_str(), ";category", NumCat, 0, NumCat );
-    h_category_yield_looseNewCSV_nomCSV[b] = new TH1D((std::string("h_category_yield_looseNewCSV_nomCSV" + short_suffix)).c_str(), ";category", NumCat, 0, NumCat );
-    h_category_yield_looseNewCSV_newCSV[b] = new TH1D((std::string("h_category_yield_looseNewCSV_newCSV" + short_suffix)).c_str(), ";category", NumCat, 0, NumCat );
-
-    h_category_yield_higgsDecayType[b] = new TH2D((std::string("h_category_yield_higgsDecayType" + short_suffix)).c_str(), ";category;Higgs decay", NumCat, 0, NumCat, 11, 0, 11 );
-
-
-    h_numPV[b]  = new TH1D((std::string("h_numPV" + short_suffix)).c_str(), ";Number of Vertices", NpvBins, NpvMin, NpvMax );
-    h_numJet[b] = new TH1D((std::string("h_numJet" + short_suffix)).c_str(), ";Number of Jets", NjetBins_full, NjetMin_full-0.5, NjetMax_full+0.5 );
-    h_numTag[b] = new TH1D((std::string("h_numTag" + short_suffix)).c_str(), ";Number of Tags", NtagBins_full, NtagMin_full-0.5, NtagMax_full+0.5 );
-    h_numJet_numTag[b] = new TH2D((std::string("h_numJet_numTag" + short_suffix)).c_str(), ";Number of Jets;Number of Tags", NjetBins, NjetMin-0.5, NjetMax+0.5, NtagBins, NtagMin-0.5, NtagMax+0.5 );
-
-
-    h_numLooseJet[b] = new TH1D((std::string("h_numLooseJet" + short_suffix)).c_str(), ";Number of Loose Jets", NjetBins_loose, NjetMin_loose-0.5, NjetMax_loose+0.5 );
-    h_numLooseTag[b] = new TH1D((std::string("h_numLooseTag" + short_suffix)).c_str(), ";Number of Loose Tags", NtagBins_loose, NtagMin_loose-0.5, NtagMax_loose+0.5 );
-
-
-
-    for( int c=0; c<NumCat; c++ ){ 
-      std::string suffix = "_" + cat_labels[c];
-      std::string cat_suffix = "_" + cat_labels[c];
-      suffix += sys_cat_labels[b];
-
-
-      h_NumBmatch[c][b] = new TH1D((std::string("h_NumBmatch" + suffix)).c_str(), ";Number of b matched jets", 8, 0-0.5, 7+0.5 );
-
-      h_higgsDecayType[c][b] = new TH1D((std::string("h_higgsDecayType" + suffix)).c_str(), ";Higgs decay", 11, 0, 11 );
-
-      h_numPV_cat[c][b]  = new TH1D((std::string("h_numPV_cat" + suffix)).c_str(), ";Number of Vertices", NpvBins, NpvMin, NpvMax );
-
-      h_lepton_pt[c][b] = new TH1D((std::string("h_lepton_pt" + suffix)).c_str(),";lepton p_{T}", NlepPtBins, 0, lepPtMax );
-      h_lepton_phi[c][b] = new TH1D((std::string("h_lepton_phi" + suffix)).c_str(),";lepton #phi", 34, -3.4, 3.4 );
-      h_lepton_eta[c][b] = new TH1D((std::string("h_lepton_eta" + suffix)).c_str(),";lepton #eta", 25, -2.5, 2.5 );
-      h_lepton_relIso[c][b] = new TH1D((std::string("h_lepton_relIso" + suffix)).c_str(),";lepton relative isolation", 60, 0., 0.13 );
-
-
-      h_jet_eta_1[c][b] = new TH1D((std::string("h_jet_eta_1" + suffix)).c_str(),";jet 1 #eta", 25, -2.5, 2.5 );
-      h_jet_eta_2[c][b] = new TH1D((std::string("h_jet_eta_2" + suffix)).c_str(),";jet 2 #eta", 25, -2.5, 2.5 );
-      h_jet_eta_3[c][b] = new TH1D((std::string("h_jet_eta_3" + suffix)).c_str(),";jet 3 #eta", 25, -2.5, 2.5 );
-      h_jet_eta_4[c][b] = new TH1D((std::string("h_jet_eta_4" + suffix)).c_str(),";jet 4 #eta", 25, -2.5, 2.5 );
-
-      h_jet_pt[c][b] = new TH1D((std::string("h_jet_pt" + suffix)).c_str(),";jet p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_pt_noCSV[c][b] = new TH1D((std::string("h_jet_pt_noCSV" + suffix)).c_str(),";jet p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_pt_newCSV[c][b] = new TH1D((std::string("h_jet_pt_newCSV" + suffix)).c_str(),";jet p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_pt_looseNewCSV[c][b] = new TH1D((std::string("h_jet_pt_looseNewCSV" + suffix)).c_str(),";jet p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_pt_looseNewCSV_nomCSV[c][b] = new TH1D((std::string("h_jet_pt_looseNewCSV_nomCSV" + suffix)).c_str(),";jet p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_pt_looseNewCSV_newCSV[c][b] = new TH1D((std::string("h_jet_pt_looseNewCSV_newCSV" + suffix)).c_str(),";jet p_{T}", NjetptBins, 0, jetptmax );
-
-      h_jet_eta[c][b] = new TH1D((std::string("h_jet_eta" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-      h_jet_eta_noCSV[c][b] = new TH1D((std::string("h_jet_eta_noCSV" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-      h_jet_eta_newCSV[c][b] = new TH1D((std::string("h_jet_eta_newCSV" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-      h_jet_eta_looseNewCSV[c][b] = new TH1D((std::string("h_jet_eta_looseNewCSV" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-      h_jet_eta_looseNewCSV_nomCSV[c][b] = new TH1D((std::string("h_jet_eta_looseNewCSV_nomCSV" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-      h_jet_eta_looseNewCSV_newCSV[c][b] = new TH1D((std::string("h_jet_eta_looseNewCSV_newCSV" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-
-      h_jet_csv[c][b] = new TH1D((std::string("h_jet_csv" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_csv_noCSV[c][b] = new TH1D((std::string("h_jet_csv_noCSV" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_csv_newCSV[c][b] = new TH1D((std::string("h_jet_csv_newCSV" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_csv_looseNewCSV[c][b] = new TH1D((std::string("h_jet_csv_looseNewCSV" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_csv_looseNewCSV_nomCSV[c][b] = new TH1D((std::string("h_jet_csv_looseNewCSV_nomCSV" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_csv_looseNewCSV_newCSV[c][b] = new TH1D((std::string("h_jet_csv_looseNewCSV_newCSV" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-
-      h_jet_loose_pt[c][b] = new TH1D((std::string("h_jet_loose_pt" + suffix)).c_str(),";jet p_{T}", 20, 20, 30 );
-      h_jet_loose_pt_noCSV[c][b] = new TH1D((std::string("h_jet_loose_pt_noCSV" + suffix)).c_str(),";jet p_{T}", 20, 20, 30 );
-      h_jet_loose_pt_newCSV[c][b] = new TH1D((std::string("h_jet_loose_pt_newCSV" + suffix)).c_str(),";jet p_{T}", 20, 20, 30 );
-      h_jet_loose_pt_looseNewCSV[c][b] = new TH1D((std::string("h_jet_loose_pt_looseNewCSV" + suffix)).c_str(),";jet p_{T}", 20, 20, 30 );
-      h_jet_loose_pt_looseNewCSV_nomCSV[c][b] = new TH1D((std::string("h_jet_loose_pt_looseNewCSV_nomCSV" + suffix)).c_str(),";jet p_{T}", 20, 20, 30 );
-      h_jet_loose_pt_looseNewCSV_newCSV[c][b] = new TH1D((std::string("h_jet_loose_pt_looseNewCSV_newCSV" + suffix)).c_str(),";jet p_{T}", 20, 20, 30 );
-
-      h_jet_loose_eta[c][b] = new TH1D((std::string("h_jet_loose_eta" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-      h_jet_loose_eta_noCSV[c][b] = new TH1D((std::string("h_jet_loose_eta_noCSV" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-      h_jet_loose_eta_newCSV[c][b] = new TH1D((std::string("h_jet_loose_eta_newCSV" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-      h_jet_loose_eta_looseNewCSV[c][b] = new TH1D((std::string("h_jet_loose_eta_looseNewCSV" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-      h_jet_loose_eta_looseNewCSV_nomCSV[c][b] = new TH1D((std::string("h_jet_loose_eta_looseNewCSV_nomCSV" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-      h_jet_loose_eta_looseNewCSV_newCSV[c][b] = new TH1D((std::string("h_jet_loose_eta_looseNewCSV_newCSV" + suffix)).c_str(),";jet #eta", 25, -2.5, 2.5 );
-
-      h_jet_loose_csv[c][b] = new TH1D((std::string("h_jet_loose_csv" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_loose_csv_noCSV[c][b] = new TH1D((std::string("h_jet_loose_csv_noCSV" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_loose_csv_newCSV[c][b] = new TH1D((std::string("h_jet_loose_csv_newCSV" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_loose_csv_looseNewCSV[c][b] = new TH1D((std::string("h_jet_loose_csv_looseNewCSV" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_loose_csv_looseNewCSV_nomCSV[c][b] = new TH1D((std::string("h_jet_loose_csv_looseNewCSV_nomCSV" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_loose_csv_looseNewCSV_newCSV[c][b] = new TH1D((std::string("h_jet_loose_csv_looseNewCSV_newCSV" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-
-
-      h_tag_jet_pt[c][b] = new TH1D((std::string("h_tag_jet_pt" + suffix)).c_str(),";tagged jet p_{T}", NjetptBins, 0, jetptmax );
-      h_untag_jet_pt[c][b] = new TH1D((std::string("h_untag_jet_pt" + suffix)).c_str(),";untagged jet p_{T}", NjetptBins, 0, jetptmax );
-
-
-      h_jet_csv_noTopPt[c][b] = new TH1D((std::string("h_jet_csv_noTopPt" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_csv_noTopPt_noCSV[c][b] = new TH1D((std::string("h_jet_csv_noTopPt_noCSV" + suffix)).c_str(),";jet CSV", NcsvBins, -1.1, 1.1 );
-
-      h_jet_pt_noTopPt[c][b] = new TH1D((std::string("h_jet_pt_noTopPt" + suffix)).c_str(),";jet p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_pt_noTopPt_noCSV[c][b] = new TH1D((std::string("h_jet_pt_noTopPt_noCSV" + suffix)).c_str(),";jet p_{T}", NjetptBins, 0, jetptmax );
-
-      h_jet_pt_1_noCSV[c][b] = new TH1D((std::string("h_jet_pt_1_noCSV" + suffix)).c_str(),";jet 1 p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_pt_1_noTopPt[c][b] = new TH1D((std::string("h_jet_pt_1_noTopPt" + suffix)).c_str(),";jet 1 p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_pt_1_noTopPt_noCSV[c][b] = new TH1D((std::string("h_jet_pt_1_noTopPt_noCSV" + suffix)).c_str(),";jet 1 p_{T}", NjetptBins, 0, jetptmax );
-
-
-      h_jet_pt_1[c][b] = new TH1D((std::string("h_jet_pt_1" + suffix)).c_str(),";jet 1 p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_pt_2[c][b] = new TH1D((std::string("h_jet_pt_2" + suffix)).c_str(),";jet 2 p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_pt_3[c][b] = new TH1D((std::string("h_jet_pt_3" + suffix)).c_str(),";jet 3 p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_pt_4[c][b] = new TH1D((std::string("h_jet_pt_4" + suffix)).c_str(),";jet 4 p_{T}", NjetptBins, 0, jetptmax );
-
-
-      h_jet_tag_pt_1[c][b] = new TH1D((std::string("h_jet_tag_pt_1" + suffix)).c_str(),";tag jet 1 p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_tag_pt_2[c][b] = new TH1D((std::string("h_jet_tag_pt_2" + suffix)).c_str(),";tag jet 2 p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_tag_pt_3[c][b] = new TH1D((std::string("h_jet_tag_pt_3" + suffix)).c_str(),";tag jet 3 p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_tag_pt_4[c][b] = new TH1D((std::string("h_jet_tag_pt_4" + suffix)).c_str(),";tag jet 4 p_{T}", NjetptBins, 0, jetptmax );
-
-
-      h_jet_untag_pt_1[c][b] = new TH1D((std::string("h_jet_untag_pt_1" + suffix)).c_str(),";untag jet 1 p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_untag_pt_2[c][b] = new TH1D((std::string("h_jet_untag_pt_2" + suffix)).c_str(),";untag jet 2 p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_untag_pt_3[c][b] = new TH1D((std::string("h_jet_untag_pt_3" + suffix)).c_str(),";untag jet 3 p_{T}", NjetptBins, 0, jetptmax );
-      h_jet_untag_pt_4[c][b] = new TH1D((std::string("h_jet_untag_pt_4" + suffix)).c_str(),";untag jet 4 p_{T}", NjetptBins, 0, jetptmax );
-
-
-
-
-      h_jet_csv_1[c][b] = new TH1D((std::string("h_jet_csv_1" + suffix)).c_str(),";jet 1 CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_csv_2[c][b] = new TH1D((std::string("h_jet_csv_2" + suffix)).c_str(),";jet 2 CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_csv_3[c][b] = new TH1D((std::string("h_jet_csv_3" + suffix)).c_str(),";jet 3 CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_csv_4[c][b] = new TH1D((std::string("h_jet_csv_4" + suffix)).c_str(),";jet 4 CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_csv_5[c][b] = new TH1D((std::string("h_jet_csv_5" + suffix)).c_str(),";jet 5 CSV", NcsvBins, -1.1, 1.1 );
-      h_jet_csv_6[c][b] = new TH1D((std::string("h_jet_csv_6" + suffix)).c_str(),";jet 6 CSV", NcsvBins, -1.1, 1.1 );
-	  
-      h_first_jet_pt[c][b] = new TH1D((std::string("h_first_jet_pt" + suffix)).c_str(),";first jet pt", NjetptBins, 0, jetptmax );
-      h_second_jet_pt[c][b] = new TH1D((std::string("h_second_jet_pt" + suffix)).c_str(),";second jet pt", NjetptBins, 0, jetptmax );
-      h_third_jet_pt[c][b] = new TH1D((std::string("h_third_jet_pt" + suffix)).c_str(),";third jet pt", NjetptBins, 0, jetptmax );
-      h_fourth_jet_pt[c][b] = new TH1D((std::string("h_fourth_jet_pt" + suffix)).c_str(),";fourth jet pt", NjetptBins, 0, jetptmax );
-
-
-      h_maxDEta_jet_aveJetEta[c][b] = new TH1D((std::string("h_maxDEta_jet_aveJetEta" + suffix)).c_str(),";max #Delta#eta(jet,ave jet #eta)", 50, 0., 6. );
-      h_maxDEta_tag_aveJetEta[c][b] = new TH1D((std::string("h_maxDEta_tag_aveJetEta" + suffix)).c_str(),";max #Delta#eta(tag,ave jet #eta)", 50, 0., 6. );
-      h_maxDEta_tag_aveTagEta[c][b] = new TH1D((std::string("h_maxDEta_tag_aveTagEta" + suffix)).c_str(),";max #Delta#eta(tag,ave tag #eta)", 50, 0., 6. );
-
-
-      h_jet_aveJetEta[c][b] = new TH1D((std::string("h_jet_aveJetEta" + suffix)).c_str(),";ave jet #eta", 50, -2.5, 2.5 );
-      h_jet_aveTagEta[c][b] = new TH1D((std::string("h_jet_aveTagEta" + suffix)).c_str(),";ave tag #eta", 50, -2.5, 2.5 );
-
-
-      h_met_pt[c][b]  = new TH1D((std::string("h_met_pt" + suffix)).c_str(),";MET p_{T}", NmetBins, 0, metmax );
-      h_met_phi[c][b] = new TH1D((std::string("h_met_phi" + suffix)).c_str(),";MET #phi", 34, -3.4, 3.4 );
-	  h_met[c][b]  = new TH1D((std::string("h_met" + suffix)).c_str(),";MET", NmetBins, 0, metmax );
-      h_mht_pt[c][b]  = new TH1D((std::string("h_mht_pt" + suffix)).c_str(),";MHT p_{T}", NmetBins, 0, metmax );
-      h_mht_phi[c][b] = new TH1D((std::string("h_mht_phi" + suffix)).c_str(),";MHT #phi", 34, -3.4, 3.4 );
-	  h_mht[c][b]  = new TH1D((std::string("h_mht" + suffix)).c_str(),";MHT", NmetBins, 0, metmax );
-      h_all_sum_pt[c][b] = new TH1D((std::string("h_all_sum_pt" + suffix)).c_str(),";sum p_{T} (jets,#mu,ele)", NhtBins, 0, htmax );
-      h_all_sum_pt_with_met[c][b] = new TH1D((std::string("h_all_sum_pt_with_met" + suffix)).c_str(),";sum p_{T} (jets,lepton,MET)", NhtBins, 0, htmax );
-      h_invariant_mass_of_everything[c][b] = new TH1D((std::string("h_invariant_mass_of_everything" + suffix)).c_str(),";M_{inv} (jets,lepton,MET)", NhtBins, 0, htmax );
-      h_transverse_mass_met[c][b] = new TH1D((std::string("h_transverse_mass_met" + suffix)).c_str(),";M_{T} (lepton,MET)", NmetBins, 0, metmax );
-      h_transverse_mass_met_vs_met[c][b] = new TH2D((std::string("h_transverse_mass_met_vs_met" + suffix)).c_str(),";M_{T} (lepton,MET);MET", NmetBins, 0, metmax, NmetBins, 0, metmax );
-      h_transverse_mass_mht[c][b] = new TH1D((std::string("h_transverse_mass_mht" + suffix)).c_str(),";M_{T} (lepton,MHT)", NmetBins, 0, metmax );
-      h_transverse_mass_mht_vs_mht[c][b] = new TH2D((std::string("h_transverse_mass_mht_vs_mht" + suffix)).c_str(),";M_{T} (lepton,MHT);MHT", NmetBins, 0, metmax, NmetBins, 0, metmax );
-
-
-      h_HT[c][b] = new TH1D((std::string("h_HT" + suffix)).c_str(),";H_{T} (jets)", NhtBins, 0, htmax );
-
-      h_min_dR_lep_jet[c][b] = new TH1D((std::string("h_min_dR_lep_jet" + suffix)).c_str(),";min #DeltaR(lep,jet)", 30, 0, 6. );
-      h_min_dR_tag_tag[c][b] = new TH1D((std::string("h_min_dR_tag_tag" + suffix)).c_str(),";min #DeltaR(tag,tag)", 30, 0, 6. );
-      h_ave_dR_tag_tag[c][b] = new TH1D((std::string("h_ave_dR_tag_tag" + suffix)).c_str(),";ave #DeltaR(tag,tag)", 30, 0, 6. );
-
-      h_ave_mass_tag_tag[c][b] = new TH1D((std::string("h_ave_mass_tag_tag" + suffix)).c_str(),";ave mass(tag,tag)", NmassBins, 0, massmax );
-      h_ave_mass_untag_untag[c][b] = new TH1D((std::string("h_ave_mass_untag_untag" + suffix)).c_str(),";ave mass(untag,untag)", NmassBins, 0, massmax );
-      h_M3[c][b] = new TH1D((std::string("h_M3" + suffix)).c_str(),";M3", Nm3Bins, 0, m3max );
-      h_M3_1tag[c][b] = new TH1D((std::string("h_M3_1tag" + suffix)).c_str(),";M3 (1 tag)", Nm3Bins, 0, m3max );
-      h_Mlb[c][b] = new TH1D((std::string("h_Mlb" + suffix)).c_str(),";M(lep,tag)", NmassBins, 0, massmax );
-
-      h_best_higgs_mass[c][b] = new TH1D((std::string("h_best_higgs_mass" + suffix)).c_str(),";best Higgs mass", NmassBins, 0, massmax );
-      h_minChi2[c][b] = new TH1D((std::string("h_minChi2" + suffix)).c_str(),";minChi2", 500, 0, 500 );
-      h_dRbb[c][b] = new TH1D((std::string("h_dRbb" + suffix)).c_str(),";best #DeltaR(b,b)", 30, 0, 6. );
-
-      h_tagged_dijet_mass_closest_to_125[c][b] = new TH1D((std::string("h_tagged_dijet_mass_closest_to_125" + suffix)).c_str(),";tagged dijet mass closest to 125", NmassBins, 0, massmax );
-
-
-
-      h_leptonicW_mass[c][b] = new TH1D((std::string("h_leptonicW_mass" + suffix)).c_str(),";lep W mass (minChi2)", NmassBins, 0, massmax );
-      h_hadronicW_mass[c][b] = new TH1D((std::string("h_hadronicW_mass" + suffix)).c_str(),";had W mass (minChi2)", NmassBins, 0, massmax );
-      h_leptonicT_mass[c][b] = new TH1D((std::string("h_leptonicT_mass" + suffix)).c_str(),";lep top mass (minChi2)", NmassBins, 0, massmax );
-      h_hadronicT_mass[c][b] = new TH1D((std::string("h_hadronicT_mass" + suffix)).c_str(),";had top mass (minChi2)", NmassBins, 0, massmax );
-
-      h_hadronicW_pT[c][b] = new TH1D((std::string("h_hadronicW_pT" + suffix)).c_str(),";had W mass (minChi2)", NjetptBins, 0, jetptmax );
-      h_hadronicW_pT_mass[c][b] = new TH2D((std::string("h_hadronicW_pT_mass" + suffix)).c_str(),";had W mass (minChi2)", NjetptBins, 0, jetptmax, NmassBins, 0, massmax );
-
-      h_leptonicT_pT[c][b] = new TH1D((std::string("h_leptonicT_pT" + suffix)).c_str(),";lep top p_{T} (minChi2)", NjetptBins, 0, jetptmax );
-      h_leptonicT_pT_mass[c][b] = new TH2D((std::string("h_leptonicT_pT_mass" + suffix)).c_str(),";lep top p_{T} (minChi2);lep top mass (minChi2)", NjetptBins, 0, jetptmax, NmassBins, 0, massmax );
-      h_hadronicT_pT[c][b] = new TH1D((std::string("h_hadronicT_pT" + suffix)).c_str(),";had top p_{T} (minChi2)", NjetptBins, 0, jetptmax );
-      h_hadronicT_pT_mass[c][b] = new TH2D((std::string("h_hadronicT_pT_mass" + suffix)).c_str(),";had top p_{T} (minChi2);had top mass (minChi2)", NjetptBins, 0, jetptmax, NmassBins, 0, massmax );
-
-      h_lepT_hadT_DeltaR[c][b] = new TH1D((std::string("h_lepT_hadT_DeltaR" + suffix)).c_str(),";DeltaR(lepT,hadT)", 35, 0, 7.0 );
-      h_lepT_hadT_Angle[c][b]  = new TH1D((std::string("h_lepT_hadT_Angle" + suffix)).c_str(), ";Angle(lepT,hadT)",  30, 0, 3.5 );
-
-
-      h_sumTop_pT[c][b] = new TH1D((std::string("h_sumTop_pT" + suffix)).c_str(),";had + lep top p_{T} (minChi2)", NjetptBins, 0, jetptmax );
-      h_sumTop_mass[c][b] = new TH1D((std::string("h_sumTop_mass" + suffix)).c_str(),";had + lep top mass (minChi2)", NmassBins_sumTop, 0, massmax_sumTop );
-      h_sumTop_pT_mass[c][b] = new TH2D((std::string("h_sumTop_pT_mass" + suffix)).c_str(),";had + lep top mass (minChi2)", NjetptBins, 0, jetptmax, NmassBins_sumTop, 0, massmax_sumTop );
-
-      h_minChi2_getTopSystem[c][b] = new TH1D((std::string("h_minChi2_getTopSystem" + suffix)).c_str(),";minChi2 (getTopSystem)", 50, 0, 500 );
-
-
-      h_leptonicW_mass_minChi2_getTopSystem[c][b] = new TH2D((std::string("h_leptonicW_mass_minChi2_getTopSystem" + suffix)).c_str(),";lep W mass (minChi2)", NmassBins, 0, massmax, 500, 0, 500 );
-      h_hadronicW_mass_minChi2_getTopSystem[c][b] = new TH2D((std::string("h_hadronicW_mass_minChi2_getTopSystem" + suffix)).c_str(),";had W mass (minChi2)", NmassBins, 0, massmax, 500, 0, 500 );
-      h_leptonicT_mass_minChi2_getTopSystem[c][b] = new TH2D((std::string("h_leptonicT_mass_minChi2_getTopSystem" + suffix)).c_str(),";lep top mass (minChi2)", NmassBins, 0, massmax, 500, 0, 500 );
-      h_hadronicT_mass_minChi2_getTopSystem[c][b] = new TH2D((std::string("h_hadronicT_mass_minChi2_getTopSystem" + suffix)).c_str(),";had top mass (minChi2)", NmassBins, 0, massmax, 500, 0, 500 );
-
-
+	h_first_jet_pt[c][b] = new TH1D((std::string("h_first_jet_pt" + suffix)).c_str(),";first jet pt", NjetptBins, 0, jetptmax );
+      	h_second_jet_pt[c][b] = new TH1D((std::string("h_second_jet_pt" + suffix)).c_str(),";second jet pt", NjetptBins, 0, jetptmax );
+        h_third_jet_pt[c][b] = new TH1D((std::string("h_third_jet_pt" + suffix)).c_str(),";third jet pt", NjetptBins, 0, jetptmax );
+        h_fourth_jet_pt[c][b] = new TH1D((std::string("h_fourth_jet_pt" + suffix)).c_str(),";fourth jet pt", NjetptBins, 0, jetptmax );
 
       h_aplanarity[c][b] = new TH1D((std::string("h_aplanarity" + suffix)).c_str(),";aplanarity", 25, 0, 0.5 );
       h_sphericity[c][b] = new TH1D((std::string("h_sphericity" + suffix)).c_str(),";sphericity", 25, 0, 1.0 );
-      h_avg_btag_disc_non_btags[c][b] = new TH1D((std::string("h_avg_btag_disc_non_btags" + suffix)).c_str(),";ave btag disc non btags", 230, -10.5, 1.0 );
+     // h_avg_btag_disc_non_btags[c][b] = new TH1D((std::string("h_avg_btag_disc_non_btags" + suffix)).c_str(),";ave btag disc non btags", 230, -10.5, 1.0 );
       h_avg_btag_disc_btags[c][b] = new TH1D((std::string("h_avg_btag_disc_btags" + suffix)).c_str(),";ave btag disc btags", 100, -0.01, 1.01 );
       h_dev_from_avg_disc_btags[c][b] = new TH1D((std::string("h_dev_from_avg_disc_btags" + suffix)).c_str(),";dev from avg disc btags", 25, -0.0001, 0.04 );
-      h_lowest_btag[c][b] = new TH1D((std::string("h_lowest_btag" + suffix)).c_str(),";lowest btag", 20, 0.65, 1.001 );
       h_closest_tagged_dijet_mass[c][b] = new TH1D((std::string("h_closest_tagged_dijet_mass" + suffix)).c_str(),";mass of closest tagged jets", NmassBins, 0, massmax );
 
       h_h0[c][b] = new TH1D((std::string("h_h0" + suffix)).c_str(),";h0", 25, 0, 0.5 );
       h_h1[c][b] = new TH1D((std::string("h_h1" + suffix)).c_str(),";h1", 25, -0.3, 0.5 );
       h_h2[c][b] = new TH1D((std::string("h_h2" + suffix)).c_str(),";h2", 25, -0.2, 0.5 );
       h_h3[c][b] = new TH1D((std::string("h_h3" + suffix)).c_str(),";h3", 25, -0.2, 1.1 );
-      h_h4[c][b] = new TH1D((std::string("h_h4" + suffix)).c_str(),";h4", 25, -0.2, 0.3 );
+   //   h_h4[c][b] = new TH1D((std::string("h_h4" + suffix)).c_str(),";h4", 25, -0.2, 0.3 );
 
-
-      h_bhmv2[c][b] = new TH1D((std::string("h_bhmv2" + suffix)).c_str(),";best Higgs mass (v2)",20, 0, massmax );
       h_maxeta_jet_jet[c][b] = new TH1D((std::string("h_maxeta_jet_jet" + suffix)).c_str(),";max #Delta#eta(jet,ave jet #eta)", 50, 0., 6. );
       h_maxeta_jet_tag[c][b] = new TH1D((std::string("h_maxeta_jet_tag" + suffix)).c_str(),";max #Delta#eta(tag,ave jet #eta)", 50, 0., 6. );
       h_maxeta_tag_tag[c][b] = new TH1D((std::string("h_maxeta_tag_tag" + suffix)).c_str(),";max #Delta#eta(tag,ave tag #eta)", 50, 0., 6. );
-      h_abs_dEta_leptop_bb[c][b] = new TH1D((std::string("h_abs_dEta_leptop_bb" + suffix)).c_str(),";abs(#Delta#eta(leptonic top, bb))", 20, 0., 6. );
-      h_abs_dEta_hadtop_bb[c][b] = new TH1D((std::string("h_abs_dEta_hadtop_bb" + suffix)).c_str(),";abs(#Delta#eta(hadronic top, bb))", 20, 0., 6. );
       h_dEta_fn[c][b] = new TH1D((std::string("h_dEta_fn" + suffix)).c_str(),";product(#Delta#eta(leptonic top, bb),#Delta#eta(hadronic top, bb))", 20, 0., 6.);
-      h_abs_bb_eta[c][b] = new TH1D((std::string("h_abs_bb_eta" + suffix)).c_str(),";abs(bb#eta)", 20, 0., 6.);
-      h_angle_tops_bb[c][b] = new TH1D((std::string("h_angle_tops_bb" + suffix)).c_str(),";3D angle (tops, bb)", 20, 0., 3.5);
-      h_median_bb_mass[c][b] = new TH1D((std::string("h_median_bb_mass" + suffix)).c_str(),";median inv. mass, all btag pairs",20, 0, massmax );
       h_pt_all_jets_over_E_all_jets[c][b] = new TH1D((std::string("h_pt_all_jets_over_E_all_jets" + suffix)).c_str(),";(#Sigma jet p_{T})/(#Sigma jet E)",50,0.,1.);
 
+    //  h_jet_csv_1[c][b] = new TH1D((std::string("h_jet_csv_1" + suffix)).c_str(),";jet 1 CSV", NcsvBins, -1.1, 1.1 );
+      h_second_highest_btag[c][b] = new TH1D((std::string("h_second_highest_btag" + suffix)).c_str(),";jet 2 CSV", NcsvBins, -1.1, 1.1 );
+      h_third_highest_btag[c][b] = new TH1D((std::string("h_third_highest_btag" + suffix)).c_str(),";jet 3 CSV", NcsvBins, -1.1, 1.1 );
+      h_fourth_highest_btag[c][b] = new TH1D((std::string("h_fourth_highest_btag" + suffix)).c_str(),";jet 4 CSV", NcsvBins, -1.1, 1.1 );
+      h_fifth_highest_CSV[c][b] = new TH1D((std::string("h_fifth_highest_CSV" + suffix)).c_str(),";jet 5 CSV", NcsvBins, -1.1, 1.1 );
+    
+      h_min_dr_tagged_jets[c][b] = new TH1D((std::string("h_min_dr_tagged_jets" + suffix)).c_str(),";min #DeltaR(tag,tag)", 30, 0, 6. );
+      h_avg_dr_tagged_jets[c][b] = new TH1D((std::string("h_avg_dr_tagged_jets" + suffix)).c_str(),";ave #DeltaR(tag,tag)", 30, 0, 6. );
+	
+      h_HT[c][b] = new TH1D((std::string("h_HT" + suffix)).c_str(),";H_{T} (jets)", NhtBins, 0, htmax );
+      h_all_sum_pt_with_met[c][b] = new TH1D((std::string("h_all_sum_pt_with_met" + suffix)).c_str(),";sum p_{T} (jets,lepton,MET)", NhtBins, 0, htmax );
+      h_invariant_mass_of_everything[c][b] = new TH1D((std::string("h_invariant_mass_of_everything" + suffix)).c_str(),";M_{inv} (jets,lepton,MET)", NhtBins, 0, htmax );
      
-    } // end loop over categories
+      h_Mlb[c][b] = new TH1D((std::string("h_Mlb" + suffix)).c_str(),";M(lep,tag)", NmassBins, 0, massmax );
+      h_tagged_dijet_mass_closest_to_125[c][b] = new TH1D((std::string("h_tagged_dijet_mass_closest_to_125" + suffix)).c_str(),";tagged dijet mass closest to 125", NmassBins, 0, massmax );
 
-  } // end loop over systematics
+	 }
+	 
+	  std::string short_suffix = sys_cat_labels[b];
+	  
+	      //SpecialKIT binning 
+    
+	  h1_6j2t_KIT[b] = new TH1F((std::string("h1_6j2t_KIT" + short_suffix)).c_str(),"h1 (6j2t)",20,-0.175,0.325);    
+	  avg_dr_tagged_jets_6j2t_KIT[b] = new TH1F((std::string("avg_dr_tagged_jets_6j2t_KIT" + short_suffix)).c_str(),"avg_dr_tagged_jets (6j2t)",19,0.0,4.75);
+	  sphericity_6j2t_KIT[b] = new TH1F((std::string("sphericity_6j2t_KIT" + short_suffix)).c_str(),"sphericity (6j2t)",18,0.0,0.9);
+	  third_highest_btag_6j2t_KIT[b] = new TH1F((std::string("third_highest_btag_6j2t_KIT" + short_suffix)).c_str(),"third_highest_btag (6j2t)",18,0.0,0.9);
+	  h3_6j2t_KIT[b] = new TH1F((std::string("h3_6j2t_KIT" + short_suffix)).c_str(),"h3 (6j2t)",19,0.0,0.95);
+	  HT_6j2t_KIT[b] = new TH1F((std::string("HT_6j2t_KIT" + short_suffix)).c_str(),"HT (6j2t)",17,0.0,1700.0);
+	  Mlb_6j2t_KIT[b] = new TH1F((std::string("Mlb_6j2t_KIT" + short_suffix)).c_str(),"Mlb (6j2t)",20,0.0,400.0);
+	  fifth_highest_CSV_6j2t_KIT[b] = new TH1F((std::string("fifth_highest_CSV_6j2t_KIT" + short_suffix)).c_str(),"fifth_highest_CSV (6j2t)",13,0.0,0.65);
+	  fourth_highest_btag_6j2t_KIT[b] = new TH1F((std::string("fourth_highest_btag_6j2t_KIT" + short_suffix)).c_str(),"fourth_highest_btag (6j2t)",17,0.0,0.85);
+	  h1_4j3t_KIT[b] = new TH1F((std::string("h1_4j3t_KIT" + short_suffix)).c_str(),"h1 (4j3t)",11,-0.2,0.35);
+	  avg_dr_tagged_jets_4j3t_KIT[b] = new TH1F((std::string("avg_dr_tagged_jets_4j3t_KIT" + short_suffix)).c_str(),"avg_dr_tagged_jets (4j3t)",19,0.0,3.8);
+	  sphericity_4j3t_KIT[b] = new TH1F((std::string("sphericity_4j3t_KIT" + short_suffix)).c_str(),"sphericity (4j3t)",18,0.0,0.9);
+	  third_highest_btag_4j3t_KIT[b] = new TH1F((std::string("third_highest_btag_4j3t_KIT" + short_suffix)).c_str(),"third_highest_btag (4j3t)",11,0.88,0.99);
+	  HT_4j3t_KIT[b] = new TH1F((std::string("HT_4j3t_KIT" + short_suffix)).c_str(),"HT (4j3t)",19,0.0,950.0);
+	  dev_from_avg_disc_btags_4j3t_KIT[b] = new TH1F((std::string("dev_from_avg_disc_btags_4j3t_KIT" + short_suffix)).c_str(),"dev_from_avg_disc_btags (4j3t)",12,0.0,0.0024);
+	  M3_4j3t_KIT[b] = new TH1F((std::string("M3_4j3t_KIT" + short_suffix)).c_str(),"M3 (4j3t)",17,0.0,850.0);
+	  min_dr_tagged_jets_4j3t_KIT[b] = new TH1F((std::string("min_dr_tagged_jets_4j3t_KIT" + short_suffix)).c_str(),"min_dr_tagged_jets (4j3t)",16,0.0,3.2);
+	  Evt_CSV_Average_4j3t_KIT[b] = new TH1F((std::string("Evt_CSV_Average_4j3t_KIT" + short_suffix)).c_str(),"Evt_CSV_Average (4j3t)",13,0.68,0.94);
+	  h1_5j3t_KIT[b] = new TH1F((std::string("h1_5j3t_KIT" + short_suffix)).c_str(),"h1 (5j3t)",20,-0.2,0.3);
+	  avg_dr_tagged_jets_5j3t_KIT[b] = new TH1F((std::string("avg_dr_tagged_jets_5j3t_KIT" + short_suffix)).c_str(),"avg_dr_tagged_jets (5j3t)",18,0.0,3.6);
+	  sphericity_5j3t_KIT[b] = new TH1F((std::string("sphericity_5j3t_KIT" + short_suffix)).c_str(),"sphericity (5j3t)",18,0.0,0.9);
+	  third_highest_btag_5j3t_KIT[b] = new TH1F((std::string("third_highest_btag_5j3t_KIT" + short_suffix)).c_str(),"third_highest_btag (5j3t)",12,0.88,1.0);
+	  h3_5j3t_KIT[b] = new TH1F((std::string("h3_5j3t_KIT" + short_suffix)).c_str(),"h3 (5j3t)",20,-0.05,0.95);
+	  HT_5j3t_KIT[b] = new TH1F((std::string("HT_5j3t_KIT" + short_suffix)).c_str(),"HT (5j3t)",12,0.0,1200.0);
+	  dev_from_avg_disc_btags_5j3t_KIT[b] = new TH1F((std::string("dev_from_avg_disc_btags_5j3t_KIT" + short_suffix)).c_str(),"dev_from_avg_disc_btags (5j3t)",12,0.0,0.0024);
+	  fourth_highest_btag_5j3t_KIT[b] = new TH1F((std::string("fourth_highest_btag_5j3t_KIT" + short_suffix)).c_str(),"fourth_highest_btag (5j3t)",17,0.0,0.85);
+	  h1_6j3t_KIT[b] = new TH1F((std::string("h1_6j3t_KIT" + short_suffix)).c_str(),"h1 (6j3t)",20,-0.175,0.325);
+	  avg_dr_tagged_jets_6j3t_KIT[b] = new TH1F((std::string("avg_dr_tagged_jets_6j3t_KIT" + short_suffix)).c_str(),"avg_dr_tagged_jets (6j3t)",19,0.0,3.8);
+	  third_highest_btag_6j3t_KIT[b] = new TH1F((std::string("third_highest_btag_6j3t_KIT" + short_suffix)).c_str(),"third_highest_btag (6j3t)",12,0.88,1.0);
+	  HT_6j3t_KIT[b] = new TH1F((std::string("HT_6j3t_KIT" + short_suffix)).c_str(),"HT (6j3t)",19,0.0,1900.0);
+	  pt_all_jets_over_E_all_jets_6j3t_KIT[b] = new TH1F((std::string("pt_all_jets_over_E_all_jets_6j3t_KIT" + short_suffix)).c_str(),"pt_all_jets_over_E_all_jets (6j3t)",14,0.2,0.9);
+	  fifth_highest_CSV_6j3t_KIT[b] = new TH1F((std::string("fifth_highest_CSV_6j3t_KIT" + short_suffix)).c_str(),"fifth_highest_CSV (6j3t)",13,0.0,0.65);
+	  fourth_highest_btag_6j3t_KIT[b] = new TH1F((std::string("fourth_highest_btag_6j3t_KIT" + short_suffix)).c_str(),"fourth_highest_btag (6j3t)",18,0.0,0.9);
+	  min_dr_tagged_jets_6j3t_KIT[b] = new TH1F((std::string("min_dr_tagged_jets_6j3t_KIT" + short_suffix)).c_str(),"min_dr_tagged_jets (6j3t)",17,0.0,3.4);
+	  h1_4j4t_KIT[b] = new TH1F((std::string("h1_4j4t_KIT" + short_suffix)).c_str(),"h1 (4j4t)",19,-0.2,0.275);
+	  avg_dr_tagged_jets_4j4t_KIT[b] = new TH1F((std::string("avg_dr_tagged_jets_4j4t_KIT" + short_suffix)).c_str(),"avg_dr_tagged_jets (4j4t)",15,1.4,2.9);
+	  sphericity_4j4t_KIT[b] = new TH1F((std::string("sphericity_4j4t_KIT" + short_suffix)).c_str(),"sphericity (4j4t)",17,0.0,0.85);
+	  avg_btag_disc_btags_4j4t_KIT[b] = new TH1F((std::string("avg_btag_disc_btags_4j4t_KIT" + short_suffix)).c_str(),"avg_btag_disc_btags (4j4t)",16,0.915,0.995);
+	  h2_4j4t_KIT[b] = new TH1F((std::string("h2_4j4t_KIT" + short_suffix)).c_str(),"h2 (4j4t)",20,-0.16,0.24);
+	  closest_tagged_dijet_mass_4j4t_KIT[b] = new TH1F((std::string("closest_tagged_dijet_mass_4j4t_KIT" + short_suffix)).c_str(),"closest_tagged_dijet_mass (4j4t)",11,0.0,220.0);
+	  second_highest_btag_4j4t_KIT[b] = new TH1F((std::string("second_highest_btag_4j4t_KIT" + short_suffix)).c_str(),"second_highest_btag (4j4t)",16,0.92,1.0);
+	  fourth_highest_btag_4j4t_KIT[b] = new TH1F((std::string("fourth_highest_btag_4j4t_KIT" + short_suffix)).c_str(),"fourth_highest_btag (4j4t)",11,0.88,0.99);
+	  maxeta_jet_jet_4j4t_KIT[b] = new TH1F((std::string("maxeta_jet_jet_4j4t_KIT" + short_suffix)).c_str(),"maxeta_jet_jet (4j4t)",15,0.0,1.5);
+	  pt_all_jets_over_E_all_jets_4j4t_KIT[b] = new TH1F((std::string("pt_all_jets_over_E_all_jets_4j4t_KIT" + short_suffix)).c_str(),"pt_all_jets_over_E_all_jets (4j4t)",14,0.2,0.9);
+	  avg_dr_tagged_jets_5j4t_KIT[b] = new TH1F((std::string("avg_dr_tagged_jets_5j4t_KIT" + short_suffix)).c_str(),"avg_dr_tagged_jets (5j4t)",18,1.3,3.1);
+	  HT_5j4t_KIT[b] = new TH1F((std::string("HT_5j4t_KIT" + short_suffix)).c_str(),"HT (5j4t)",11,0.0,1100.0);
+	  M3_5j4t_KIT[b] = new TH1F((std::string("M3_5j4t_KIT" + short_suffix)).c_str(),"M3 (5j4t)",17,0.0,850.0);
+	  fifth_highest_CSV_5j4t_KIT[b] = new TH1F((std::string("fifth_highest_CSV_5j4t_KIT" + short_suffix)).c_str(),"fifth_highest_CSV (5j4t)",19,-0.05,0.9);
+	  fourth_highest_btag_5j4t_KIT[b] = new TH1F((std::string("fourth_highest_btag_5j4t_KIT" + short_suffix)).c_str(),"fourth_highest_btag (5j4t)",11,0.88,0.99);
+	  Evt_Deta_JetsAverage_5j4t_KIT[b] = new TH1F((std::string("Evt_Deta_JetsAverage_5j4t_KIT" + short_suffix)).c_str(),"Evt_Deta_JetsAverage (5j4t)",12,0.0,2.4);
+	  avg_btag_disc_btags_5j4t_KIT[b] = new TH1F((std::string("avg_btag_disc_btags_5j4t_KIT" + short_suffix)).c_str(),"avg_btag_disc_btags (5j4t)",18,0.9,0.99);
+	  h2_6j4t_KIT[b] = new TH1F((std::string("h2_6j4t_KIT" + short_suffix)).c_str(),"h2 (6j4t)",20,-0.12,0.28);
+	  avg_dr_tagged_jets_6j4t_KIT[b] = new TH1F((std::string("avg_dr_tagged_jets_6j4t_KIT" + short_suffix)).c_str(),"avg_dr_tagged_jets (6j4t)",16,0.0,3.2);
+	  third_highest_btag_6j4t_KIT[b] = new TH1F((std::string("third_highest_btag_6j4t_KIT" + short_suffix)).c_str(),"third_highest_btag (6j4t)",11,0.89,1.0);
+	  M3_6j4t_KIT[b] = new TH1F((std::string("M3_6j4t_KIT" + short_suffix)).c_str(),"M3 (6j4t)",13,0.0,1300.0);
+	  fifth_highest_CSV_6j4t_KIT[b] = new TH1F((std::string("fifth_highest_CSV_6j4t_KIT" + short_suffix)).c_str(),"fifth_highest_CSV (6j4t)",19,0.0,0.95);
+	  fourth_highest_btag_6j4t_KIT[b] = new TH1F((std::string("fourth_highest_btag_6j4t_KIT" + short_suffix)).c_str(),"fourth_highest_btag (6j4t)",11,0.88,0.99);
+	  best_higgs_mass_6j4t_KIT[b] = new TH1F((std::string("best_higgs_mass_6j4t_KIT" + short_suffix)).c_str(),"best_higgs_mass (6j4t)",12,0.0,1200.0);
+	  dEta_fn_6j4t_KIT[b] = new TH1F((std::string("dEta_fn_6j4t_KIT" + short_suffix)).c_str(),"dEta_fn (6j4t)",18,0.0,4.5);
 
+	  ///
+	
+	
+	
+	}
 
-  for( int b=0; b<NumSysCat; b++ ){
-    for( int c=0; c<NumCat; c++ ){
-      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(1+1,"bb");
-      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(2+1,"WW");
-      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(3+1,"#tau#tau");
-      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(4+1,"gg");
-      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(5+1,"cc");
-      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(6+1,"ZZ");
-      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(7+1,"Z#gamma");
-      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(8+1,"#gamma#gamma");
-      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(9+1,"ss");
-      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(10+1,"#mu#mu");
-      
-
-    }
-  }
-
-  for( int b=0; b<NumSysCat; b++ ){
-    for( int c=0; c<NumCat; c++ ){
-      h_category_yield[b]->GetXaxis()->SetBinLabel(c+1,cat_labels[c].c_str());
-
-      h_category_yield_noCSV[b]->GetXaxis()->SetBinLabel(c+1,cat_labels[c].c_str());
-      h_category_yield_newCSV[b]->GetXaxis()->SetBinLabel(c+1,cat_labels[c].c_str());
-      h_category_yield_looseNewCSV[b]->GetXaxis()->SetBinLabel(c+1,cat_labels[c].c_str());
-      h_category_yield_looseNewCSV_nomCSV[b]->GetXaxis()->SetBinLabel(c+1,cat_labels[c].c_str());
-      h_category_yield_looseNewCSV_newCSV[b]->GetXaxis()->SetBinLabel(c+1,cat_labels[c].c_str());
-
-      h_category_yield_higgsDecayType[b]->GetXaxis()->SetBinLabel(c+1,cat_labels[c].c_str());
-      h_category_yield_higgsDecayType[b]->GetXaxis()->SetBinLabel(1+1,"bb");
-      h_category_yield_higgsDecayType[b]->GetXaxis()->SetBinLabel(2+1,"WW");
-      h_category_yield_higgsDecayType[b]->GetXaxis()->SetBinLabel(3+1,"#tau#tau");
-      h_category_yield_higgsDecayType[b]->GetXaxis()->SetBinLabel(4+1,"gg");
-      h_category_yield_higgsDecayType[b]->GetXaxis()->SetBinLabel(5+1,"cc");
-      h_category_yield_higgsDecayType[b]->GetXaxis()->SetBinLabel(6+1,"ZZ");
-      h_category_yield_higgsDecayType[b]->GetXaxis()->SetBinLabel(7+1,"Z#gamma");
-      h_category_yield_higgsDecayType[b]->GetXaxis()->SetBinLabel(8+1,"#gamma#gamma");
-      h_category_yield_higgsDecayType[b]->GetXaxis()->SetBinLabel(9+1,"ss");
-      h_category_yield_higgsDecayType[b]->GetXaxis()->SetBinLabel(10+1,"#mu#mu");
-    }
-  }
-
-
-  //////////////////////////////////////////////////////////////////////////
-  ///  Weights
-  //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    ///  Weights
+    //////////////////////////////////////////////////////////////////////////
  
 
-  int nentries = chain->GetEntries();
-  std::cout << "\n\t Number of entries = " << nentries << std::endl;
-  std::cout << "\t Max number of entries = " << maxNentries << std::endl;
-  std::cout << "\n" << std::endl;
+    int nentries = chain->GetEntries();
+    std::cout << "\n\t Number of entries = " << nentries << std::endl;
+    std::cout << "\t Max number of entries = " << maxNentries << std::endl;
+    std::cout << "\n" << std::endl;
 
-  int use_nentries = std::max( maxNentries, nentries);
+    int use_nentries = std::max( maxNentries, nentries);
 
-  int NeventsPerJob = int( double(use_nentries)/double(Njobs) + 0.000001 ) + 1;
+    int NeventsPerJob = int( double(use_nentries)/double(Njobs) + 0.000001 ) + 1;
 
-  int firstEvent = (jobN-1)*NeventsPerJob + 1;
-  int lastEvent  = firstEvent + NeventsPerJob;
-  if( jobN==Njobs ) lastEvent = -1;
-  if( jobN==1 ) firstEvent = 0;
+    int firstEvent = (jobN-1)*NeventsPerJob + 1;
+    int lastEvent  = firstEvent + NeventsPerJob;
+    if( jobN==Njobs ) lastEvent = -1;
+    if( jobN==1 ) firstEvent = 0;
   
-  //MyWeights
- 
   
-  double GenWgtSum = 0;
-  double GenSumPos[15];
-  double GenSumNeg[15];
+    double MyWgt = 1;
+    double ttJet_xSec = 832;
+    //double ttH_xSec = 0.5085;
+	double ttHbb_xSec = 0.2934;
+	double ttHnobb_xSec = 0.2151;
+    double ttZ_xSec = 2.232;
+    double ttW_xSec = 1.152;
+    double nGen = nentries;
+    double nGenNeg=1580920; //for amc@nlo sample
+
+	double MyttHwgtNeg = (ttHnobb_xSec/nGenNeg)*10000;
+	double MyttHwgt = ttHbb_xSec/nGen*10000; 
+	double MyttJetwgt = (ttJet_xSec/nGen)*10000;
+	double MyttZwgt = (ttZ_xSec/nGen)*10000;
+	double MyttWwgt = (ttW_xSec/nGen)*10000;
+
+
+
+
+  cout<<" BEGIN wgt ="<<MyttHwgtNeg<<endl;
+
+
+  if(SampleType ==1)MyWgt=MyttHwgtNeg;
+  if(SampleType ==2)MyWgt=MyttJetwgt;
+  if(SampleType ==3)MyWgt=MyttHwgt;
+  if(SampleType ==4)MyWgt=MyttZwgt;
+  if(SampleType ==5)MyWgt=MyttWwgt;
   
-  for(int gi=0;gi<15;gi++){
-  GenSumPos[gi]=0;
-  GenSumNeg[gi]=0;
-  }
-  
-  double MyWgt = 1;
-  double ttJet_xSec = 832;
-  double ttH_xSec = 0.5085;
-  double ttZ_xSec = 2.232;
-  double ttW_xSec = 1.152;
-  double nGen = nentries;
-  double nGenNeg=89671.4;
+  int cut[7];
 	
-	
-double MyttHwgtNeg = (ttH_xSec/nGenNeg)*10000;
-cout<<" BEGIN wgt ="<<MyttHwgtNeg<<endl;
-double MyttHwgt = ttH_xSec/nGen*10000; //If you don't incorporate negative weights
-double MyttJetwgt = (ttJet_xSec/nGen)*10000;
-double MyttZwgt = (ttZ_xSec/nGen)*10000;
-double MyttWwgt = (ttW_xSec/nGen)*10000;
-
-
-
-cout<<SplitType<<" asdfsdf"<<endl;
-//SampleTypes
-//1  is TTH
-//2  is TTJets
-//3  is TTZ
-//4  is TTW
-
-//SplitTypes
-// 1 is TTb
-// 6 is TTB
-// 2 is TTbb
-// 3 is TTc
-// 4 is TTcc
-// 5 is TTlf
-
-
-if(SampleType ==1)MyWgt=MyttHwgtNeg;
-if(SampleType ==2)MyWgt=MyttJetwgt;
-if(SampleType ==3)MyWgt=MyttZwgt;
-if(SampleType ==4)MyWgt=MyttWwgt;
-  
-
-  std::cout << "========  Starting Event Loop  ========" << std::endl;
-  for (Long64_t ievt=0; ievt<chain->GetEntries();ievt++) {    //Long64_t
-
-    if( ievt<firstEvent ) continue;
-    if( ievt==lastEvent ) break;
-
-    if( ievt==1 )        std::cout << "     Event " << ievt << std::endl;
-    if( ievt%10000==0 && ievt!=1 ) std::cout << "           " << ievt << "\t" 
-					     << int(double(ievt-firstEvent)/double(NeventsPerJob)*100) << "% done" << std::endl;
-
-    //if( ievt==(maxNentries+1) ) break;
-    if( ievt==(maxNentries+1) && ievt!=0 ) break;
-
-    chain->GetEntry(ievt);
-
-
-	double GenWgt = eve->wgt_generator_;
-	GenWgtSum = GenWgtSum + GenWgt;
-
-   
-	bool GoodFirstPV = eve->GoodFirstPV_;
-	if(!GoodFirstPV) continue;
-
-
-	bool PassLJ = eve->PassLJ_;
-	if(!PassLJ) continue;
-
-    // Filter by decay
-
-	if(SampleType == 2){
-	int additionalJetEventId			 = eve->additionalJetEventId_;
-	if(SplitType ==1 && !(additionalJetEventId == 51) )continue; //ttb
-	if(SplitType ==3 && !(additionalJetEventId == 52) )continue; //ttB
-	if(SplitType ==2 && !(additionalJetEventId == 53 || additionalJetEventId == 54 || additionalJetEventId == 55))continue; //ttbb
-	if(SplitType ==4 && !(additionalJetEventId == 41 || additionalJetEventId == 42 || additionalJetEventId == 43 || additionalJetEventId == 44 || additionalJetEventId == 45))continue; //ttc
-	//if(SplitType ==5 && !(additionalJetEventId == 43 || additionalJetEventId == 44 || additionalJetEventId == 45))continue; //ttcc
-	if(SplitType ==5 && !(additionalJetEventId == 0))continue; //ttlf
-    }
-	
-	if(SampleType == 1){
-		int Hdecay = eve->higgsDecayType_;
-		if(SplitType==1 && !(Hdecay == 1))continue; //bb
-		if(SplitType==2 && !(Hdecay == 2))continue; //WW
-		if(SplitType==3 && !(Hdecay == 3))continue; //TauTau
-		if(SplitType==4 && !(Hdecay == 4))continue; //gluglu
-		if(SplitType==5 && !(Hdecay == 5))continue; //cc
-		if(SplitType==6 && !(Hdecay == 6))continue; //ZZ
-		if(SplitType==7 && !(Hdecay == 7))continue; //Zgamma
-		if(SplitType==8 && !(Hdecay == 8))continue; //gammagamma
-		if(SplitType==10 && !(Hdecay == 10))continue; //ss
-		if(SplitType==11 && !(Hdecay == 11))continue; //mumu
-	}
-	
-	
-    int numPVs = eve->numPVs_;
-
-    int run = eve->run_;
-    int lumi = eve->lumi_;
-    long evt = eve->evt_;
-	
-	
-
- 
-
-//rNumSys=NumSysCat;
-
-    // iSys used for plot filling
-    int iSys=-1;
-    for(int treeSys=0; treeSys<rNumSys; treeSys++){
-    HT=0;
-      // if( treeSys>=1 && treeSys<=10 ) continue;
-      iSys++;
-
-      numJets_float = eve->numJets_float_[treeSys];
-      numTags_float = eve->numTags_float_[treeSys];
-
-      // convert floats to ints for nJets, nTags
-      int numJets = int( numJets_float + 0.001 );
-      int numTags = int( numTags_float + 0.001 );
-
-      int njet = ( numJets>NjetMax ) ? NjetMax : numJets;
-      int ntag = ( numTags>NtagMax ) ? NtagMax : numTags;
-      int njet_full = ( numJets>NjetMax_full ) ? NjetMax_full : numJets;
-      int ntag_full = ( numTags>NtagMax_full ) ? NtagMax_full : numTags;
-
-      int numJets_loose = int( eve->numJets_loose_float_[treeSys] + 0.001 );
-      int numTags_loose = int( eve->numTags_loose_float_[treeSys] + 0.001 );
-
-      int njet_loose = ( numJets_loose>NjetMax_loose ) ? NjetMax_loose : numJets_loose;
-      int ntag_loose = ( numTags_loose>NtagMax_loose ) ? NtagMax_loose : numTags_loose;
-
-
-      // 
-      // Associate the variables with the MVA reader with the vars in the tree
-      //
-      tight_lepton_pt           = eve->tight_lepton_pt_;
-      tight_lepton_phi          = eve->tight_lepton_phi_;
-      first_jet_pt              = eve->first_jet_pt_[treeSys];
-      min_dr_tagged_jets        = eve->min_dr_tagged_jets_[treeSys];
-      avg_dr_tagged_jets        = eve->avg_dr_tagged_jets_[treeSys];
-      aplanarity                = eve->aplanarity_[treeSys];
-      sphericity                = eve->sphericity_[treeSys];
-      MET                       = eve->MET_[treeSys];
-      second_jet_pt             = eve->second_jet_pt_[treeSys];
-      avg_btag_disc_btags       = eve->avg_btag_disc_btags_[treeSys]; 
-      dev_from_avg_disc_btags   = eve->dev_from_avg_disc_btags_[treeSys];
-      third_jet_pt              = eve->third_jet_pt_[treeSys];
-      fourth_jet_pt             = eve->fourth_jet_pt_[treeSys];
-      avg_tagged_dijet_mass     = eve->avg_tagged_dijet_mass_[treeSys];
-      lowest_btag               = eve->lowest_btag_[treeSys];
-      all_sum_pt_incl_met       = eve->all_sum_pt_with_met_[treeSys];
-      avg_untagged_dijet_mass   = eve->avg_untagged_dijet_mass_[treeSys];
-      closest_tagged_dijet_mass = eve->closest_tagged_dijet_mass_[treeSys];
-      first_highest_btag        = eve->first_highest_btag_[treeSys];
-      second_highest_btag       = eve->second_highest_btag_[treeSys];
-      third_highest_btag        = eve->third_highest_btag_[treeSys];
-      fourth_highest_btag       = eve->fourth_highest_btag_[treeSys];
-	  fifth_highest_CSV			= eve->fifth_highest_CSV_[treeSys];
-	  sixth_highest_CSV			= eve->sixth_highest_CSV_[treeSys];
-      best_higgs_mass           = eve->best_higgs_mass_[treeSys];
-      invariant_mass_of_everything   = eve->invariant_mass_of_everything_[treeSys];
-      dr_between_lep_and_closest_jet = eve->dr_between_lep_and_closest_jet_[treeSys];
-
-      tagged_dijet_mass_closest_to_125 = eve->tagged_dijet_mass_closest_to_125_[treeSys];
-
-      MHT     = eve->MHT_[treeSys];
-      MHT_phi = eve->MHT_phi_[treeSys];
-
-
-      h0 = eve->h0_[treeSys];
-      h1 = eve->h1_[treeSys];
-      h2 = eve->h2_[treeSys];
-      h3 = eve->h3_[treeSys];
-      h4 = eve->h4_[treeSys];
-
-      minChi2 = eve->minChi2_[treeSys];
-      dRbb = eve->dRbb_[treeSys];
-      avg_btag_disc_non_btags = eve->avg_btag_disc_non_btags_[treeSys];
-      all_sum_pt = eve->all_sum_pt_[treeSys];
-
-     // all_sum_pt_with_met = all_sum_pt_incl_met;
-
-      Mlb     = eve->Mlb_[treeSys];
-      M3      = eve->M3_[treeSys];
-      M3_1tag = eve->M3_1tag_[treeSys];
-
-      double MET_phi = eve->MET_phi_[treeSys];
-      double tight_lepton_eta = eve->tight_lepton_eta_;
-
-	double	  wgt = MyWgt;
-      double wgt_nomCSV = eve->wgt_csvSF_[treeSys];
-      double wgt_noCSV = ( eve->wgt_csvSF_[treeSys]>=0. ) ? eve->wgt_[treeSys]/eve->wgt_csvSF_[treeSys] : eve->wgt_[treeSys];
-      double wgt_noTopPt = ( eve->wgt_topPt_>=0. ) ? eve->wgt_[treeSys]/eve->wgt_topPt_ : eve->wgt_[treeSys];
-
-      if( (sys_cat_labels[iSys].find("_topPtcorrUp")!=std::string::npos) )        wgt_noTopPt *= eve->wgt_topPt_/eve->wgt_topPtUp_;
-      else if( (sys_cat_labels[iSys].find("_topPtcorrDown")!=std::string::npos) ) wgt_noTopPt *= eve->wgt_topPt_/eve->wgt_topPtDown_;
-
-      double wgt_noTopPt_noCSV = ( eve->wgt_csvSF_[iSys]>=0. ) ? wgt_noTopPt/eve->wgt_csvSF_[iSys] : wgt_noTopPt;
-
-
-
-      int this_category = -1;
-      if( numJets==4 && numTags==2) this_category=0;
-      if( numJets==5 && numTags==2) this_category=1;
-      if( numJets>=6 && numTags==2) this_category=2;	
-      if( numJets==4 && numTags==3) this_category=3;
-      if( numJets==5 && numTags==3) this_category=4;
-      if( numJets>=6 && numTags==3) this_category=5;
-      if( numJets==4 && numTags>=4) this_category=6;
-      if( numJets==5 && numTags>=4) this_category=7;
-      if( numJets>=6 && numTags>=4) this_category=8;
-      if( numJets==4 && numTags==1) this_category=9;
-      if( numJets==5 && numTags==1) this_category=10;
-      if( numJets>=6 && numTags==1) this_category=11;	
-      
-      if(treeSys==0){
-      
-      if(wgt>0)h_NumCount->Fill(this_category+11,wgt);
-      if(wgt<0)h_NumCount->Fill(this_category+1,wgt);
-      if(wgt>0)GenSumPos[this_category]++;
-      if(wgt<0)GenSumNeg[this_category]++;
-      }
-      
-
-
-      double MT_met = sqrt( 2 * tight_lepton_pt * MET * (1-cos(tight_lepton_phi - MET_phi)) );
-      MT_mht = sqrt( 2 * tight_lepton_pt * MHT * (1-cos(tight_lepton_phi - MHT_phi)) );
-
-      /////////////
-
-
-      vdouble lepton_vect = eve->lepton_vect_TLV_[0];
-	  if( this_category>-1 && this_category<9 ){   
-		
-	maxeta_jet_jet = eve->maxeta_jet_jet_[treeSys];
-	maxeta_jet_tag = eve->maxeta_jet_tag_[treeSys];
-	maxeta_tag_tag = eve->maxeta_tag_tag_[treeSys];
-
-	
-     
-	abs_dEta_leptop_bb = abs(eve->dEta_leptop_bb_[treeSys]);   
-	abs_dEta_hadtop_bb = abs(eve->dEta_hadtop_bb_[treeSys]);   
-	dEta_fn = eve->dEta_f_[treeSys];	      
-	
-	       
-	median_bb_mass = eve->median_bb_mass_[treeSys];
-	pt_all_jets_over_E_all_jets = eve->pt_all_jets_over_E_all_jets_[treeSys];
-
-      }
-
-
-
-      vvdouble jet_vect_TLV = eve->jet_vect_TLV_[treeSys];
-      vdouble jet_CSV = eve->jet_CSV_[treeSys];
-      vint    jet_flavour = eve->jet_flavour_[treeSys];
-      vint    jet_genId = eve->jet_genId_[treeSys];
-
-      vvdouble jet_loose_vect_TLV = eve->jet_loose_vect_TLV_[treeSys];
-      vdouble  jet_loose_CSV = eve->jet_loose_CSV_[treeSys];
-      vint     jet_loose_flavour = eve->jet_loose_flavour_[treeSys];
-
-      double csvWgtHF, csvWgtLF, csvWgtCF;
-      double csvWgtHF_loose, csvWgtLF_loose, csvWgtCF_loose;
-
-      double newCSVwgt = ( insample<0 ) ? 1 : get_csv_wgt(jet_vect_TLV,jet_CSV,jet_flavour,treeSys, csvWgtHF, csvWgtLF, csvWgtCF);
-      double newCSVwgt_loose = ( insample<0 ) ? 1 : get_csv_wgt(jet_loose_vect_TLV,jet_loose_CSV,jet_loose_flavour,treeSys, csvWgtHF_loose, csvWgtLF_loose, csvWgtCF_loose);
-
-      double wgt_newCSV = ( insample<0 ) ? 1 : wgt_noCSV*newCSVwgt;
-      double wgt_looseNewCSV = ( insample<0 ) ? 1 : wgt_noCSV*newCSVwgt_loose;
-      double wgt_looseNewCSV_nomCSV = ( insample<0 ) ? 1 : wgt_noCSV*newCSVwgt_loose*wgt_nomCSV;
-      double wgt_looseNewCSV_newCSV = ( insample<0 ) ? 1 : wgt_noCSV*newCSVwgt_loose*newCSVwgt;
-
-
-      h_wgt_lepSF[iSys]->Fill(eve->wgt_lepSF_);
-      h_wgt_PU[iSys]->Fill(eve->wgt_pu_);
-      h_wgt_csvSF[iSys]->Fill(eve->wgt_csvSF_[treeSys]);
-
-	 // if (treeSys<21 && treeSys>6) wgt *= newCSVwgt;
-if(SampleType ==1)wgt=MyWgt*GenWgt;
-wgt=wgt*newCSVwgt;
-
-
-      h_category_yield[iSys]->Fill(this_category,eve->wgt_[treeSys]);
-
-      h_category_yield_noCSV[iSys]->Fill(this_category,wgt_noCSV);
-      h_category_yield_newCSV[iSys]->Fill(this_category,wgt_newCSV);
-      h_category_yield_looseNewCSV[iSys]->Fill(this_category,wgt_looseNewCSV);
-      h_category_yield_looseNewCSV_nomCSV[iSys]->Fill(this_category,wgt_looseNewCSV_nomCSV);
-      h_category_yield_looseNewCSV_newCSV[iSys]->Fill(this_category,wgt_looseNewCSV_newCSV);
-
-
-     if(SampleType==1) h_category_yield_higgsDecayType[iSys]->Fill(this_category,eve->higgsDecayType_,wgt);
-
-
-
-      h_numLooseJet[iSys]->Fill(njet_loose,wgt);
-      h_numLooseTag[iSys]->Fill(ntag_loose,wgt);
-
-      if( numJets>=4 && numTags>=2 ){
-	h_numPV[iSys]->Fill(numPVs,wgt);
-	h_numTag[iSys]->Fill(ntag_full,wgt);
-	h_numJet[iSys]->Fill(njet_full,wgt);
-	h_numJet_numTag[iSys]->Fill(njet,ntag,wgt);
-      }
-
-
-
-
-
-      /////////////////////////////////////////
-      ////
-      ////
-      ////  Loop over categories
-      ////
-      ////
-      /////////////////////////////////////////
-
-
-      for( int category=0; category<NumCat; category++ ){
-	if( this_category!=category ) continue;
-
-	if(SampleType==1)h_higgsDecayType[category][iSys]->Fill(eve->higgsDecayType_,wgt);
-
-	h_met_pt[category][iSys]->Fill(std::min(double(MET),metmax)-0.00001,wgt);
-	h_met_phi[category][iSys]->Fill(MET_phi,wgt);
-	h_met[category][iSys]->Fill(MET,wgt);
-
-	h_mht_pt[category][iSys]->Fill(std::min(double(MHT),metmax)-0.00001,wgt);
-	h_mht_phi[category][iSys]->Fill(MHT_phi,wgt);
-	h_mht[category][iSys]->Fill(MHT,wgt);
-
-	h_transverse_mass_met[category][iSys]->Fill(std::min(double(MT_met),metmax)-0.00001,wgt);
-	h_transverse_mass_met_vs_met[category][iSys]->Fill(std::min(double(MT_met),metmax)-0.00001,std::min(double(MET),metmax)-0.00001,wgt);
-
-	h_transverse_mass_mht[category][iSys]->Fill(std::min(double(MT_mht),metmax)-0.00001,wgt);
-	h_transverse_mass_mht_vs_mht[category][iSys]->Fill(std::min(double(MT_mht),metmax)-0.00001,std::min(double(MHT),metmax)-0.00001,wgt);
-
-	h_numPV_cat[category][iSys]->Fill(numPVs,wgt);
-
-	h_lepton_pt[category][iSys]->Fill(std::min(double(tight_lepton_pt),lepPtMax)-0.00001,wgt);
-	h_lepton_eta[category][iSys]->Fill(tight_lepton_eta,wgt);
-	h_lepton_phi[category][iSys]->Fill(tight_lepton_phi,wgt);
-	h_lepton_relIso[category][iSys]->Fill(eve->tight_lepton_relIso_,wgt);
-
-	// bool isMinNPV = ( numPVs>=0  && numPVs<=12 );
-	// bool isMidNPV = ( numPVs>=13 && numPVs<=17 );
-
-
-	h_min_dR_lep_jet[category][iSys]->Fill(dr_between_lep_and_closest_jet,wgt);
-	h_all_sum_pt[category][iSys]->Fill(std::min(double(all_sum_pt),htmax)-0.00001,wgt);
-	//h_all_sum_pt_with_met[category][iSys]->Fill(std::min(double(all_sum_pt_with_met),htmax)-0.00001,wgt);
-	h_invariant_mass_of_everything[category][iSys]->Fill(std::min(double(invariant_mass_of_everything+MET),htmax)-0.00001,wgt);
-
-	//h_HT[category][iSys]->Fill(std::min(double(HT),htmax)-0.00001,wgt);
-
-
-	double maxJetPt = -1;
-	double maxJetPtCSV = -1;
-
-
-	double sumJetEta = 0;
-	double sumTagEta = 0;
-	double cntJetEta = 0;
-	double cntTagEta = 0;
-
-	int myTags=0, myUnTags=0;
-	int myBmatch=0;
-	vecTLorentzVector jetsV;
-	for( int iJet=0; iJet<int(jet_vect_TLV.size()); iJet++ ){
-	  TLorentzVector myJet;
-	  myJet.SetPxPyPzE( jet_vect_TLV[iJet][0], jet_vect_TLV[iJet][1], jet_vect_TLV[iJet][2], jet_vect_TLV[iJet][3] );
-
-	  jetsV.push_back(myJet);
+    std::cout << "========  Starting Event Loop  ========" << std::endl;
+    for (Long64_t ievt=0; ievt<chain->GetEntries();ievt++) {    //Long64_t
+
+	    if( ievt<firstEvent ) continue;
+	    if( ievt==lastEvent ) break;
+
+      	if( ievt==0 )        std::cout << "     Event " << ievt+1 << std::endl;
+      	if( ievt%10000==0 && ievt!=1) std::cout << "           " << ievt << "\t" 
+  					     << int(double(ievt-1)/double(nentries)*100) << "% done" << std::endl;
 	  
-	  double myCSV = jet_CSV[iJet];
-	  double myJetPT = myJet.Pt();
-	  int myFlavor = jet_flavour[iJet];
-	  HT += myJetPT;
-	  if( abs(myFlavor)==5 ) myBmatch++;
-
-	  h_jet_eta[category][iSys]->Fill(myJet.Eta(),wgt);
-	  h_jet_eta_noCSV[category][iSys]->Fill(myJet.Eta(),wgt_noCSV);
-	  h_jet_eta_newCSV[category][iSys]->Fill(myJet.Eta(),wgt_newCSV);
-	  h_jet_eta_looseNewCSV[category][iSys]->Fill(myJet.Eta(),wgt_looseNewCSV);
-	  h_jet_eta_looseNewCSV_nomCSV[category][iSys]->Fill(myJet.Eta(),wgt_looseNewCSV_nomCSV);
-	  h_jet_eta_looseNewCSV_newCSV[category][iSys]->Fill(myJet.Eta(),wgt_looseNewCSV_newCSV);
-
-	  h_jet_csv[category][iSys]->Fill(myCSV,wgt);
-	  h_jet_csv_noCSV[category][iSys]->Fill(myCSV,wgt_noCSV);
-	  h_jet_csv_newCSV[category][iSys]->Fill(myCSV,wgt_newCSV);
-	  h_jet_csv_looseNewCSV[category][iSys]->Fill(myCSV,wgt_looseNewCSV);
-	  h_jet_csv_looseNewCSV_nomCSV[category][iSys]->Fill(myCSV,wgt_looseNewCSV_nomCSV);
-	  h_jet_csv_looseNewCSV_newCSV[category][iSys]->Fill(myCSV,wgt_looseNewCSV_newCSV);
-
-	  h_jet_csv_noTopPt[category][iSys]->Fill(myCSV,wgt_noTopPt);
-	  h_jet_csv_noTopPt_noCSV[category][iSys]->Fill(myCSV,wgt_noTopPt_noCSV);
-
-
-	  h_jet_pt[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	  h_jet_pt_noCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_noCSV);
-	  h_jet_pt_newCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_newCSV);
-	  h_jet_pt_looseNewCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_looseNewCSV);
-	  h_jet_pt_looseNewCSV_nomCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_looseNewCSV_nomCSV);
-	  h_jet_pt_looseNewCSV_newCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_looseNewCSV_newCSV);
-
-
-	  h_jet_pt_noTopPt[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_noTopPt);
-	  h_jet_pt_noTopPt_noCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_noTopPt_noCSV);
-
-	  if( myCSV>0.679 ) h_tag_jet_pt[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	  else              h_untag_jet_pt[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-
-
-	  sumJetEta += myJet.Eta();
-	  cntJetEta += 1.;
-
-	  if( myCSV>0.679 ){
-	    sumTagEta += myJet.Eta();
-	    cntTagEta += 1.;
-	  }
-
-	  if( iJet==0 ){
-	    h_jet_eta_1[category][iSys]->Fill(myJet.Eta(),wgt);
-	    h_jet_pt_1[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-
-	    h_jet_pt_1_noCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_noCSV);
-	    h_jet_pt_1_noTopPt[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_noTopPt);
-	    h_jet_pt_1_noTopPt_noCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_noTopPt_noCSV);
-	  }
-	  else if( iJet==1 ){
-	    h_jet_eta_2[category][iSys]->Fill(myJet.Eta(),wgt);
-	    h_jet_pt_2[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	  }
-	  else if( iJet==2 ){
-	    h_jet_eta_3[category][iSys]->Fill(myJet.Eta(),wgt);
-	    h_jet_pt_3[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	  }
-	  else if( iJet==3 ){
-	    h_jet_eta_4[category][iSys]->Fill(myJet.Eta(),wgt);
-	    h_jet_pt_4[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	  }
-
-	  if( myCSV>0.679 ){
-	    if( myTags==0 )      h_jet_tag_pt_1[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	    else if( myTags==1 ) h_jet_tag_pt_2[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	    else if( myTags==2 ) h_jet_tag_pt_3[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	    else if( myTags==3 ) h_jet_tag_pt_4[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	    myTags++;
-	  }
-	  else {
-	    if( myUnTags==0 )      h_jet_untag_pt_1[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	    else if( myUnTags==1 ) h_jet_untag_pt_2[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	    else if( myUnTags==2 ) h_jet_untag_pt_3[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	    else if( myUnTags==3 ) h_jet_untag_pt_4[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	    myUnTags++;
-	  }    
+	 	if( ievt==(maxNentries+1) && ievt!=0 ) break;
 	  
+		cut[0]=0;
+		cut[1]=0;
+		cut[2]=0;
+		cut[3]=0;
+		cut[4]=0;
+		cut[5]=0;
+		cut[6]=0;
+		
+		cut[0]++;
 	  
-	  if(myJetPT>maxJetPt){
-	  maxJetPt=myJetPT;
-	  maxJetPtCSV=myCSV;
-	  }
-	        
-
-	} // end loop over jets
-	
-		h_HT[category][iSys]->Fill(std::min(double(HT),htmax)-0.00001,wgt);
-		all_sum_pt_with_met = HT + tight_lepton_pt + MET;
-		h_all_sum_pt_with_met[category][iSys]->Fill(std::min(double(all_sum_pt_with_met),htmax)-0.00001,wgt);
-
-
-	for( int iJet=0; iJet<int(jet_loose_vect_TLV.size()); iJet++ ){
-	  TLorentzVector myJet;
-	  myJet.SetPxPyPzE( jet_loose_vect_TLV[iJet][0], jet_loose_vect_TLV[iJet][1], jet_loose_vect_TLV[iJet][2], jet_loose_vect_TLV[iJet][3] );
-	  
-	  double myCSV = jet_loose_CSV[iJet];
-	  double myJetPT = myJet.Pt();
-
-	  h_jet_loose_eta[category][iSys]->Fill(myJet.Eta(),wgt);
-	  h_jet_loose_eta_noCSV[category][iSys]->Fill(myJet.Eta(),wgt_noCSV);
-	  h_jet_loose_eta_newCSV[category][iSys]->Fill(myJet.Eta(),wgt_newCSV);
-	  h_jet_loose_eta_looseNewCSV[category][iSys]->Fill(myJet.Eta(),wgt_looseNewCSV);
-	  h_jet_loose_eta_looseNewCSV_nomCSV[category][iSys]->Fill(myJet.Eta(),wgt_looseNewCSV_nomCSV);
-	  h_jet_loose_eta_looseNewCSV_newCSV[category][iSys]->Fill(myJet.Eta(),wgt_looseNewCSV_newCSV);
-
-	  h_jet_loose_csv[category][iSys]->Fill(myCSV,wgt);
-	  h_jet_loose_csv_noCSV[category][iSys]->Fill(myCSV,wgt_noCSV);
-	  h_jet_loose_csv_newCSV[category][iSys]->Fill(myCSV,wgt_newCSV);
-	  h_jet_loose_csv_looseNewCSV[category][iSys]->Fill(myCSV,wgt_looseNewCSV);
-	  h_jet_loose_csv_looseNewCSV_nomCSV[category][iSys]->Fill(myCSV,wgt_looseNewCSV_nomCSV);
-	  h_jet_loose_csv_looseNewCSV_newCSV[category][iSys]->Fill(myCSV,wgt_looseNewCSV_newCSV);
-
-	  h_jet_loose_pt[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt);
-	  h_jet_loose_pt_noCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_noCSV);
-	  h_jet_loose_pt_newCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_newCSV);
-	  h_jet_loose_pt_looseNewCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_looseNewCSV);
-	  h_jet_loose_pt_looseNewCSV_nomCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_looseNewCSV_nomCSV);
-	  h_jet_loose_pt_looseNewCSV_newCSV[category][iSys]->Fill(std::min(myJetPT,jetptmax)-0.00001,wgt_looseNewCSV_newCSV);
-	} //end loop over loose jets
-
-	h_NumBmatch[category][iSys]->Fill(myBmatch,wgt);
-
-	double aveJetEta = ( cntJetEta>0 ) ? sumJetEta/cntJetEta : -999;
-	double aveTagEta = ( cntTagEta>0 ) ? sumTagEta/cntTagEta : -999;
-
-	double maxDEta_jet_aveJetEta = -1;
-	double maxDEta_tag_aveJetEta = -1;
-	double maxDEta_tag_aveTagEta = -1;
-
-	for( int iJet=0; iJet<int(jet_vect_TLV.size()); iJet++ ){
-	  TLorentzVector myJet;
-	  myJet.SetPxPyPzE( jet_vect_TLV[iJet][0], jet_vect_TLV[iJet][1], jet_vect_TLV[iJet][2], jet_vect_TLV[iJet][3] );
-
-	  double myCSV = jet_CSV[iJet];
-	  double myJetEta = myJet.Eta();
-
-	  maxDEta_jet_aveJetEta = std::max( maxDEta_jet_aveJetEta, fabs(myJetEta - aveJetEta) );
-	  if( myCSV>0.679 ){
-	    maxDEta_tag_aveJetEta = std::max( maxDEta_tag_aveJetEta, fabs(myJetEta - aveJetEta) );
-	    maxDEta_tag_aveTagEta = std::max( maxDEta_tag_aveTagEta, fabs(myJetEta - aveTagEta) );
-	  }
-	}
-
-	h_maxDEta_jet_aveJetEta[category][iSys]->Fill(maxDEta_jet_aveJetEta,wgt);
-	h_maxDEta_tag_aveJetEta[category][iSys]->Fill(maxDEta_tag_aveJetEta,wgt);
-	h_maxDEta_tag_aveTagEta[category][iSys]->Fill(maxDEta_tag_aveTagEta,wgt);
-
-	h_jet_aveJetEta[category][iSys]->Fill(aveJetEta,wgt);
-	h_jet_aveTagEta[category][iSys]->Fill(aveTagEta,wgt);
-	
-	//When testing different histo weights adjust these. Right now set to "defaults"
-	double igwgt = 1;
-	double inwgt = wgt;
-	double pwgt = wgt;
-	double nwgt = wgt;
-
-
-	if(category==2){
-		double Reader_Output_6j2t_final = reader_final10v16_8TeV_BDT[2]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_6j2t_final[iSys]->Fill(Reader_Output_6j2t_final,wgt);
+		long evt = eve->evt_;
+	  	
+		chain->GetEntry(ievt);
 		
-		double Reader_Output_6j2t_final_May10_optimized = reader_NewMay10_optimized_BDT[2]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_6j2t_final_May10_optimized[iSys]->Fill(Reader_Output_6j2t_final_May10_optimized,wgt);
+		bool GoodFirstPV = eve->GoodFirstPV_;
+		if(GoodFirstPV)cut[1]++;
 		
-		h_BDT_6j2t_IgnoreWgt[iSys]->Fill(Reader_Output_6j2t_final_May10_optimized,igwgt);
-		h_BDT_6j2t_IncludeWgt[iSys]->Fill(Reader_Output_6j2t_final_May10_optimized,inwgt);
-		if(GenWgt>0)h_BDT_6j2t_PosWgt[iSys]->Fill(Reader_Output_6j2t_final_May10_optimized,abs(pwgt));
-		if(GenWgt<0)h_BDT_6j2t_NegWgt[iSys]->Fill(Reader_Output_6j2t_final_May10_optimized,abs(nwgt));
-		h_LeadJetPt_6j2t_IgnoreWgt[iSys]->Fill(maxJetPt,igwgt);
-		h_LeadJetPt_6j2t_IncludeWgt[iSys]->Fill(maxJetPt,inwgt);
-		if(GenWgt>0)h_LeadJetPt_6j2t_PosWgt[iSys]->Fill(maxJetPt,abs(pwgt));
-		if(GenWgt<0)h_LeadJetPt_6j2t_NegWgt[iSys]->Fill(maxJetPt,abs(nwgt));
-		h_LeadJetCSV_6j2t_IgnoreWgt[iSys]->Fill(maxJetPtCSV,igwgt);
-		h_LeadJetCSV_6j2t_IncludeWgt[iSys]->Fill(maxJetPtCSV,inwgt);
-		if(GenWgt>0)h_LeadJetCSV_6j2t_PosWgt[iSys]->Fill(maxJetPtCSV,abs(pwgt));
-		if(GenWgt<0)h_LeadJetCSV_6j2t_NegWgt[iSys]->Fill(maxJetPtCSV,abs(nwgt));
+		// LJ Event selection
+		
+		int passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1 = eve->passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1_;
+		int passHLT_IsoMu24_eta2p1_v = eve->passHLT_IsoMu24_eta2p1_v_;
+		if((passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1==1 || passHLT_IsoMu24_eta2p1_v==1) && cut[1]==1)cut[2]++;
+		
+		int numTightElectrons = eve->numTightElectrons_;
+		int numLooseElectrons = eve->numLooseElectrons_;
+		int numTightMuons = eve->numTightMuons_;
+		int numLooseMuons = eve->numLooseMuons_;
+		int numLooselep=-1;
+		int numTightlep=-1;
+
+		if((numLooseMuons + numLooseElectrons)==1)numLooselep=1;
+		if(((numLooseMuons==1 && passHLT_IsoMu24_eta2p1_v==1) || (numLooseElectrons==1 && passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1==1)) && cut[2]==1)cut[3]++;
+		if(((numTightElectrons==1 && passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1==1 && numLooseElectrons==1) || (numTightMuons==1 && passHLT_IsoMu24_eta2p1_v==1 && numLooseMuons==1)) && cut[3]==1)cut[4]++;
+		if(((numTightElectrons==1 && passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1==1) || (numTightMuons==1 && passHLT_IsoMu24_eta2p1_v==1)) && numLooselep==1 && cut[4]==1)cut[5]++;
 		
 		
-	}
-	
-	if(category==3){
-		double Reader_Output_4j3t_final = reader_final10v16_8TeV_BDT[3]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_4j3t_final[iSys]->Fill(Reader_Output_4j3t_final,wgt);
+		// Cat Event selection
 		
-		double Reader_Output_4j3t_final_May10_optimized = reader_NewMay10_optimized_BDT[3]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_4j3t_final_May10_optimized[iSys]->Fill(Reader_Output_4j3t_final_May10_optimized,wgt);
+		int numJets = int( eve->numJets_float_[0] + 0.001 );
+		int numTags = int( eve->numTags_float_[0] + 0.001 );
 		
-		h_BDT_4j3t_IgnoreWgt[iSys]->Fill(Reader_Output_4j3t_final_May10_optimized,igwgt);
-		h_BDT_4j3t_IncludeWgt[iSys]->Fill(Reader_Output_4j3t_final_May10_optimized,inwgt);
-		if(GenWgt>0)h_BDT_4j3t_PosWgt[iSys]->Fill(Reader_Output_4j3t_final_May10_optimized,abs(pwgt));
-		if(GenWgt<0)h_BDT_4j3t_NegWgt[iSys]->Fill(Reader_Output_4j3t_final_May10_optimized,abs(nwgt));
-		h_LeadJetPt_4j3t_IgnoreWgt[iSys]->Fill(maxJetPt,igwgt);
-		h_LeadJetPt_4j3t_IncludeWgt[iSys]->Fill(maxJetPt,inwgt);
-		if(GenWgt>0)h_LeadJetPt_4j3t_PosWgt[iSys]->Fill(maxJetPt,abs(pwgt));
-		if(GenWgt<0)h_LeadJetPt_4j3t_NegWgt[iSys]->Fill(maxJetPt,abs(nwgt));
-		h_LeadJetCSV_4j3t_IgnoreWgt[iSys]->Fill(maxJetPtCSV,igwgt);
-		h_LeadJetCSV_4j3t_IncludeWgt[iSys]->Fill(maxJetPtCSV,inwgt);
-		if(GenWgt>0)h_LeadJetCSV_4j3t_PosWgt[iSys]->Fill(maxJetPtCSV,abs(pwgt));
-		if(GenWgt<0)h_LeadJetCSV_4j3t_NegWgt[iSys]->Fill(maxJetPtCSV,abs(nwgt));
+		if(((numJets>=4 && numTags>=3) || (numJets>=6 && numTags>=2)) && cut[5]==1)cut[6]++;
 		
-	}
-	
-	if(category==4){
-	
-	
-		double Reader_Output_5j3t_final = reader_final10v16_8TeV_BDT[4]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_5j3t_final[iSys]->Fill(Reader_Output_5j3t_final,wgt);
-		
-		double Reader_Output_5j3t_final_May10_optimized = reader_NewMay10_optimized_BDT[4]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_5j3t_final_May10_optimized[iSys]->Fill(Reader_Output_5j3t_final_May10_optimized,wgt);
-		//cout<<iSys<<" "<<wgt<<" "<<Reader_Output_5j3t_final_May10_optimized<<" "<<third_jet_pt<<" "<<HT<<" "<<h3<<" "<<maxeta_jet_jet<<endl;
-		h_BDT_5j3t_IgnoreWgt[iSys]->Fill(Reader_Output_5j3t_final_May10_optimized,igwgt);
-		h_BDT_5j3t_IncludeWgt[iSys]->Fill(Reader_Output_5j3t_final_May10_optimized,inwgt);
-		if(GenWgt>0)h_BDT_5j3t_PosWgt[iSys]->Fill(Reader_Output_5j3t_final_May10_optimized,abs(pwgt));
-		if(GenWgt<0)h_BDT_5j3t_NegWgt[iSys]->Fill(Reader_Output_5j3t_final_May10_optimized,abs(nwgt));
-		h_LeadJetPt_5j3t_IgnoreWgt[iSys]->Fill(maxJetPt,igwgt);
-		h_LeadJetPt_5j3t_IncludeWgt[iSys]->Fill(maxJetPt,inwgt);
-		if(GenWgt>0)h_LeadJetPt_5j3t_PosWgt[iSys]->Fill(maxJetPt,abs(pwgt));
-		if(GenWgt<0)h_LeadJetPt_5j3t_NegWgt[iSys]->Fill(maxJetPt,abs(nwgt));
-		h_LeadJetCSV_5j3t_IgnoreWgt[iSys]->Fill(maxJetPtCSV,igwgt);
-		h_LeadJetCSV_5j3t_IncludeWgt[iSys]->Fill(maxJetPtCSV,inwgt);
-		if(GenWgt>0)h_LeadJetCSV_5j3t_PosWgt[iSys]->Fill(maxJetPtCSV,abs(pwgt));
-		if(GenWgt<0)h_LeadJetCSV_5j3t_NegWgt[iSys]->Fill(maxJetPtCSV,abs(nwgt));
-	}
-	
-	if(category==5){
-		ttH_ttbb_reader_Output_6j3t = ttH_ttbb_reader_6j3t->EvaluateMVA( "BDT method" );
-		h_ttH_ttbb_Reader_Output_6j3t[iSys]->Fill(ttH_ttbb_reader_Output_6j3t,wgt);
-		
-		double Reader_Output_6j3t_final = reader_final10v16_8TeV_BDT[5]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_6j3t_final[iSys]->Fill(Reader_Output_6j3t_final,wgt);
-		
-		double Reader_Output_6j3t_final_May10_optimized = reader_NewMay10_optimized_BDT[5]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_6j3t_final_May10_optimized[iSys]->Fill(Reader_Output_6j3t_final_May10_optimized,wgt);
-		
-		h_BDT_6j3t_IgnoreWgt[iSys]->Fill(Reader_Output_6j3t_final_May10_optimized,igwgt);
-		h_BDT_6j3t_IncludeWgt[iSys]->Fill(Reader_Output_6j3t_final_May10_optimized,inwgt);
-		if(GenWgt>0)h_BDT_6j3t_PosWgt[iSys]->Fill(Reader_Output_6j3t_final_May10_optimized,abs(pwgt));
-		if(GenWgt<0)h_BDT_6j3t_NegWgt[iSys]->Fill(Reader_Output_6j3t_final_May10_optimized,abs(nwgt));
-		h_LeadJetPt_6j3t_IgnoreWgt[iSys]->Fill(maxJetPt,igwgt);
-		h_LeadJetPt_6j3t_IncludeWgt[iSys]->Fill(maxJetPt,inwgt);
-		if(GenWgt>0)h_LeadJetPt_6j3t_PosWgt[iSys]->Fill(maxJetPt,abs(pwgt));
-		if(GenWgt<0)h_LeadJetPt_6j3t_NegWgt[iSys]->Fill(maxJetPt,abs(nwgt));
-		h_LeadJetCSV_6j3t_IgnoreWgt[iSys]->Fill(maxJetPtCSV,igwgt);
-		h_LeadJetCSV_6j3t_IncludeWgt[iSys]->Fill(maxJetPtCSV,inwgt);
-		if(GenWgt>0)h_LeadJetCSV_6j3t_PosWgt[iSys]->Fill(maxJetPtCSV,abs(pwgt));
-		if(GenWgt<0)h_LeadJetCSV_6j3t_NegWgt[iSys]->Fill(maxJetPtCSV,abs(nwgt));
-	}
-	
-	
-	if(category==6){
-		double Reader_Output_4j4t_final = reader_final10v16_8TeV_BDT[6]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_4j4t_final[iSys]->Fill(Reader_Output_4j4t_final,wgt);
-		
-		double Reader_Output_4j4t_final_May10_optimized = reader_NewMay10_optimized_BDT[6]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_4j4t_final_May10_optimized[iSys]->Fill(Reader_Output_4j4t_final_May10_optimized,wgt);
-		
-		h_BDT_4j4t_IgnoreWgt[iSys]->Fill(Reader_Output_4j4t_final_May10_optimized,igwgt);
-		h_BDT_4j4t_IncludeWgt[iSys]->Fill(Reader_Output_4j4t_final_May10_optimized,inwgt);
-		if(GenWgt>0)h_BDT_4j4t_PosWgt[iSys]->Fill(Reader_Output_4j4t_final_May10_optimized,abs(pwgt));
-		if(GenWgt<0)h_BDT_4j4t_NegWgt[iSys]->Fill(Reader_Output_4j4t_final_May10_optimized,abs(nwgt));
-		h_LeadJetPt_4j4t_IgnoreWgt[iSys]->Fill(maxJetPt,igwgt);
-		h_LeadJetPt_4j4t_IncludeWgt[iSys]->Fill(maxJetPt,inwgt);
-		if(GenWgt>0)h_LeadJetPt_4j4t_PosWgt[iSys]->Fill(maxJetPt,abs(pwgt));
-		if(GenWgt<0)h_LeadJetPt_4j4t_NegWgt[iSys]->Fill(maxJetPt,abs(nwgt));
-		h_LeadJetCSV_4j4t_IgnoreWgt[iSys]->Fill(maxJetPtCSV,igwgt);
-		h_LeadJetCSV_4j4t_IncludeWgt[iSys]->Fill(maxJetPtCSV,inwgt);
-		if(GenWgt>0)h_LeadJetCSV_4j4t_PosWgt[iSys]->Fill(maxJetPtCSV,abs(pwgt));
-		if(GenWgt<0)h_LeadJetCSV_4j4t_NegWgt[iSys]->Fill(maxJetPtCSV,abs(nwgt));
-	}
-	
-	if(category==7){
-		ttH_ttbb_reader_Output_5j4t = ttH_ttbb_reader_5j4t->EvaluateMVA( "BDT method" );
-		h_ttH_ttbb_Reader_Output_5j4t[iSys]->Fill(ttH_ttbb_reader_Output_5j4t,wgt);
-		
-		double Reader_Output_5j4t_final = reader_final10v16_8TeV_BDT[7]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_5j4t_final[iSys]->Fill(Reader_Output_5j4t_final,wgt);
-		
-		double Reader_Output_5j4t_final_May10_optimized = reader_NewMay10_optimized_BDT[7]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_5j4t_final_May10_optimized[iSys]->Fill(Reader_Output_5j4t_final_May10_optimized,wgt);
-		
-		h_BDT_5j4t_IgnoreWgt[iSys]->Fill(Reader_Output_5j4t_final_May10_optimized,igwgt);
-		h_BDT_5j4t_IncludeWgt[iSys]->Fill(Reader_Output_5j4t_final_May10_optimized,inwgt);
-		if(GenWgt>0)h_BDT_5j4t_PosWgt[iSys]->Fill(Reader_Output_5j4t_final_May10_optimized,abs(pwgt));
-		if(GenWgt<0)h_BDT_5j4t_NegWgt[iSys]->Fill(Reader_Output_5j4t_final_May10_optimized,abs(nwgt));
-		h_LeadJetPt_5j4t_IgnoreWgt[iSys]->Fill(maxJetPt,igwgt);
-		h_LeadJetPt_5j4t_IncludeWgt[iSys]->Fill(maxJetPt,inwgt);
-		if(GenWgt>0)h_LeadJetPt_5j4t_PosWgt[iSys]->Fill(maxJetPt,abs(pwgt));
-		if(GenWgt<0)h_LeadJetPt_5j4t_NegWgt[iSys]->Fill(maxJetPt,abs(nwgt));
-		h_LeadJetCSV_5j4t_IgnoreWgt[iSys]->Fill(maxJetPtCSV,igwgt);
-		h_LeadJetCSV_5j4t_IncludeWgt[iSys]->Fill(maxJetPtCSV,inwgt);
-		if(GenWgt>0)h_LeadJetCSV_5j4t_PosWgt[iSys]->Fill(maxJetPtCSV,abs(pwgt));
-		if(GenWgt<0)h_LeadJetCSV_5j4t_NegWgt[iSys]->Fill(maxJetPtCSV,abs(nwgt));
-		
-		
-	}
-	
-	if(category==8){
-		ttH_ttbb_reader_Output_6j4t = ttH_ttbb_reader_6j4t->EvaluateMVA( "BDT method" );
-		h_ttH_ttbb_Reader_Output_6j4t[iSys]->Fill(ttH_ttbb_reader_Output_6j4t,wgt);
-		
-		double Reader_Output_6j4t_final = reader_final10v16_8TeV_BDT[8]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_6j4t_final[iSys]->Fill(Reader_Output_6j4t_final,wgt);
-		
-		double Reader_Output_6j4t_final_May10_optimized = reader_NewMay10_optimized_BDT[8]->EvaluateMVA( "BDT method" );
-		h_Reader_Output_6j4t_final_May10_optimized[iSys]->Fill(Reader_Output_6j4t_final_May10_optimized,wgt);
-		
-		//if(iSys==0)cout<<Reader_Output_6j4t_final_May10_optimized<<" "<<wgt<<" "<<MyttHwgt<<" "<<MyttHwgtNeg*GenWgt<<endl;
-		
-		h_BDT_6j4t_IgnoreWgt[iSys]->Fill(Reader_Output_6j4t_final_May10_optimized,igwgt);
-		h_BDT_6j4t_IncludeWgt[iSys]->Fill(Reader_Output_6j4t_final_May10_optimized,inwgt);
-		if(GenWgt>0)h_BDT_6j4t_PosWgt[iSys]->Fill(Reader_Output_6j4t_final_May10_optimized,abs(pwgt));
-		if(GenWgt<0)h_BDT_6j4t_NegWgt[iSys]->Fill(Reader_Output_6j4t_final_May10_optimized,abs(nwgt));
-		h_LeadJetPt_6j4t_IgnoreWgt[iSys]->Fill(maxJetPt,igwgt);
-		h_LeadJetPt_6j4t_IncludeWgt[iSys]->Fill(maxJetPt,inwgt);
-		if(GenWgt>0)h_LeadJetPt_6j4t_PosWgt[iSys]->Fill(maxJetPt,abs(pwgt));
-		if(GenWgt<0)h_LeadJetPt_6j4t_NegWgt[iSys]->Fill(maxJetPt,abs(nwgt));
-		h_LeadJetCSV_6j4t_IgnoreWgt[iSys]->Fill(maxJetPtCSV,igwgt);
-		h_LeadJetCSV_6j4t_IncludeWgt[iSys]->Fill(maxJetPtCSV,inwgt);
-		if(GenWgt>0)h_LeadJetCSV_6j4t_PosWgt[iSys]->Fill(maxJetPtCSV,abs(pwgt));
-		if(GenWgt<0)h_LeadJetCSV_6j4t_NegWgt[iSys]->Fill(maxJetPtCSV,abs(nwgt));
-	}
-	
-
-
-
-
-
-	h_jet_csv_1[category][iSys]->Fill(first_highest_btag,wgt);
-	h_jet_csv_2[category][iSys]->Fill(second_highest_btag,wgt);
-	h_jet_csv_3[category][iSys]->Fill(third_highest_btag,wgt);
-	h_jet_csv_4[category][iSys]->Fill(fourth_highest_btag,wgt);
-	h_jet_csv_5[category][iSys]->Fill(fifth_highest_CSV,wgt);
-	h_jet_csv_6[category][iSys]->Fill(sixth_highest_CSV,wgt);	
-	
-	h_first_jet_pt[category][iSys]->Fill(first_jet_pt,wgt);
-	h_second_jet_pt[category][iSys]->Fill(second_jet_pt,wgt);
-	h_third_jet_pt[category][iSys]->Fill(third_jet_pt,wgt);
-	h_fourth_jet_pt[category][iSys]->Fill(fourth_jet_pt,wgt);
-
-	h_min_dR_tag_tag[category][iSys]->Fill(min_dr_tagged_jets,wgt);
-	h_ave_dR_tag_tag[category][iSys]->Fill(avg_dr_tagged_jets,wgt);
-	h_ave_mass_tag_tag[category][iSys]->Fill(std::min(double(avg_tagged_dijet_mass),massmax)-0.00001,wgt);
-	h_ave_mass_untag_untag[category][iSys]->Fill(std::min(double(avg_untagged_dijet_mass),massmax)-0.00001,wgt);
-
-	h_best_higgs_mass[category][iSys]->Fill(std::min(double(best_higgs_mass),massmax)-0.00001,wgt);
-	h_minChi2[category][iSys]->Fill(minChi2,wgt);
-	h_dRbb[category][iSys]->Fill(dRbb,wgt);
-
-	h_tagged_dijet_mass_closest_to_125[category][iSys]->Fill(std::min(double(tagged_dijet_mass_closest_to_125),massmax)-0.00001,wgt);
-
-
-	TLorentzVector mydummyguy;
-	mydummyguy.SetPxPyPzE(1,1,1,5);
-	TLorentzVector lepW = mydummyguy;
-	TLorentzVector hadW = mydummyguy;
-	TLorentzVector lepB = mydummyguy;
-	TLorentzVector hadB = mydummyguy;
-	TLorentzVector lepT = mydummyguy;
-	TLorentzVector hadT = mydummyguy;
-	double minChi2_getTopSystem = 100000000;
-
-	TLorentzVector leptonV;
-	leptonV.SetPxPyPzE( lepton_vect[0], lepton_vect[1], lepton_vect[2], lepton_vect[3] );
-
-	TLorentzVector metV;
-	metV.SetPxPyPzE( MET*cos(MET_phi), MET*sin(MET_phi), 0, MET );
-
-
-	int result_getTopSystem = 0;
-
-	TLorentzVector sumT;
-	sumT.SetPxPyPzE( 1, 1, 0, 3 );
-
-	if( this_category<9 ){
-	  result_getTopSystem = getTopSystem( leptonV, metV, jetsV, jet_CSV, minChi2_getTopSystem, hadW, lepW, hadB, lepB, hadT, lepT );
-
-	  TLorentzVector sumT = hadT + lepT;
-
-	  if( result_getTopSystem<0 ) std::cout << " ERROR !! result_getTopSystem = " << result_getTopSystem << std::endl;
-	}
-
-
-
-	h_leptonicW_mass[category][iSys]->Fill(std::min(lepW.M(),massmax)-0.00001,wgt);
-	h_hadronicW_mass[category][iSys]->Fill(std::min(hadW.M(),massmax)-0.00001,wgt);
-	h_leptonicT_mass[category][iSys]->Fill(std::min(lepT.M(),massmax)-0.00001,wgt);
-	h_hadronicT_mass[category][iSys]->Fill(std::min(hadT.M(),massmax)-0.00001,wgt);
-
-	h_hadronicW_pT[category][iSys]->Fill(std::min(hadW.Pt(),massmax)-0.00001,wgt);
-	h_hadronicW_pT_mass[category][iSys]->Fill(std::min(hadW.Pt(),massmax)-0.00001,std::min(hadW.M(),massmax)-0.00001,wgt);
-
-	h_leptonicT_pT[category][iSys]->Fill(std::min(lepT.Pt(),massmax)-0.00001,wgt);
-	h_leptonicT_pT_mass[category][iSys]->Fill(std::min(lepT.Pt(),massmax)-0.00001,std::min(lepT.M(),massmax)-0.00001,wgt);
-	h_hadronicT_pT[category][iSys]->Fill(std::min(hadT.Pt(),massmax)-0.00001,wgt);
-	h_hadronicT_pT_mass[category][iSys]->Fill(std::min(hadT.Pt(),massmax)-0.00001,std::min(hadT.M(),massmax)-0.00001,wgt);
-
-	h_lepT_hadT_DeltaR[category][iSys]->Fill(std::min(lepT.DeltaR(hadT),7.0)-0.00001,wgt);
-	h_lepT_hadT_Angle[category][iSys]->Fill(lepT.Angle(hadT.Vect()),wgt);
-
-	h_sumTop_pT[category][iSys]->Fill(std::min(sumT.Pt(),jetptmax)-0.00001,wgt);
-	h_sumTop_mass[category][iSys]->Fill(std::min(sumT.M(),massmax_sumTop)-0.00001,wgt);
-	h_sumTop_pT_mass[category][iSys]->Fill(std::min(sumT.Pt(),jetptmax)-0.00001,std::min(sumT.M(),massmax_sumTop)-0.00001,wgt);
-
-	h_minChi2_getTopSystem[category][iSys]->Fill(minChi2_getTopSystem,wgt);
-
-	h_leptonicW_mass_minChi2_getTopSystem[category][iSys]->Fill(std::min(lepW.M(),massmax)-0.00001,minChi2_getTopSystem,wgt);
-	h_hadronicW_mass_minChi2_getTopSystem[category][iSys]->Fill(std::min(hadW.M(),massmax)-0.00001,minChi2_getTopSystem,wgt);
-	h_leptonicT_mass_minChi2_getTopSystem[category][iSys]->Fill(std::min(lepT.M(),massmax)-0.00001,minChi2_getTopSystem,wgt);
-	h_hadronicT_mass_minChi2_getTopSystem[category][iSys]->Fill(std::min(hadT.M(),massmax)-0.00001,minChi2_getTopSystem,wgt);
-
-
-
-
-	h_M3[category][iSys]->Fill(std::min(double(M3),m3max)-0.00001,wgt);
-	h_M3_1tag[category][iSys]->Fill(std::min(double(M3_1tag),m3max)-0.00001,wgt);
-	h_Mlb[category][iSys]->Fill(std::min(double(Mlb),massmax)-0.00001,wgt);
-
-	h_aplanarity[category][iSys]->Fill(aplanarity,wgt);
-	h_sphericity[category][iSys]->Fill(sphericity,wgt);
-	h_avg_btag_disc_non_btags[category][iSys]->Fill(avg_btag_disc_non_btags,wgt);
-	h_avg_btag_disc_btags[category][iSys]->Fill(avg_btag_disc_btags,wgt);
-	h_dev_from_avg_disc_btags[category][iSys]->Fill(dev_from_avg_disc_btags,wgt);
-	h_lowest_btag[category][iSys]->Fill(lowest_btag,wgt);
-	h_closest_tagged_dijet_mass[category][iSys]->Fill(closest_tagged_dijet_mass,wgt);
-
-
-	h_h0[category][iSys]->Fill(h0,wgt);
-	h_h1[category][iSys]->Fill(h1,wgt);
-	h_h2[category][iSys]->Fill(h2,wgt);
-	h_h3[category][iSys]->Fill(h3,wgt);
-	h_h4[category][iSys]->Fill(h4,wgt);
-
-
-
-
-	h_bhmv2[category][iSys]->Fill(std::min(double(bhmv2),massmax)-0.00001,wgt);
-	h_maxeta_jet_jet[category][iSys]->Fill(maxeta_jet_jet,wgt);
-	h_maxeta_jet_tag[category][iSys]->Fill(maxeta_jet_tag,wgt);
-	h_maxeta_tag_tag[category][iSys]->Fill(maxeta_tag_tag,wgt);
-	h_abs_dEta_leptop_bb[category][iSys]->Fill(abs_dEta_leptop_bb,wgt);
-	h_abs_dEta_hadtop_bb[category][iSys]->Fill(abs_dEta_hadtop_bb,wgt);
-	h_dEta_fn[category][iSys]->Fill(dEta_fn,wgt);
-	h_abs_bb_eta[category][iSys]->Fill(abs_bb_eta,wgt);
-	h_angle_tops_bb[category][iSys]->Fill(angle_tops_bb,wgt);
-	h_median_bb_mass[category][iSys]->Fill(std::min(double(median_bb_mass),massmax)-0.00001,wgt);
-	h_pt_all_jets_over_E_all_jets[category][iSys]->Fill(pt_all_jets_over_E_all_jets,wgt);
-
-
-	if( numJets>=6 && numTags>=4 && iSys==0 && insample<0 ){
-	  std::cout << " *************************************************************** " << std::endl;
-	  std::cout << "\t grab " << run << ":" << lumi << ":" << evt << std::endl;
-	  std::cout << "  run = " << run << ",\t lumi = " << lumi << ",\t event = " << evt << std::endl;
-	  std::cout << "  number of jets = " << numJets << ",\t number of tags = " << numTags << std::endl;
-	  // std::cout << "  BDT output (v16 8TeV) = " << BDT_final10v16_8TeV << std::endl;
-	  std::cout << "  lepton: pt = " << tight_lepton_pt << ",\t eta = " << tight_lepton_eta << ",\t phi = " << tight_lepton_phi << std::endl;
-	  std::cout << "  min DR (lep,jet) = " << dr_between_lep_and_closest_jet << std::endl;
-	  std::cout << "  first:  jet pt = " << first_jet_pt  << ",\t jet csv = " << first_highest_btag   << std::endl;
-	  std::cout << "  second: jet pt = " << second_jet_pt << ",\t jet csv = " << second_highest_btag  << std::endl;
-	  std::cout << "  third:  jet pt = " << third_jet_pt  << ",\t jet csv = " << third_highest_btag  << std::endl;
-	  std::cout << "  fourth: jet pt = " << fourth_jet_pt << ",\t jet csv = " << fourth_highest_btag << std::endl;
-	  std::cout << "  lowest csv     = " << lowest_btag << std::endl;
-	  std::cout << "  ave CSV (tags) = " << avg_btag_disc_btags << ",\t (untags) = " << avg_btag_disc_non_btags << std::endl;
-	  std::cout << "  dev from ave CSV (tags) = " << dev_from_avg_disc_btags << std::endl;
-	  std::cout << "  min DR (tag,tag) = " << min_dr_tagged_jets << ",\t ave DR (tag,tag) = " << avg_dr_tagged_jets << std::endl;
-	  std::cout << "  MET:    pt = " << MET << ",\t phi = " << MET_phi << std::endl;
-	  std::cout << "  MHT:    pt = " << MHT << ",\t phi = " << MHT_phi << std::endl;
-	  std::cout << "  Transverse mass (MET) = " << MT_met << ",\t (MHT) = " << MT_mht << std::endl;
-	  std::cout << "  Mlb = " << Mlb << ",\t M3 (1 tag) = " << M3_1tag << ",\t M3 = " << M3 << std::endl;
-	  std::cout << "  aplanarity = " << aplanarity << ",\t sphericity = " << sphericity << std::endl;
-	  std::cout << "  closest mass (tag,tag) = " << closest_tagged_dijet_mass << ",\t ave mass (tag,tag) = " << avg_tagged_dijet_mass << ",\t (untag,untag) = " << avg_untagged_dijet_mass << std::endl;
-	  std::cout << "  sum pt (lepton,jets,met) = " << all_sum_pt_with_met << ",\t sum pt (lepton,jets) = " << all_sum_pt << std::endl;
-	  std::cout << "  mass (lepton,jets,met) = " << invariant_mass_of_everything << std::endl;
-	  std::cout << "  best_higgs_mass = " << best_higgs_mass << std::endl;
-	  printf("  getTopSystem mass: lepW = %.1f,\t hadW = %.1f,\t lepT = %.1f,\t hadT = %.1f \n",
-		 lepW.M(), hadW.M(), lepT.M(), hadT.M() );
-	 // printf("  BHM v2 = %.1f,\t mass: lepW = %.1f,\t leptop = %.1f,\t hadW = %.1f,\t hadtop = %.1f \n", 
-	//	 bhm_v2, mass_lepW, mass_leptop, mass_hadW, mass_hadtop );
-	  std::cout << " *************************************************************** " << std::endl;
-	}
-      } // end loop over categories
-
-
-    } // end loop over systematics
-  } // end loop over events
-
-  std::cout << " Done! " << std::endl;
-
-
-  std::cout<< "  GenWgtSum = " << GenWgtSum<<endl;
-  
-  std::cout<<"p + n "<<2<<" "<<GenSumPos[0]<<" "<<GenSumNeg[0]<<endl;
-  std::cout<<"p + n "<<2<<" "<<GenSumPos[1]<<" "<<GenSumNeg[1]<<endl;
-  std::cout<<"p + n "<<2<<" "<<GenSumPos[2]<<" "<<GenSumNeg[2]<<endl;
-  std::cout<<"p + n "<<2<<" "<<GenSumPos[3]<<" "<<GenSumNeg[3]<<endl;
-  std::cout<<"p + n "<<2<<" "<<GenSumPos[4]<<" "<<GenSumNeg[4]<<endl;
-  std::cout<<"p + n "<<2<<" "<<GenSumPos[5]<<" "<<GenSumNeg[5]<<endl;
-  std::cout<<"p + n "<<2<<" "<<GenSumPos[6]<<" "<<GenSumNeg[6]<<endl;
-  std::cout<<"p + n "<<2<<" "<<GenSumPos[7]<<" "<<GenSumNeg[7]<<endl;
-  std::cout<<"p + n "<<2<<" "<<GenSumPos[8]<<" "<<GenSumNeg[8]<<endl;
-  std::cout<<"p + n "<<2<<" "<<GenSumPos[9]<<" "<<GenSumNeg[9]<<endl;
-
-  histofile.Write();
-  histofile.Close();
-
-}
-
-
-
-int getTopSystem(TLorentzVector lepton, TLorentzVector met, vecTLorentzVector jets, vdouble btag,
-		 double &minChi, TLorentzVector &hadW, TLorentzVector &lepW, TLorentzVector &hadB, TLorentzVector &lepB, TLorentzVector &hadT, TLorentzVector &lepT){
-
-  
-  int nJets = int(jets.size());
-
-  double chi_top_lep=10000;
-  double chi_top_had=10000;
-  //double chi_W_lep=10000; //isn't really used
-  double chi_W_had=10000;
-
-  minChi = 1000000;
-  double btagCut = 0.679;
-  double W_mass = 80.4;
-  double top_mass = 172.5;
-
-  // from Darren 2/22/2013
-  double sigma_hadW   = 10.51;
-  double sigma_hadTop = 17.97;
-  double sigma_lepTop = 10.02;
-
-  double metPz[2];
-  double chi=999999;
-
-
-  int nBtags = 0;
-  for(int i=0;i<nJets;i++){
-    if(btag[i]>btagCut) nBtags++;
-  }
-
-  if( !(nJets>=4 && nBtags>=2) ) return -1;
-
-  int nUntags = nJets-nBtags;
-
-  double lowest_btag = 99.;
-  double second_lowest_btag = 999.;
-  int ind_lowest_btag = 999;
-  int ind_second_lowest_btag = 999;
-
-  if( nUntags<2 ){
-    for(int i=0;i<nJets;i++){
-      if( btag[i]<lowest_btag ){
-	second_lowest_btag = lowest_btag;
-	ind_second_lowest_btag = ind_lowest_btag;
-	
-	lowest_btag = btag[i];
-	ind_lowest_btag = i;
-      }
-      else if( btag[i]<second_lowest_btag ){
-	second_lowest_btag = btag[i];
-	ind_second_lowest_btag = i;
-      }
-    }
-  }
-
-
-  // First get the neutrino z
-  double energyLep = lepton.E();
-  double a = (W_mass*W_mass/(2.0*energyLep)) + (lepton.Px()*met.Px() + lepton.Py()*met.Py())/energyLep;
-  double radical = (2.0*lepton.Pz()*a/energyLep)*(2.0*lepton.Pz()*a/energyLep);
-  radical = radical - 4.0*(1.0 - (lepton.Pz()/energyLep)*(lepton.Pz()/energyLep))*(met.Px()*met.Px() + met.Py()*met.Py()- a*a);
-  if (radical < 0.0) radical = 0.0;
-  metPz[0] = (lepton.Pz()*a/energyLep) + 0.5*sqrt(radical);
-  metPz[0] = metPz[0] / (1.0 - (lepton.Pz()/energyLep)*(lepton.Pz()/energyLep));
-  metPz[1] = (lepton.Pz()*a/energyLep) - 0.5*sqrt(radical);
-  metPz[1] = metPz[1] / (1.0 - (lepton.Pz()/energyLep)*(lepton.Pz()/energyLep));
-
-
-  // Loop over all jets, both Pz, calcaulte chi-square
-  TLorentzVector metNew;
-  for( int ipznu=0; ipznu<2; ipznu++ ){
-    metNew.SetXYZM(met.Px(),met.Py(),metPz[ipznu],0.0); //neutrino has mass 0
-    //with b-tag info
-    if( nJets>=4 && nBtags>=2 ){
-      vecTLorentzVector not_b_tagged,b_tagged;
-      //fill not_b_tagged and b_tagged
-      for( int i=0;i<nJets;i++ ){
-	if( btag[i]>btagCut && i!=ind_second_lowest_btag && i!=ind_lowest_btag) b_tagged.push_back(jets[i]);
-	else not_b_tagged.push_back(jets[i]);
-      }
-      //first make possible t_lep's with b-tagged jets (includes making W_lep)
-      for( int i=0; i<int(b_tagged.size()); i++ ){
-	TLorentzVector W_lep=metNew+lepton; //used for histogram drawing only
-	TLorentzVector top_lep=metNew+lepton+b_tagged.at(i);
-	chi_top_lep=pow((top_lep.M()-top_mass)/sigma_lepTop,2);
-	//next make possible W_had's with not b-tagged jets
-	for( int j=0; j<int(not_b_tagged.size()); j++ ){
-	  for( int k=0; k<int(not_b_tagged.size()); k++ ){
-	    if( j!=k ){
-	      TLorentzVector W_had=not_b_tagged.at(j)+not_b_tagged.at(k);
-	      chi_W_had=pow((W_had.M()-W_mass)/sigma_hadW,2);
-	      //now make possible top_had's (using the W_had + some b-tagged jet)
-	      for( int l=0; l<int(b_tagged.size()); l++ ){
-		if( l!=i ){
-		  TLorentzVector top_had=W_had+b_tagged.at(l);
-		  chi_top_had=pow((top_had.M()-top_mass)/sigma_hadTop,2);
-		  chi=chi_top_lep+chi_W_had+chi_top_had;
-		  //accept the lowest chi
-		  if( chi<minChi ){
-		    minChi=chi;
-		    hadW = W_had;
-		    lepW = W_lep;
-		    hadB = b_tagged.at(l);
-		    lepB = b_tagged.at(i);
-		    hadT = top_had;
-		    lepT = top_lep;
-		  } // end if chi<minChi
-		}
-	      }
+		for(int i=0;i<7;i++){
+		  if(cut[i]==1) h_NumCountRaw->Fill(i+1);
 	    }
-	  }
-	}
-      }
-    }
-  }
+		
+		if(cut[5]==0)continue; // Lepton + Jet selection.
+		
+		
+	    // Filter by decay
 
-  return 1;
+		if(SampleType == 2){
+		int additionalJetEventId			 = eve->additionalJetEventId_;
+		if(SplitType ==1 && !(additionalJetEventId == 51) )continue; //ttb
+		if(SplitType ==3 && !(additionalJetEventId == 52) )continue; //ttB
+		if(SplitType ==2 && !(additionalJetEventId == 53 || additionalJetEventId == 54 || additionalJetEventId == 55))continue; //ttbb
+		if(SplitType ==4 && !(additionalJetEventId == 41 || additionalJetEventId == 42 || additionalJetEventId == 43 || additionalJetEventId == 44 || additionalJetEventId == 45))continue; //ttc
+		//if(SplitType ==5 && !(additionalJetEventId == 43 || additionalJetEventId == 44 || additionalJetEventId == 45))continue; //ttcc
+		if(SplitType ==5 && !(additionalJetEventId == 0))continue; //ttlf
+	    }
+	
+		if(SampleType == 1){
+			int Hdecay = eve->higgsDecayType_;
+			if(SplitType==1 && !(Hdecay == 1))continue; //bb
+			if(SplitType==2 && !(Hdecay == 2))continue; //WW
+			if(SplitType==3 && !(Hdecay == 3))continue; //TauTau
+			if(SplitType==4 && !(Hdecay == 4))continue; //gluglu
+			if(SplitType==5 && !(Hdecay == 5))continue; //cc
+			if(SplitType==6 && !(Hdecay == 6))continue; //ZZ
+			if(SplitType==7 && !(Hdecay == 7))continue; //Zgamma
+			if(SplitType==8 && !(Hdecay == 8))continue; //gammagamma
+			if(SplitType==10 && !(Hdecay == 10))continue; //ss
+			if(SplitType==11 && !(Hdecay == 11))continue; //mumu
+		}
+	
+	
+		
+		
+		
+	    int iSys=-1;
+	    for(int treeSys=0; treeSys<rNumSys; treeSys++){
+	    HT=0;
+	      iSys++;
+		
+
+  		// Cat Event selection
+		
+  		numJets = int( eve->numJets_float_[treeSys] + 0.001 );
+  		numTags = int( eve->numTags_float_[treeSys] + 0.001 );
+		
+		
+    
+
+
+
+
+		
+	
+		// Grab variables from YggdrasilTrees
+		
+	    int this_category = -1;
+	    if( numJets==4 && numTags==2) this_category=0;
+	    if( numJets==5 && numTags==2) this_category=1;
+	    if( numJets>=6 && numTags==2) this_category=2;	
+	    if( numJets==4 && numTags==3) this_category=3;
+	    if( numJets==5 && numTags==3) this_category=4;
+	    if( numJets>=6 && numTags==3) this_category=5;
+	    if( numJets==4 && numTags>=4) this_category=6;
+	    if( numJets==5 && numTags>=4) this_category=7;
+	    if( numJets>=6 && numTags>=4) this_category=8;
+	    
+	   
+  
+	
+		if(this_category<2)continue;
+		
+		int run = eve->run_;
+		int lumi = eve->lumi_;
+	
+		//Associate BDT variables
+
+	    aplanarity             	 	 = eve->aplanarity_[treeSys];
+	    sphericity              	 	 = eve->sphericity_[treeSys];
+	    second_highest_btag   			 = eve->second_highest_btag_[treeSys];
+	    third_highest_btag     		 = eve->third_highest_btag_[treeSys];
+	    fourth_highest_btag     		 = eve->fourth_highest_btag_[treeSys]; 
+	    Mlb   							 = eve->Mlb_[treeSys];
+		first_jet_pt          	  		 = eve->first_jet_pt_[treeSys];
+		second_jet_pt          		 = eve->second_jet_pt_[treeSys];
+	    third_jet_pt           	  	 = eve->third_jet_pt_[treeSys];
+	    fourth_jet_pt           		 = eve->fourth_jet_pt_[treeSys];
+		avg_btag_disc_btags    		 = eve->avg_btag_disc_btags_[treeSys]; 
+		h0								 = eve->h0_[treeSys];
+		h1								 = eve->h1_[treeSys];
+		h2								 = eve->h2_[treeSys];
+		h3								 = eve->h3_[treeSys];
+		avg_dr_tagged_jets      		 = eve->avg_dr_tagged_jets_[treeSys];
+		dev_from_avg_disc_btags  		 = eve->dev_from_avg_disc_btags_[treeSys];
+		closest_tagged_dijet_mass		 = eve->closest_tagged_dijet_mass_[treeSys];			
+		invariant_mass_of_everything 	 = eve->invariant_mass_of_everything_[treeSys];
+		min_dr_tagged_jets      		 = eve->min_dr_tagged_jets_[treeSys];
+		tagged_dijet_mass_closest_to_125= eve->tagged_dijet_mass_closest_to_125_[treeSys];
+		maxeta_jet_jet					 = eve->maxeta_jet_jet_[treeSys];  
+		maxeta_jet_tag					 = eve->maxeta_jet_tag_[treeSys];  
+		maxeta_tag_tag					 = eve->maxeta_tag_tag_[treeSys]; 
+		dEta_fn							 = eve->dEta_f_[treeSys];
+		pt_all_jets_over_E_all_jets	 = eve->pt_all_jets_over_E_all_jets_[treeSys];
+		fifth_highest_CSV				 = eve->fifth_highest_CSV_[treeSys];
+		//sixth_highest_CSV_f                = eve->sixth_highest_CSV_[treeSys];
+		//HT_f 								=eve->HT_[treeSys];
+		//all_sum_pt_with_met_f			= eve->all_sum_pt_with_met_[treeSys];
+		
+	
+		//If running over yggdrasil_trees uncomment this.
+
+	
+		//need to get proper HT and KIT variables
+		HT=0;
+		vvdouble jet_vect_TLV = eve->jet_vect_TLV_[treeSys];
+   		vdouble jet_CSV = eve->jet_CSV_[treeSys];
+   		vint    jet_flavour = eve->jet_flavour_[treeSys];
+		
+		double maxJetPt=-1;
+		double maxJetPtCSV=-1;
+		
+		double sumJetEta = 0;
+		double sumTagEta = 0;
+		double cntJetEta = 0;
+		double cntTagEta = 0;
+		double sumCSV =0;
+		double cntCSV =0;
+		double sumDeta =0;
+		double cntDeta =0;
+		
+		for( int iJet=0; iJet<int(jet_vect_TLV.size()); iJet++ ){
+		  TLorentzVector myJet;
+		  myJet.SetPxPyPzE( jet_vect_TLV[iJet][0], jet_vect_TLV[iJet][1], jet_vect_TLV[iJet][2], jet_vect_TLV[iJet][3] );
+		  double myJetPT = myJet.Pt();
+		  double myCSV = jet_CSV[iJet];
+		  sumCSV = sumCSV + myCSV;
+		  cntCSV +=1;
+		  HT += myJetPT;
+		  if(myJetPT>maxJetPt){
+		  	maxJetPt=myJetPT;
+		  	maxJetPtCSV=myCSV;
+		  }
+ 
+          for( int jJet =iJet;jJet<int(jet_vect_TLV.size()); jJet++){
+                   if(iJet==jJet)continue;
+                   TLorentzVector myJetJ;
+                   myJetJ.SetPxPyPzE(jet_vect_TLV[jJet][0],jet_vect_TLV[jJet][1],jet_vect_TLV[jJet][2],jet_vect_TLV[jJet][3]);
+                  // sumDabseta = abs(myJet.Eta())-abs(myJetJ.Eta());
+                   sumDeta = sumDeta + abs(myJet.Eta()-myJetJ.Eta());
+                   cntDeta +=1;
+			   }
+	 	 }
+	  
+	   double MET                       = eve->MET_[treeSys];
+	   double tight_lepton_pt           = eve->tight_lepton_pt_;
+	   
+	  all_sum_pt_with_met =HT + tight_lepton_pt + MET;
+	  CSV_Average = sumCSV/cntCSV;
+	  Deta_JetsAverage = sumDeta/cntDeta;
+	  
+		
+	
+	
+		
+		double csvWgtHF, csvWgtLF, csvWgtCF;
+		double newCSVwgt = ( insample<0 ) ? 1 : get_csv_wgt(jet_vect_TLV,jet_CSV,jet_flavour,treeSys, csvWgtHF, csvWgtLF, csvWgtCF);
+		double wgt=MyWgt;
+		
+		//Dealing with negWgts
+		double GenWgt = eve->wgt_generator_;
+		if(SampleType ==1)wgt=MyWgt*GenWgt;
+		//
+		
+		wgt=wgt*newCSVwgt;
+		
+	
+		
+		
+		double wgthalf=wgt*2;  //halving the amount of events
+
+	
+		double Reader_Output = reader_Spring15_KITreoptimized_BDT[this_category]->EvaluateMVA( "BDT method" );
+		double SplittingOutput_1_1 = reader_Splitting_1_1[this_category]->EvaluateMVA("BDT method");
+		double SplittingOutput_1_2 = reader_Splitting_1_2[this_category]->EvaluateMVA("BDT method");
+		
+		h_BDT_Output_IncludeWgt[this_category][iSys]->Fill(Reader_Output,wgt);
+	  	h_LeadJetPt_IncludeWgt[this_category][iSys]->Fill(maxJetPt,wgt);
+	  	h_LeadJetCSV_IncludeWgt[this_category][iSys]->Fill(maxJetPtCSV,wgt);
+		
+		if(int(evt) % 2 !=0){
+			h_BDT_Output_IncludeWgt_odd[this_category][iSys]->Fill(Reader_Output,wgthalf);
+			h_SplittingOutput_1_1[this_category][iSys]->Fill(SplittingOutput_1_1,wgthalf);
+			h_SplittingOutput_1_2_Train[this_category][iSys]->Fill(SplittingOutput_1_2,wgthalf);
+		}
+		if(int(evt) % 2 ==0){
+			h_BDT_Output_IncludeWgt_even[this_category][iSys]->Fill(Reader_Output,wgthalf);
+			h_SplittingOutput_1_2[this_category][iSys]->Fill(SplittingOutput_1_2,wgthalf);
+			h_SplittingOutput_1_1_Train[this_category][iSys]->Fill(SplittingOutput_1_1,wgthalf);
+		}
+		
+		h_BDT_Output_NoWgt[this_category][iSys]->Fill(Reader_Output,1);
+	  	h_LeadJetPt_NoWgt[this_category][iSys]->Fill(maxJetPt,1);
+	  	h_LeadJetCSV_NoWgt[this_category][iSys]->Fill(maxJetPtCSV,1);
+		
+		  h_first_jet_pt[this_category][iSys]->Fill(first_jet_pt,wgt); 
+      h_min_dr_tagged_jets[this_category][iSys]->Fill(min_dr_tagged_jets,wgt);
+      h_avg_dr_tagged_jets[this_category][iSys]->Fill(avg_dr_tagged_jets,wgt);
+      h_aplanarity[this_category][iSys]->Fill(aplanarity,wgt);
+      h_sphericity[this_category][iSys]->Fill(sphericity,wgt);
+     // h_avg_btag_disc_non_btags[this_category][iSys]->Fill(avg_btag_disc_non_btags,wgt);
+      h_second_jet_pt[this_category][iSys]->Fill(second_jet_pt,wgt);
+    //  h_dr_between_lep_and_closest_jet[this_category][iSys]->Fill(dr_between_lep_and_closest_jet,wgt);
+      h_h0[this_category][iSys]->Fill(h0,wgt);
+      h_avg_btag_disc_btags[this_category][iSys]->Fill(avg_btag_disc_btags,wgt);
+      h_dev_from_avg_disc_btags[this_category][iSys]->Fill(dev_from_avg_disc_btags,wgt);
+      h_third_jet_pt[this_category][iSys]->Fill(third_jet_pt,wgt);
+      h_fourth_jet_pt[this_category][iSys]->Fill(fourth_jet_pt,wgt);
+     // h_avg_tagged_dijet_mass[this_category][iSys]->Fill(avg_tagged_dijet_mass,wgt);
+      h_h1[this_category][iSys]->Fill(h1,wgt);
+      h_h2[this_category][iSys]->Fill(h2,wgt);
+      h_all_sum_pt_with_met[this_category][iSys]->Fill(all_sum_pt_with_met,wgt);
+      h_closest_tagged_dijet_mass[this_category][iSys]->Fill(closest_tagged_dijet_mass,wgt);
+      h_h3[this_category][iSys]->Fill(h3,wgt);
+    //  h_h4[this_category][iSys]->Fill(h4,wgt);
+    //  h_first_highest_btag[this_category][iSys]->Fill(first_highest_btag,wgt);
+      h_second_highest_btag[this_category][iSys]->Fill(second_highest_btag,wgt);
+      h_third_highest_btag[this_category][iSys]->Fill(third_highest_btag,wgt);
+      h_fourth_highest_btag[this_category][iSys]->Fill(fourth_highest_btag,wgt);
+      h_fifth_highest_CSV[this_category][iSys]->Fill(fifth_highest_CSV,wgt);
+     // h_sixth_highest_CSV[this_category][iSys]->Fill(sixth_highest_CSV,wgt);
+      h_invariant_mass_of_everything[this_category][iSys]->Fill(invariant_mass_of_everything,wgt);
+      h_Mlb[this_category][iSys]->Fill(Mlb,wgt);
+      h_tagged_dijet_mass_closest_to_125[this_category][iSys]->Fill(tagged_dijet_mass_closest_to_125,wgt);
+      h_maxeta_jet_jet[this_category][iSys]->Fill(maxeta_jet_jet,wgt);		 
+      h_maxeta_jet_tag[this_category][iSys]->Fill(maxeta_jet_tag,wgt);		 
+      h_maxeta_tag_tag[this_category][iSys]->Fill(maxeta_tag_tag,wgt);			 
+      h_dEta_fn[this_category][iSys]->Fill(dEta_fn,wgt);			 
+      h_pt_all_jets_over_E_all_jets[this_category][iSys]->Fill(pt_all_jets_over_E_all_jets,wgt);  
+      h_HT[this_category][iSys]->Fill(HT,wgt);
+     
+	//if(iSys==0)		cout<<run<<" "<<lumi<<" "<<evt<<" "<<aplanarity_f<<" "<<sphericity_f<<" "<<tight_lepton_pt<<" "<<MET<<endl;
+	
+	
+	  //Fill KIT histos
+	  //KIT uses odd events on training and even events on testing and evaluating limits
+	  if(int(evt)%2==0){
+	  if(this_category==2){
+	    	h1_6j2t_KIT[iSys]->Fill(h1,wgthalf);
+			avg_dr_tagged_jets_6j2t_KIT[iSys]->Fill(avg_dr_tagged_jets,wgthalf);
+			sphericity_6j2t_KIT[iSys]->Fill(sphericity,wgthalf);
+			third_highest_btag_6j2t_KIT[iSys]->Fill(third_highest_btag,wgthalf);
+			h3_6j2t_KIT[iSys]->Fill(h3,wgthalf);
+			HT_6j2t_KIT[iSys]->Fill(HT,wgthalf);
+			Mlb_6j2t_KIT[iSys]->Fill(Mlb,wgthalf);
+			fifth_highest_CSV_6j2t_KIT[iSys]->Fill(fifth_highest_CSV,wgthalf);
+			fourth_highest_btag_6j2t_KIT[iSys]->Fill(fourth_highest_btag,wgthalf);
+		}
+		if(this_category==3){
+		    h1_4j3t_KIT[iSys]->Fill(h1,wgthalf);
+			avg_dr_tagged_jets_4j3t_KIT[iSys]->Fill(avg_dr_tagged_jets,wgthalf);
+			sphericity_4j3t_KIT[iSys]->Fill(sphericity,wgthalf);
+			third_highest_btag_4j3t_KIT[iSys]->Fill(third_highest_btag,wgthalf);
+			HT_4j3t_KIT[iSys]->Fill(HT,wgthalf);
+			dev_from_avg_disc_btags_4j3t_KIT[iSys]->Fill(dev_from_avg_disc_btags,wgthalf);
+			M3_4j3t_KIT[iSys]->Fill(M3,wgthalf);
+			min_dr_tagged_jets_4j3t_KIT[iSys]->Fill(min_dr_tagged_jets,wgthalf);
+			Evt_CSV_Average_4j3t_KIT[iSys]->Fill(CSV_Average,wgthalf);
+		}
+		
+		if(this_category==4){
+		
+			h1_5j3t_KIT[iSys]->Fill(h1,wgthalf);
+			avg_dr_tagged_jets_5j3t_KIT[iSys]->Fill(avg_dr_tagged_jets,wgthalf);
+			sphericity_5j3t_KIT[iSys]->Fill(sphericity,wgthalf);
+			third_highest_btag_5j3t_KIT[iSys]->Fill(third_highest_btag,wgthalf);
+			h3_5j3t_KIT[iSys]->Fill(h3,wgthalf);
+			HT_5j3t_KIT[iSys]->Fill(HT,wgthalf);
+			dev_from_avg_disc_btags_5j3t_KIT[iSys]->Fill(dev_from_avg_disc_btags,wgthalf);
+			fourth_highest_btag_5j3t_KIT[iSys]->Fill(fourth_highest_btag,wgthalf);
+		}
+			if(this_category==5){
+			h1_6j3t_KIT[iSys]->Fill(h1,wgthalf);
+			avg_dr_tagged_jets_6j3t_KIT[iSys]->Fill(avg_dr_tagged_jets,wgthalf);
+			third_highest_btag_6j3t_KIT[iSys]->Fill(third_highest_btag,wgthalf);
+			HT_6j3t_KIT[iSys]->Fill(HT,wgthalf);
+			pt_all_jets_over_E_all_jets_6j3t_KIT[iSys]->Fill(pt_all_jets_over_E_all_jets,wgthalf);
+			fifth_highest_CSV_6j3t_KIT[iSys]->Fill(fifth_highest_CSV,wgthalf);
+			fourth_highest_btag_6j3t_KIT[iSys]->Fill(fourth_highest_btag,wgthalf);
+			min_dr_tagged_jets_6j3t_KIT[iSys]->Fill(min_dr_tagged_jets,wgthalf);
+		}
+		
+		if(this_category==6){	
+			h1_4j4t_KIT[iSys]->Fill(h1,wgthalf);
+			avg_dr_tagged_jets_4j4t_KIT[iSys]->Fill(avg_dr_tagged_jets,wgthalf);
+			sphericity_4j4t_KIT[iSys]->Fill(sphericity,wgthalf);
+			avg_btag_disc_btags_4j4t_KIT[iSys]->Fill(avg_btag_disc_btags,wgthalf);
+			h2_4j4t_KIT[iSys]->Fill(h2,wgthalf);
+			closest_tagged_dijet_mass_4j4t_KIT[iSys]->Fill(closest_tagged_dijet_mass,wgthalf);
+			second_highest_btag_4j4t_KIT[iSys]->Fill(second_highest_btag,wgthalf);
+			fourth_highest_btag_4j4t_KIT[iSys]->Fill(fourth_highest_btag,wgthalf);
+			maxeta_jet_jet_4j4t_KIT[iSys]->Fill(maxeta_jet_jet,wgthalf);
+			pt_all_jets_over_E_all_jets_4j4t_KIT[iSys]->Fill(pt_all_jets_over_E_all_jets,wgthalf);
+		}
+		
+		if(this_category==7){
+			avg_dr_tagged_jets_5j4t_KIT[iSys]->Fill(avg_dr_tagged_jets,wgthalf);
+			HT_5j4t_KIT[iSys]->Fill(HT,wgthalf);
+			M3_5j4t_KIT[iSys]->Fill(M3,wgthalf);
+			fifth_highest_CSV_5j4t_KIT[iSys]->Fill(fifth_highest_CSV,wgthalf);
+			fourth_highest_btag_5j4t_KIT[iSys]->Fill(fourth_highest_btag,wgthalf);
+			Evt_Deta_JetsAverage_5j4t_KIT[iSys]->Fill(Deta_JetsAverage,wgthalf);
+			avg_btag_disc_btags_5j4t_KIT[iSys]->Fill(avg_btag_disc_btags,wgthalf);
+		}
+			if(this_category==8){
+				h2_6j4t_KIT[iSys]->Fill(h2,wgthalf);
+				avg_dr_tagged_jets_6j4t_KIT[iSys]->Fill(avg_dr_tagged_jets,wgthalf);
+				third_highest_btag_6j4t_KIT[iSys]->Fill(third_highest_btag,wgthalf);
+				M3_6j4t_KIT[iSys]->Fill(M3,wgthalf);
+				fifth_highest_CSV_6j4t_KIT[iSys]->Fill(fifth_highest_CSV,wgthalf);
+				fourth_highest_btag_6j4t_KIT[iSys]->Fill(fourth_highest_btag,wgthalf);
+				best_higgs_mass_6j4t_KIT[iSys]->Fill(best_higgs_mass,wgthalf);
+				dEta_fn_6j4t_KIT[iSys]->Fill(dEta_fn,wgthalf);
+		    }
+			
+		}//end KIT evenevts
+		}//end loop over systematics
+	
+		
+		
+	
+  	} // end loop over evts
+	
+	
+	
+	
+	
+	double RawCutEvts[7];
+	double CutEvts[7];
+	double CatEvts[9];
+	double RawCatEvts[9];
+	for(int i=0;i<9;i++){
+	if(i<7)RawCutEvts[i] = h_NumCountRaw->GetBinContent(i+2);
+	//if(i<7)CutEvts[i] = h_NumCount->GetBinContent(i+1);
+	if(i>1)CatEvts[i] = h_BDT_Output_IncludeWgt[i][0]->Integral();
+	if(i>1)RawCatEvts[i] = h_BDT_Output_NoWgt[i][0]->Integral();
+    }
+    
+	std::string t_end = "_" + str_jobN + "_Info.txt";
+    if( Njobs==1 ) t_end = "_Info.txt";
+	std::string textfilename = "/eos/uscms/store/user/sflowers/TreeReader/Spring15_Sep15Trees/Test/" + sampleName + t_end;
+	
+	ofstream textfile;
+	  textfile.open (textfilename);
+	  
+	  //textfile << "Cut Evts   Raw : Weighted"<<endl;
+	  textfile<<"Cut Evts Raw"<<endl;
+	  for(int i=0;i<7;i++){
+		  //textfile<<"Cut #"<<i<<" "<<RawCutEvts[i]<<"   :   "<<CutEvts<<endl;
+		  textfile<<"Cut #"<<i<<" "<<RawCutEvts[i]<<endl;
+	  }
+	  textfile<<endl;
+	  textfile<< "Category Yields    Raw : Weighted"<<endl;
+	  for(int i=2;i<9;i++){
+		  textfile<<cat_labels[i]<<" "<<RawCatEvts[i]<<"     :     "<<CatEvts[i]<<endl;
+	  }
+	 
+	 
+	 
+	  textfile.close();
+		
+   	 t=clock()-t;
+	
+	
+		std::cout << " Done! " <<((float)t)/CLOCKS_PER_SEC<< std::endl;
+	
+		
+    
+	
+
+    histofile.Write();
+    histofile.Close();
+
+	
+
+	 
+
 }
+
+
+
 
 
 
@@ -2648,3 +1526,5 @@ double get_csv_wgt( vvdouble jets, vdouble jetCSV, vint jetFlavor, int iSys, dou
 
   return csvWgtTotal;
 }
+
+
