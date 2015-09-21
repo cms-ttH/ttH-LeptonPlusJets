@@ -723,16 +723,17 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
    
 
   // Do jets stuff
-  std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets(*pfjets);
- // std::vector<pat::Jet> rawJets_ID = miniAODhelper.GetSelectedJets(rawJets,0.,999,jetID::jetLoose,'-');
+  std::vector<pat::Jet> pfJets_ID = miniAODhelper.GetSelectedJets(*pfjets,0.,999,jetID::jetLoose,'-');
+  std::vector<pat::Jet> pfJets_ID_clean = miniAODhelper.GetDeltaRCleanedJets( pfJets_ID, selectedMuons_loose, selectedElectrons_loose, 0.4);
+  std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets(pfJets_ID_clean);
  // std::vector<pat::Jet> jetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons_loose, rawJets_ID);
  // std::vector<pat::Jet> jetsNoEle = miniAODhelper.RemoveOverlaps(selectedElectrons_loose, jetsNoMu);
   std::vector<pat::Jet> correctedJets_noSys = miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup);
-  std::vector<pat::Jet> selectedJets_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 30., 2.4, jetID::jetLoose, '-' );
-  std::vector<pat::Jet> selectedJets_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 30., 2.4, jetID::jetLoose, 'M' );
+  std::vector<pat::Jet> selectedJets_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 30., 2.4, jetID::none, '-' );
+  std::vector<pat::Jet> selectedJets_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 30., 2.4, jetID::none, 'M' );
 
-  std::vector<pat::Jet> selectedJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 20., 3.0, jetID::jetLoose, '-' );
-  std::vector<pat::Jet> selectedJets_loose_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 20., 3.0, jetID::jetLoose, 'M' );
+  std::vector<pat::Jet> selectedJets_loose_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 20., 3.0, jetID::none, '-' );
+  std::vector<pat::Jet> selectedJets_loose_tag_noSys_unsorted = miniAODhelper.GetSelectedJets( correctedJets_noSys, 20., 3.0, jetID::none, 'M' );
 
 
 
@@ -1562,14 +1563,14 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     ////////
 
     std::vector<pat::Jet> correctedJets = ( !(iSys>=5 && iSys<=8) ) ? correctedJets_noSys : miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, iSysType);
-    std::vector<pat::Jet> selectedJets_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_noSys_unsorted : miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::jetLoose, '-' );
+    std::vector<pat::Jet> selectedJets_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_noSys_unsorted : miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::none, '-' );
 
 
     // Get CSVM tagged jet collection
-    std::vector<pat::Jet> selectedJets_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, 'M' );
+    std::vector<pat::Jet> selectedJets_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::none, 'M' );
 
     // Get nontagged jet collection
-    std::vector<pat::Jet> selectedJets_untag_unsorted = selectedJets_tag_unsorted;//miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, 'M' ); 
+    std::vector<pat::Jet> selectedJets_untag_unsorted = selectedJets_tag_unsorted;//miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::none, 'M' ); 
     //std::vector<pat::Jet> selectedJets_untag_unsorted = miniAODhelper.GetSymmetricDifference( selectedJets_unsorted, selectedJets_tag_unsorted );
 
 
@@ -1603,9 +1604,14 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
    
 
          
-    // Get Corrected MET
-    pat::MET correctedMET = pfmet->front();//miniAODhelper.GetCorrectedMET( pfmets.at(0), pfJets_forMET, iSysType );
+    // Get Corrected MET (propagating JEC and JER)
+    // pat::MET correctedMET = pfmet->front();//miniAODhelper.GetCorrectedMET( pfmets.at(0), pfJets_forMET, iSysType );
+    std::vector<pat::Jet> oldJetsForMET = miniAODhelper.GetSelectedJets(*pfjets, 0., 999, jetID::jetMETcorrection, '-' );
+    std::vector<pat::Jet> oldJetsForMET_uncorr = miniAODhelper.GetUncorrectedJets(oldJetsForMET);
+    std::vector<pat::Jet> newJetsForMET = miniAODhelper.GetCorrectedJets(oldJetsForMET_uncorr, iEvent, iSetup, iSysType);
+    std::vector<pat::MET> newMETs = miniAODhelper.CorrectMET(oldJetsForMET, newJetsForMET, *pfmet);
 
+    pat::MET correctedMET = newMETs.at(0); 
     TLorentzVector metV(correctedMET.px(),correctedMET.py(),0.0,correctedMET.pt());
 
        
@@ -1766,10 +1772,10 @@ jcntn++;
 
 
     // Add loose jet container
-    std::vector<pat::Jet> selectedJets_loose_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 3.0, jetID::jetLoose, '-' );
+    std::vector<pat::Jet> selectedJets_loose_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 3.0, jetID::none, '-' );
     std::vector<pat::Jet> selectedJets_loose = miniAODhelper.GetSortedByPt( selectedJets_loose_unsorted );
 
-    std::vector<pat::Jet> selectedJets_loose_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 3.0, jetID::jetLoose, 'M' );
+    std::vector<pat::Jet> selectedJets_loose_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 3.0, jetID::none, 'M' );
 
     vvdouble vvjets_loose;
     std::vector<double> csvV_loose;
