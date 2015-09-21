@@ -90,6 +90,21 @@
 #include "MiniAOD/MiniAODHelper/interface/MiniAODHelper.h"
 #include "MiniAOD/MiniAODHelper/interface/TopTagger.h"
 #include "MiniAOD/MiniAODHelper/interface/HiggsTagger.h"
+
+//*****************************************************************************
+typedef std::vector< TLorentzVector >          vecTLorentzVector;
+typedef std::vector<int>                       vint;
+typedef std::vector<double>                    vdouble;
+typedef std::vector<std::vector<double> >      vvdouble;
+
+void fillCSVhistos(TFile *fileHF, TFile *fileLF);
+double get_csv_wgt( vvdouble jets, vdouble jetCSV, vint jetFlavor, int iSys, double &csvWgtHF, double &csvWgtLF, double &csvWgtCF );
+
+// CSV reweighting
+TH1D* h_csv_wgt_hf[9][6];
+TH1D* c_csv_wgt_hf[9][6];
+TH1D* h_csv_wgt_lf[9][4][3];
+
 //
 // class declaration
 //
@@ -211,6 +226,8 @@ class TTHSyncExercise : public edm::EDAnalyzer {
 
   MiniAODHelper miniAODhelper;
   TopTagger toptagger;
+  std::string SysType_;
+  sysType::sysType iSysType;
 
   // ofstream syncOutputFile;
 };
@@ -227,8 +244,17 @@ class TTHSyncExercise : public edm::EDAnalyzer {
 // constructors and destructor
 //
 TTHSyncExercise::TTHSyncExercise(const edm::ParameterSet& iConfig):
-  genTtbarIdToken_(consumes<int>(iConfig.getParameter<edm::InputTag>("genTtbarId")))
+  genTtbarIdToken_(consumes<int>(iConfig.getParameter<edm::InputTag>("genTtbarId"))),
+  SysType_(iConfig.getParameter<std::string>("SysType"))
 {
+
+  iSysType = sysType::NA;
+  if (SysType_ == "JERup") iSysType = sysType::JERup;
+  else if (SysType_ == "JERdown") iSysType = sysType::JERdown;
+  else if (SysType_ == "JESup") iSysType = sysType::JESup;
+  else if (SysType_ == "JESdown") iSysType = sysType::JESdown;
+  // else  iSysType_ = sysType::NA;
+
    //now do what ever initialization is needed
   verbose_ = false;
   dumpHLT_ = false;
@@ -352,6 +378,8 @@ TTHSyncExercise::TTHSyncExercise(const edm::ParameterSet& iConfig):
   bool isData = !true;
 
   miniAODhelper.SetUp(era, insample_, iAnalysisType, isData);
+  miniAODhelper.SetJetCorrectorUncertainty();
+
   toptagger = TopTagger(TopTag::Likelihood, TopTag::CSV, "toplikelihoodtaggerhistos.root");
 
   // syncOutputFile.open("ttHSyncEx1_LJ.txt");
@@ -388,8 +416,9 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // if(! ( (lumi ==  535 && event ==  53417 ) || (lumi ==  664 && event ==  66386 ) || (lumi == 1061 && event == 106001 ) || (lumi ==   46 && event ==   4599 ) || (lumi == 1001 && event == 100060 ) ) ) return;
 
   // if(! ( (lumi ==  83  && event ==  8206 ) || (lumi ==  320 && event ==  31947 ) ) )  return;
-
-  // printf("looking at event lumi:event %d, %d\n", lumi, event);  
+   // if(!  (lumi ==  11936  && event == 2379565  )  )  return;
+  
+   // printf("looking at event lumi:event %d, %d\n", lumi, event);  
   //---------
 
   double wgt = 1;
@@ -782,13 +811,12 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   }
 
 
-
   // Jet selection
   std::vector<pat::Jet> Jets_ID = miniAODhelper.GetSelectedJets(*pfjets, 0., 999, jetID::jetLoose, '-' );
   std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets(Jets_ID);
   // std::vector<pat::Jet> jetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons, rawJets_ID);
   // std::vector<pat::Jet> jetsNoEle = miniAODhelper.RemoveOverlaps(selectedElectrons, jetsNoMu);
-  std::vector<pat::Jet> correctedJets = miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup);
+  std::vector<pat::Jet> correctedJets = miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, iSysType);
   // std::vector<pat::Jet> selectedJets_unsorted = miniAODhelper.GetSelectedJets(correctedJets, 30., 2.4, jetID::jetLoose, '-' );
   // std::vector<pat::Jet> selectedJets_tag_unsorted = miniAODhelper.GetSelectedJets( correctedJets, 30., 2.4, jetID::jetLoose, 'M' );
 
@@ -849,25 +877,53 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
   ///// HEP top tagged jet
   int numTopTags = 0;
+  int  n_fatjets=0;
+  double  pt_fatjet_1=0, pt_fatjet_2=0;
+  double  pt_nonW_1=0, pt_nonW_2=0;
+  double pt_W1_1=0, pt_W1_2=0;
+  double pt_W2_1=0, pt_W2_2=0;
+  double m_top_1=0, m_top_2=0;
   vector<boosted::HTTTopJet> syncTopJets;
   if( h_htttopjet.isValid() ){
     boosted::HTTTopJetCollection const &htttopjets_unsorted = *h_htttopjet;
     boosted::HTTTopJetCollection htttopjets = BoostedUtils::GetSortedByPt(htttopjets_unsorted);
 
+    // int itop = 0;
     for( boosted::HTTTopJetCollection::iterator topJet = htttopjets.begin() ; topJet != htttopjets.end(); ++topJet ){
+      // itop++;
       // pt and eta requirements on top jet
       if( !(topJet->fatjet.pt() > 200. && abs(topJet->fatjet.eta()) < 2) ) continue;
 
+      if( !(topJet->topjet.pt() > 200. && abs(topJet->topjet.eta()) < 2) ) continue;
+
       // pt and eta requirements on subjets
-      if( !( (topJet->nonW.pt()>20 && abs(topJet->nonW.eta())<2.4 ) &&
-	     (topJet->W1.pt()>20 && abs(topJet->W1.eta())<2.4 ) &&
-	     (topJet->W2.pt()>20 && abs(topJet->W2.eta())<2.4 ) ) ) continue;
+      if( !( (topJet->nonW.pt()>30 && abs(topJet->nonW.eta())<2.4 ) &&
+	     (topJet->W1.pt()>30 && abs(topJet->W1.eta())<2.4 ) &&
+	     (topJet->W2.pt()>30 && abs(topJet->W2.eta())<2.4 ) ) ) continue;
+
+      n_fatjets++;
+      if (n_fatjets == 1){
+	pt_fatjet_1 = topJet->fatjet.pt();
+	pt_nonW_1 = topJet->nonW.pt();
+	pt_W1_1 = topJet->W1.pt() ;
+	pt_W2_1 = topJet->W2.pt() ;
+	m_top_1 = topJet->topMass ;
+      }
+      if (n_fatjets == 2){
+	pt_fatjet_2 = topJet->fatjet.pt();
+	pt_nonW_2 = topJet->nonW.pt();
+	pt_W1_2 = topJet->W1.pt() ;
+	pt_W2_2 = topJet->W2.pt() ;
+	m_top_2 = topJet->topMass ;
+      }
+ 
+
 
       //////
-      if(toptagger.GetTopTaggerOutput(*topJet)>-1){
-	numTopTags++;
-	syncTopJets.push_back(*topJet);
-      }
+      // if(toptagger.GetTopTaggerOutput(*topJet)>-1){
+      // 	numTopTags++;
+      // 	syncTopJets.push_back(*topJet);
+      // }
 
       // bool toptag = BoostedUtils::GetTopTag(*topJet);
       // // must be top-tagged
@@ -880,6 +936,7 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
   ///// Higgs tagged jet
   int numHiggsTags = 0;
+  double higgstag_fatjet_1=0, higgstag_fatjet_2=0;
   if( h_subfilterjet.isValid() ){
     boosted::SubFilterJetCollection const &subfilterjets_unsorted = *h_subfilterjet;
     boosted::SubFilterJetCollection subfilterjets = BoostedUtils::GetSortedByPt(subfilterjets_unsorted);
@@ -887,39 +944,43 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
     for( boosted::SubFilterJetCollection::iterator higgsJet = subfilterjets.begin() ; higgsJet != subfilterjets.end(); ++higgsJet ){
       // pt and eta requirements on top jet
       if( !(higgsJet->fatjet.pt() > 200. && abs(higgsJet->fatjet.eta()) < 2) ) continue;
+      numHiggsTags++;
+      if(numHiggsTags==1) higgstag_fatjet_1 = higgsJet->fatjet.pt(); 
+      if(numHiggsTags==2) higgstag_fatjet_2 = higgsJet->fatjet.pt(); 
 
       //remove overlap with topjets
-      bool overlapping=false;
-      for(auto tj=syncTopJets.begin(); tj!=syncTopJets.end(); tj++){
-	if(BoostedUtils::DeltaR(tj->fatjet,higgsJet->fatjet)<1.5){
-	  overlapping=true;
-	  break;
-	}
-      }
-      if(overlapping) continue;
+      // bool overlapping=false;
+      // for(auto tj=syncTopJets.begin(); tj!=syncTopJets.end(); tj++){
+      // 	if(BoostedUtils::DeltaR(tj->fatjet,higgsJet->fatjet)<1.5){
+      // 	  overlapping=true;
+      // 	  break;
+      // 	}
+      // }
+      // if(overlapping) continue;
 
-      int numBtagFiltJets=0;
-      std::vector<pat::Jet> filterjets = higgsJet->filterjets;
-      int numFiltJets = filterjets.size();
-      for( int ijet=0; ijet<numFiltJets; ijet++ ){
-	// if( verbose_ ){
-	//   printf("\t\t filt jet %2d:\t pT = %.1f,\t eta = %.2f,\t phi = %.2f,\t CSVv2 = %+5.3f,\t CSVv1 = %+5.3f \n",
-	// 	 ijet, filterjets[ijet].pt(), filterjets[ijet].eta(), filterjets[ijet].phi(), 
-	// 	 filterjets[ijet].bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags"),
-	// 	 filterjets[ijet].bDiscriminator("combinedSecondaryVertexBJetTags"));
-	// }
+      // int numBtagFiltJets=0;
+      // std::vector<pat::Jet> filterjets = higgsJet->filterjets;
+      // int numFiltJets = filterjets.size();
+      // for( int ijet=0; ijet<numFiltJets; ijet++ ){
+      // 	// if( verbose_ ){
+      // 	//   printf("\t\t filt jet %2d:\t pT = %.1f,\t eta = %.2f,\t phi = %.2f,\t CSVv2 = %+5.3f,\t CSVv1 = %+5.3f \n",
+      // 	// 	 ijet, filterjets[ijet].pt(), filterjets[ijet].eta(), filterjets[ijet].phi(), 
+      // 	// 	 filterjets[ijet].bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags"),
+      // 	// 	 filterjets[ijet].bDiscriminator("combinedSecondaryVertexBJetTags"));
+      // 	// }
 
-	if( !(filterjets[ijet].pt()>20. && abs(filterjets[ijet].eta()) < 2.4) ) continue;
-	if( !(filterjets[ijet].bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.89) ) continue;
-	numBtagFiltJets++;
-      }
+      // 	if( !(filterjets[ijet].pt()>20. && abs(filterjets[ijet].eta()) < 2.4) ) continue;
+      // 	if( !(filterjets[ijet].bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.89) ) continue;
+      // 	numBtagFiltJets++;
+      // }
 
       // if( verbose_ ){
       // 	printf("\t Higgs jet %2d:\t pT = %.1f,\t eta = %.2f,\t phi = %.2f,\t numFiltJets = %2d,\t numBtagFiltJets = %2d\n",
       // 	       int(higgsJet - subfilterjets.begin()), higgsJet->fatjet.pt(), higgsJet->fatjet.eta(), higgsJet->fatjet.phi(), numFiltJets, numBtagFiltJets );
       // }
 
-      if( numBtagFiltJets>=2 ) numHiggsTags++;
+      // if( numBtagFiltJets>=2 ) numHiggsTags++;
+
     }
   }
 
@@ -929,19 +990,80 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   int numTags = int( selectedJets_tag.size() );
 
   // Get Corrected MET
-  pat::MET correctedMET = pfmet->front();//miniAODhelper.GetCorrectedMET( pfmets.at(0), pfJets_forMET, iSysType );
+  // pat::MET correctedMET = pfmet->front();//miniAODhelper.GetCorrectedMET( pfmets.at(0), pfJets_forMET, iSysType );
+  //----
+  // for( std::vector<pat::Jet>::const_iterator iJet = pfjets->begin(); iJet != pfjets->end(); iJet++ ){ 
+  //   pat::Jet jeti = *iJet;
+  //   double iPt = jeti.pt();
+  //   double uncPt1 = jeti.correctedJet("Uncorrected").pt();
+  //   double uncPt2 = jeti.correctedJet(0).pt();
+
+  //   std::cout << "iPt:uncPt1:uncPt2  "<< iPt << ":" << uncPt1 << ":" << uncPt2 << std::endl;
+  // }
+
+  // double ptThresholdForMet = 10.;
+  // double emLimitForMet = 0.9;
+  // double deltaPx(0.);
+  // double deltaPy(0.);
+  // // std::vector<pat::Jet> pfJets_forMET;
+  // // std::vector<pat::Jet> pfJets_raw = miniAODhelper.GetUncorrectedJets(*pfjets);
+  // for( std::vector<pat::Jet>::const_iterator it = pfjets->begin(); it != pfjets->end(); it++ ){ 
+  //   pat::Jet inJet = *it;
+  //   pat::Jet uncJet = inJet;
+  //   uncJet.setP4(inJet.correctedJet(0).p4());
+    
+  //   pat::Jet correctedJet = miniAODhelper.GetCorrectedJet(uncJet, iEvent, iSetup, iSysType);
+
+  //   // std::cout << "raw:corr  "<< inJet.pt() << ":" << correctedJet.pt()  << std::endl;
+  //   // whether jet should be used for MET propagation
+  //   if( inJet.correctedJet(0).pt() > ptThresholdForMet
+  //      && ((!inJet.isPFJet() && inJet.emEnergyFraction() < emLimitForMet) ||
+  // 	   ( inJet.isPFJet() && inJet.neutralEmEnergyFraction() + inJet.chargedEmEnergyFraction() < emLimitForMet))){
+
+  //     deltaPx += correctedJet.px() - inJet.px();
+  //     deltaPy += correctedJet.py() - inJet.py();
+
+
+  //     // pfJets_forMET.push_back(inJet);
+  //   }
+
+  // }
+  std::vector<pat::Jet> oldJetsForMET = miniAODhelper.GetSelectedJets(*pfjets, 0., 999, jetID::jetMETcorrection, '-' );
+  std::vector<pat::Jet> oldJetsForMET_uncorr = miniAODhelper.GetUncorrectedJets(oldJetsForMET);
+  std::vector<pat::Jet> newJetsForMET = miniAODhelper.GetCorrectedJets(oldJetsForMET_uncorr, iEvent, iSetup, iSysType);
+  std::vector<pat::MET> newMETs = miniAODhelper.CorrectMET(oldJetsForMET, newJetsForMET, *pfmet);
+
+  // TLorentzVector newMET(pfmet->front().px() - deltaPx, pfmet->front().py() -deltaPy, 0, 0);
+  // pat::MET correctedMET = pfmet->front();
+  // correctedMET.setP4(reco::MET::LorentzVector(newMET.Px(), newMET.Py(), 0., newMET.Pt()));
+
+  pat::MET correctedMET = newMETs.at(0); //pfmet->front();
+  // pat::MET correctedMET = miniAODhelper.GetCorrectedMET( pfmet->front(), pfJets_forMET, iEvent, iSetup, iSysType );
   double MET_pt = correctedMET.pt();
   double MET_phi = correctedMET.phi();
 
+  vvdouble vvjets; vdouble jetCSV; vint jetFlavor;
+  for(int ijet=0; ijet<numJets; ijet++ ){
+      vdouble vjets;
+      vjets.push_back(selectedJets.at(ijet).px());
+      vjets.push_back(selectedJets.at(ijet).py());
+      vjets.push_back(selectedJets.at(ijet).pz());
+      vjets.push_back(selectedJets.at(ijet).energy());
+      vvjets.push_back(vjets);
+
+    // double pt = selectedJets.at(ijet).pt();
+    double csv = miniAODhelper.GetJetCSV(selectedJets.at(ijet), "pfCombinedInclusiveSecondaryVertexV2BJetTags");
+    int flavor = selectedJets.at(ijet).partonFlavour();
+
+    jetCSV.push_back(csv);
+    jetFlavor.push_back(flavor);
+    // std::cout << "---->jet "<< ijet << " pt:eta:phi is" << pt << ":" << eta << ":" << phi << std::endl;
+  }
+
+    double csvWgtHF=1, csvWgtLF=1, csvWgtCF=1;
+    double bWeight = get_csv_wgt( vvjets, jetCSV, jetFlavor, 0, csvWgtHF, csvWgtLF, csvWgtCF);
+
   //---- comment out checks
-  // for(int ijet=0; ijet<numJets; ijet++ ){
-  //   double pt = selectedJets.at(ijet).pt();
-  //   double eta = selectedJets.at(ijet).eta();
-  //   double phi = selectedJets.at(ijet).phi();
-
-  //   std::cout << "---->jet "<< ijet << " pt:eta:phi is" << pt << ":" << eta << ":" << phi << std::endl;
-  // }
-
   // //-------
   // if(lumi == 885278 && event == 88527714){
   //   for( std::vector<pat::Jet>::const_iterator iJet = correctedJets.begin(); iJet!=correctedJets.end(); ++iJet ){
@@ -1141,93 +1263,109 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   ////////////////////
   ///// synchronization with MEM
   ////////////////////
-  bool synch_MEM = false;
-  if( synch_MEM ){ 
-    if (GenEventInfoWeight > 0) h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, 1);
-    else h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, -1);
-
-    if( numMuons_Tight==1 ){
+  bool synch_MEM = true; //false;
+  if( synch_MEM ){
+    if( passSingleMuonTrigger ){ 
       if (GenEventInfoWeight > 0) h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, 1);
       else h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, -1);
 
-      if( numMuons==1 && numElectrons==0 ){
+      if( numMuons_Tight==1 ){
 	if (GenEventInfoWeight > 0) h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, 1);
 	else h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, -1);
-
-	if( numJets>=4 ){
+	
+	if( numMuons==1 && numElectrons==0 ){
 	  if (GenEventInfoWeight > 0) h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, 1);
 	  else h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, -1);
-
-	  if( numTags>=2 ){
+	  
+	  if( numJets>=4 ){
 	    if (GenEventInfoWeight > 0) h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, 1);
 	    else h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, -1);
-	    // printf("===ref %d,%d,%d,1,0,%.2f,%+.2f,%+.2f,%.3f,%d,0,0,0,0,0,%.2f,%.2f,%.2f,%.2f,%+.3f,%+.3f,%+.3f,%+.3f,0,0,0,0,0,0,0,0,0,0,0,0,%.2f,%+.2f,%d,%d,0,0,0,%d\n",
-	    printf("===ref %d,%d,%d,1,0,%.3f,%+.3f,%+.3f,%.3f,%d,0,0,0,0,0,%.3f,%.3f,%.3f,%.3f,%+.3f,%+.3f,%+.3f,%+.3f,%.3f,%+.3f,%d,%d,0,%d\n",
+	    
+	    if( numTags>=2 ){
+	      if (GenEventInfoWeight > 0) h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, 1);
+	      else h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, -1);
+	      // printf("===ref %d,%d,%d,1,0,%.2f,%+.2f,%+.2f,%.3f,%d,0,0,0,0,0,%.2f,%.2f,%.2f,%.2f,%+.3f,%+.3f,%+.3f,%+.3f,0,0,0,0,0,0,0,0,0,0,0,0,%.2f,%+.2f,%d,%d,0,0,0,%d\n",
+	      printf("===ref %d,%d,%d,1,0,%.3f,%+.3f,%+.3f,%.3f,%d,0,0,0,0,0,%.3f,%.3f,%.3f,%.3f,%+.3f,%+.3f,%+.3f,%+.3f,%.3f,%+.3f,%d,%d,%.3f,%d,0,0,%d,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
 		   run, lumi, event,
 		   // is_SL, is_DL,
 		   lep1_pt, lep1_eta, lep1_phi, lep1_iso, lep1_pdgId,
 		   // lep2_pt, lep2_eta, lep2_phi, lep2_iso, lep2_pdgId,
 		   jet1_pt, jet2_pt, jet3_pt, jet4_pt,
 		   jet1_CSVv2, jet2_CSVv2, jet3_CSVv2, jet4_CSVv2,
-		   // jet1_corr, jet2_corr, jet3_corr, jet4_corr,
-		   // jet1_corrUp, jet2_corrUp, jet3_corrUp, jet4_corrUp,
-		   // jet1_corrDown, jet2_corrDown, jet3_corrDown, jet4_corrDown,
 		   MET_pt, MET_phi,
 		   n_jets, n_btags,
-		   // bWeight, bWeightLFUp, bWeightLFDown,
-		   ttHFCategory);
+		   bWeight,
+		   ttHFCategory,
+ 		   // final_discriminant1,
+		   // final_discriminant2,
+		   n_fatjets,
+		   pt_fatjet_1, pt_fatjet_2,
+		   pt_nonW_1, pt_nonW_2,
+		   pt_W1_1, pt_W1_2,
+		   pt_W2_1, pt_W2_2,
+		   m_top_1, m_top_2,
+		   higgstag_fatjet_1, higgstag_fatjet_2
+		   );
+	    }
 	  }
-	}
-      } 
+	} 
+      }
     }
   }
-
 
   int n_tth_syncex1_ele=0;
   h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++);
 
   if( synch_MEM ){ 
-    if (GenEventInfoWeight > 0) h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, 1);
-    else h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, -1);
-
-    if( numElectrons_Tight==1 ){
+    if( passSingleElectronTrigger ){
       if (GenEventInfoWeight > 0) h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, 1);
       else h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, -1);
-
-      if( numElectrons==1 && numMuons==0 ){
+      
+      if( numElectrons_Tight==1 ){
 	if (GenEventInfoWeight > 0) h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, 1);
 	else h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, -1);
-
-	if( numJets>=4 ){
+	
+	if( numElectrons==1 && numMuons==0 ){
 	  if (GenEventInfoWeight > 0) h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, 1);
 	  else h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, -1);
-
-	  if( numTags>=2 ){
+	  
+	  if( numJets>=4 ){
 	    if (GenEventInfoWeight > 0) h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, 1);
 	    else h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, -1);
-	    // printf("===ref %d,%d,%d,1,0,%.2f,%+.2f,%+.2f,%.3f,%d,0,0,0,0,0,%.2f,%.2f,%.2f,%.2f,%+.3f,%+.3f,%+.3f,%+.3f,0,0,0,0,0,0,0,0,0,0,0,0,%.2f,%+.2f,%d,%d,0,0,0,%d\n",
-	    printf("===ref %d,%d,%d,1,0,%.3f,%+.3f,%+.3f,%.3f,%d,0,0,0,0,0,%.3f,%.3f,%.3f,%.3f,%+.3f,%+.3f,%+.3f,%+.3f,%.3f,%+.3f,%d,%d,0,%d\n",
+	    
+	    if( numTags>=2 ){
+	      if (GenEventInfoWeight > 0) h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, 1);
+	      else h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, -1);
+	      // printf("===ref %d,%d,%d,1,0,%.2f,%+.2f,%+.2f,%.3f,%d,0,0,0,0,0,%.2f,%.2f,%.2f,%.2f,%+.3f,%+.3f,%+.3f,%+.3f,0,0,0,0,0,0,0,0,0,0,0,0,%.2f,%+.2f,%d,%d,0,0,0,%d\n",
+	      printf("===ref %d,%d,%d,1,0,%.3f,%+.3f,%+.3f,%.3f,%d,0,0,0,0,0,%.3f,%.3f,%.3f,%.3f,%+.3f,%+.3f,%+.3f,%+.3f,%.3f,%+.3f,%d,%d,%.3f,%d,0,0,%d,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
 		   run, lumi, event,
 		   // is_SL, is_DL,
 		   lep1_pt, lep1_eta, lep1_phi, lep1_iso, lep1_pdgId,
 		   // lep2_pt, lep2_eta, lep2_phi, lep2_iso, lep2_pdgId,
 		   jet1_pt, jet2_pt, jet3_pt, jet4_pt,
 		   jet1_CSVv2, jet2_CSVv2, jet3_CSVv2, jet4_CSVv2,
-		   // jet1_corr, jet2_corr, jet3_corr, jet4_corr,
-		   // jet1_corrUp, jet2_corrUp, jet3_corrUp, jet4_corrUp,
-		   // jet1_corrDown, jet2_corrDown, jet3_corrDown, jet4_corrDown,
 		   MET_pt, MET_phi,
 		   n_jets, n_btags,
-		   // bWeight, bWeightLFUp, bWeightLFDown,
-		   ttHFCategory);
+		   bWeight, 
+		     ttHFCategory,
+ 		   // final_discriminant1,
+		   // final_discriminant2,
+		   n_fatjets,
+		   pt_fatjet_1, pt_fatjet_2,
+		   pt_nonW_1, pt_nonW_2,
+		   pt_W1_1, pt_W1_2,
+		   pt_W2_1, pt_W2_2,
+		   m_top_1, m_top_2,
+		   higgstag_fatjet_1, higgstag_fatjet_2		     
+		     );
 
+	    }
 	  }
-	}
-      } 
+	} 
+      }
     }
   }
-
-
+  
   ////-======
   TString printOut = Form("%6d %8d %10d   %6.2f %+4.2f %+4.2f   %6.2f %6.2f %6.2f %6.2f   %+7.3f %+7.3f %+7.3f %+7.3f   %+7.3f   %2d  %2d   %2d   %2d  %2d",
 	   run, lumi, event,
@@ -1619,6 +1757,11 @@ TTHSyncExercise::beginJob()
   numPos_  = 0;
   numNeg_  = 0;
 
+  TFile* f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_hf_IT_FlatSF.root").c_str());
+  TFile* f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_lf_IT_FlatSF.root").c_str());
+
+  fillCSVhistos(f_CSVwgt_HF, f_CSVwgt_LF);
+
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
@@ -1803,6 +1946,180 @@ TTHSyncExercise::fillDescriptions(edm::ConfigurationDescriptions& descriptions) 
   edm::ParameterSetDescription desc;
   desc.setUnknown();
   descriptions.addDefault(desc);
+}
+
+void fillCSVhistos(TFile* fileHF, TFile* fileLF){
+
+  for( int iSys=0; iSys<9; iSys++ ){
+    for( int iPt=0; iPt<5; iPt++ ) h_csv_wgt_hf[iSys][iPt] = NULL;
+    for( int iPt=0; iPt<3; iPt++ ){
+      for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = NULL;
+    }
+  }
+  for( int iSys=0; iSys<5; iSys++ ){
+    for( int iPt=0; iPt<5; iPt++ ) c_csv_wgt_hf[iSys][iPt] = NULL;
+  }
+
+  // CSV reweighting
+  for( int iSys=0; iSys<9; iSys++ ){
+    TString syst_csv_suffix_hf = "final";
+    TString syst_csv_suffix_c = "final";
+    TString syst_csv_suffix_lf = "final";
+    
+    switch( iSys ){
+    case 0:
+      // this is the nominal case
+      break;
+    case 1:
+      // JESUp
+      syst_csv_suffix_hf = "final_JESUp"; syst_csv_suffix_lf = "final_JESUp";
+      syst_csv_suffix_c  = "final_cErr1Up";
+      break;
+    case 2:
+      // JESDown
+      syst_csv_suffix_hf = "final_JESDown"; syst_csv_suffix_lf = "final_JESDown";
+      syst_csv_suffix_c  = "final_cErr1Down";
+      break;
+    case 3:
+      // purity up
+      syst_csv_suffix_hf = "final_LFUp"; syst_csv_suffix_lf = "final_HFUp";
+      syst_csv_suffix_c  = "final_cErr2Up";
+      break;
+    case 4:
+      // purity down
+      syst_csv_suffix_hf = "final_LFDown"; syst_csv_suffix_lf = "final_HFDown";
+      syst_csv_suffix_c  = "final_cErr2Down";
+      break;
+    case 5:
+      // stats1 up
+      syst_csv_suffix_hf = "final_Stats1Up"; syst_csv_suffix_lf = "final_Stats1Up";
+      break;
+    case 6:
+      // stats1 down
+      syst_csv_suffix_hf = "final_Stats1Down"; syst_csv_suffix_lf = "final_Stats1Down";
+      break;
+    case 7:
+      // stats2 up
+      syst_csv_suffix_hf = "final_Stats2Up"; syst_csv_suffix_lf = "final_Stats2Up";
+      break;
+    case 8:
+      // stats2 down
+      syst_csv_suffix_hf = "final_Stats2Down"; syst_csv_suffix_lf = "final_Stats2Down";
+      break;
+    }
+
+    for( int iPt=0; iPt<6; iPt++ ) h_csv_wgt_hf[iSys][iPt] = (TH1D*)fileHF->Get( Form("csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_hf.Data()) );
+
+    if( iSys<5 ){
+      for( int iPt=0; iPt<6; iPt++ ) c_csv_wgt_hf[iSys][iPt] = (TH1D*)fileHF->Get( Form("c_csv_ratio_Pt%i_Eta0_%s",iPt,syst_csv_suffix_c.Data()) );
+    }
+    
+    for( int iPt=0; iPt<4; iPt++ ){
+      for( int iEta=0; iEta<3; iEta++ )h_csv_wgt_lf[iSys][iPt][iEta] = (TH1D*)fileLF->Get( Form("csv_ratio_Pt%i_Eta%i_%s",iPt,iEta,syst_csv_suffix_lf.Data()) );
+    }
+  }
+
+  return;
+}
+
+double get_csv_wgt( vvdouble jets, vdouble jetCSV, vint jetFlavor, int iSys, double &csvWgtHF, double &csvWgtLF, double &csvWgtCF ){
+
+  int iSysHF = 0;
+  switch(iSys){
+  case 7: iSysHF=1; break;
+  case 8: iSysHF=2; break;
+  case 9: iSysHF=3; break;
+  case 10: iSysHF=4; break;
+  case 13: iSysHF=5; break;
+  case 14: iSysHF=6; break;
+  case 15: iSysHF=7; break;
+  case 16: iSysHF=8; break;
+  default : iSysHF = 0; break;
+  }
+
+  int iSysC = 0;
+  switch(iSys){
+  case 21: iSysC=1; break;
+  case 22: iSysC=2; break;
+  case 23: iSysC=3; break;
+  case 24: iSysC=4; break;
+  default : iSysC = 0; break;
+  }
+
+  int iSysLF = 0;
+  switch(iSys){
+  case 7: iSysLF=1; break;
+  case 8: iSysLF=2; break;
+  case 11: iSysLF=3; break;
+  case 12: iSysLF=4; break;
+  case 17: iSysLF=5; break;
+  case 18: iSysLF=6; break;
+  case 19: iSysLF=7; break;
+  case 20: iSysLF=8; break;
+  default : iSysLF = 0; break;
+  }
+
+  double csvWgthf = 1.;
+  double csvWgtC  = 1.;
+  double csvWgtlf = 1.;
+
+
+  for( int iJet=0; iJet<int(jets.size()); iJet++ ){
+    TLorentzVector myJet;
+    myJet.SetPxPyPzE( jets[iJet][0], jets[iJet][1], jets[iJet][2], jets[iJet][3] );
+	  
+    double csv = jetCSV[iJet];
+    double jetPt = myJet.Pt();
+    double jetAbsEta = fabs( myJet.Eta() );
+    int flavor = jetFlavor[iJet];
+
+    int iPt = -1; int iEta = -1;
+    if (jetPt >=19.99 && jetPt<30) iPt = 0;
+    else if (jetPt >=30 && jetPt<40) iPt = 1;
+    else if (jetPt >=40 && jetPt<60) iPt = 2;
+    else if (jetPt >=60 && jetPt<100) iPt = 3;
+    else if (jetPt >=100 && jetPt<160) iPt = 4;
+    else if (jetPt >=160 && jetPt<10000) iPt = 5;
+
+    if (jetAbsEta >=0 &&  jetAbsEta<0.8 ) iEta = 0;
+    else if ( jetAbsEta>=0.8 && jetAbsEta<1.6 )  iEta = 1;
+    else if ( jetAbsEta>=1.6 && jetAbsEta<2.41 ) iEta = 2;
+
+    if (iPt < 0 || iEta < 0) std::cout << "Error, couldn't find Pt, Eta bins for this b-flavor jet, jetPt = " << jetPt << ", jetAbsEta = " << jetAbsEta << std::endl;
+
+    if (abs(flavor) == 5 ){
+      int useCSVBin = (csv>=0.) ? h_csv_wgt_hf[iSysHF][iPt]->FindBin(csv) : 1;
+      double iCSVWgtHF = h_csv_wgt_hf[iSysHF][iPt]->GetBinContent(useCSVBin);
+      if( iCSVWgtHF!=0 ) csvWgthf *= iCSVWgtHF;
+
+      // if( iSysHF==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtHF );
+    }
+    else if( abs(flavor) == 4 ){
+      int useCSVBin = (csv>=0.) ? c_csv_wgt_hf[iSysC][iPt]->FindBin(csv) : 1;
+      double iCSVWgtC = c_csv_wgt_hf[iSysC][iPt]->GetBinContent(useCSVBin);
+      if( iCSVWgtC!=0 ) csvWgtC *= iCSVWgtC;
+      // if( iSysC==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      //      flavor, jetPt, iJet->eta, csv, iCSVWgtC );
+    }
+    else {
+      if (iPt >=3) iPt=3;       /// [30-40], [40-60] and [60-10000] only 3 Pt bins for lf
+      int useCSVBin = (csv>=0.) ? h_csv_wgt_lf[iSysLF][iPt][iEta]->FindBin(csv) : 1;
+      double iCSVWgtLF = h_csv_wgt_lf[iSysLF][iPt][iEta]->GetBinContent(useCSVBin);
+      if( iCSVWgtLF!=0 ) csvWgtlf *= iCSVWgtLF;
+
+      // if( iSysLF==0 ) printf(" iJet,\t flavor=%d,\t pt=%.1f,\t eta=%.2f,\t csv=%.3f,\t wgt=%.2f \n",
+      // 			     flavor, jetPt, iJet->eta, csv, iCSVWgtLF );
+    }
+  }
+
+  double csvWgtTotal = csvWgthf * csvWgtC * csvWgtlf;
+
+  csvWgtHF = csvWgthf;
+  csvWgtLF = csvWgtlf;
+  csvWgtCF = csvWgtC;
+
+  return csvWgtTotal;
 }
 
 //define this as a plug-in
