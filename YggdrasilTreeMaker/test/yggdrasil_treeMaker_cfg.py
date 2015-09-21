@@ -7,7 +7,7 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_cff" )
-process.GlobalTag.globaltag = 'PHYS14_25_V2::All'
+process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
 
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.options.allowUnscheduled = cms.untracked.bool(True)
@@ -37,7 +37,8 @@ process.ak4PFchsL1L2L3 = cms.ESProducer("JetCorrectionESChain",
 
 process.source = cms.Source("PoolSource",
         fileNames = cms.untracked.vstring(
-        '/store/user/puigh/TTHSync/ttjets_phys14_20bx25_withfatjets_v2.root'
+           '/store/mc/RunIISpring15DR74/ttHTobb_M125_13TeV_powheg_pythia8/MINIAODSIM/Asympt25ns_MCRUN2_74_V9-v1/00000/141B9915-1F08-E511-B9FF-001E675A6AB3.root'
+#        '/store/user/puigh/TTHSync/ttjets_phys14_20bx25_withfatjets_v2.root'
             #'/store/mc/Phys14DR/TTbarH_M-125_13TeV_amcatnlo-pythia8-tauola/MINIAODSIM/PU20bx25_tsg_PHYS14_25_V1-v2/00000/08B36E8F-5E7F-E411-9D5A-002590200AE4.root'
             #'/store/mc/Phys14DR/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_PHYS14_25_V1-v1/00000/00C90EFC-3074-E411-A845-002590DB9262.root'
             #'/store/mc/Spring14miniaod/TTbarH_M-125_13TeV_amcatnlo-pythia8-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/1E4F9BDC-3E1E-E411-A56C-001E67396EAA.root'
@@ -56,13 +57,20 @@ genJetCollection = 'ak4GenJetsCustom'
 genParticleCollection = 'prunedGenParticles'
 genJetInputParticleCollection = 'packedGenParticles'
 
+## producing a subset of particles to be used for jet clustering
+from RecoJets.Configuration.GenJetParticles_cff import genParticlesForJetsNoNu
+process.genParticlesForJetsNoNu = genParticlesForJetsNoNu.clone(
+	src = genJetInputParticleCollection
+)
+
 # Supplies PDG ID to real name resolution of MC particles
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 
 # Producing own jets for testing purposes
 from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
 process.ak4GenJetsCustom = ak4GenJets.clone(
-    src = genJetInputParticleCollection,
+    src = 'genParticlesForJetsNoNu',
+#    src = genJetInputParticleCollection,
     rParam = cms.double(0.4),
     jetAlgorithm = cms.string("AntiKt")
 )

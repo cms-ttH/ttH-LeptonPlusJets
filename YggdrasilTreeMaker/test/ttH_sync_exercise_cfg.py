@@ -8,7 +8,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_cff" )
 process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
-
+#process.GlobalTag.globaltag = 'PHYS14_25_V2::All'
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.options.allowUnscheduled = cms.untracked.bool(True)
 
@@ -37,7 +37,10 @@ process.ak4PFchsL1L2L3 = cms.ESProducer("JetCorrectionESChain",
 
 process.source = cms.Source("PoolSource",
         fileNames = cms.untracked.vstring(
-        'root://xrootd-cms.infn.it//store/user/shwillia/Spring15_Sync/ttHbb_spring15_25ns_plusboostedjets.root',
+#        'root://xrootd-cms.infn.it//store/user/shwillia/Spring15_HbbSync/ttHTobb_Spring15_HbbSync.root',
+        'root://xrootd-cms.infn.it//store/user/shwillia/Spring15_HbbSync/ttbar_Spring15_HbbSync.root',
+
+#        'root://xrootd-cms.infn.it//store/user/shwillia/Spring15_Sync/ttHbb_spring15_25ns_plusboostedjets.root',
 #        '/store/mc/Phys14DR/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_PHYS14_25_V1-v1/00000/00C90EFC-3074-E411-A845-002590DB9262.root',
 #        '/store/mc/Phys14DR/TTbarH_M-125_13TeV_amcatnlo-pythia8-tauola/MINIAODSIM/PU20bx25_tsg_PHYS14_25_V1-v2/00000/FC4E6E16-5C7F-E411-8843-002590200AE4.root',
 
@@ -67,13 +70,20 @@ genJetCollection = 'ak4GenJetsCustom'
 genParticleCollection = 'prunedGenParticles'
 genJetInputParticleCollection = 'packedGenParticles'
 
+## producing a subset of particles to be used for jet clustering
+from RecoJets.Configuration.GenJetParticles_cff import genParticlesForJetsNoNu
+process.genParticlesForJetsNoNu = genParticlesForJetsNoNu.clone(
+	src = genJetInputParticleCollection
+)
+
 # Supplies PDG ID to real name resolution of MC particles
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 
 # Producing own jets for testing purposes
 from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
 process.ak4GenJetsCustom = ak4GenJets.clone(
-    src = genJetInputParticleCollection,
+    src = 'genParticlesForJetsNoNu',
+#    src = genJetInputParticleCollection,
     rParam = cms.double(0.4),
     jetAlgorithm = cms.string("AntiKt")
 )
@@ -122,6 +132,7 @@ process.categorizeGenTtbar = categorizeGenTtbar.clone(
 
 process.ttHsyncExercise = cms.EDAnalyzer('TTHSyncExercise',
     genTtbarId = cms.InputTag("categorizeGenTtbar", "genTtbarId"),
+    SysType = cms.string(""),
 #    # phase space of jets to be stored
 #    genJetPtMin = cms.double(20),
 #    genJetAbsEtaMax = cms.double(2.4),
