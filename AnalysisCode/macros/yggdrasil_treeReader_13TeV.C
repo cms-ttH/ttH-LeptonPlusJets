@@ -924,10 +924,10 @@ if(SampleType == 5) sampleName = "ttW";
 		cut[6]=0;
 		
 		cut[0]++;
-	  
+		chain->GetEntry(ievt);  
 		long evt = eve->evt_;
 	  	
-		chain->GetEntry(ievt);
+		
 		
 		bool GoodFirstPV = eve->GoodFirstPV_;
 		if(GoodFirstPV)cut[1]++;
@@ -1064,6 +1064,8 @@ if(SampleType == 5) sampleName = "ttW";
 		dEta_fn							 = eve->dEta_f_[treeSys];
 		pt_all_jets_over_E_all_jets	 = eve->pt_all_jets_over_E_all_jets_[treeSys];
 		fifth_highest_CSV				 = eve->fifth_highest_CSV_[treeSys];
+		best_higgs_mass			= eve->best_higgs_mass_[treeSys];
+		M3				= eve->M3_[treeSys];
 		//sixth_highest_CSV_f                = eve->sixth_highest_CSV_[treeSys];
 		//HT_f 								=eve->HT_[treeSys];
 		//all_sum_pt_with_met_f			= eve->all_sum_pt_with_met_[treeSys];
