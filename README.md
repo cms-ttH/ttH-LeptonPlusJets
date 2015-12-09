@@ -21,11 +21,17 @@ ttH-LeptonPlusJets
     git clone https://github.com/cms-ttH/MiniAOD.git
     git clone https://github.com/cms-ttH/ttH-LeptonPlusJets.git
 
+    //you can skip this part and add it later   
     git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
     cd HiggsAnalysis/CombinedLimit
     git checkout 74x-root6
     cd -
     git clone https://github.com/cms-ttH/ttH-Limits.git ttH/Limits
+
+    scram b -j 32
+
+    //adding Ele TriggerMVA producer   https://twiki.cern.ch/twiki/bin/viewauth/CMS/MultivariateElectronIdentificationRun2#Recipes_for_regular_users_co_AN1
+    git cms-merge-topic ikrav:egm_id_7.4.12_v1
 
     scram b -j 32
 
