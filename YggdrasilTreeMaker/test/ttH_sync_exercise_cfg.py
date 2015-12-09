@@ -6,9 +6,13 @@ process = cms.Process("MAOD")
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.load( "Configuration.StandardSequences.FrontierConditions_GlobalTag_cff" )
-process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
-#process.GlobalTag.globaltag = 'PHYS14_25_V2::All'
+#### caution: use the correct global tag for MC or Data 
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
+process.GlobalTag.globaltag = '74X_mcRun2_asymptotic_v4'  ##MC
+
+# Load the producer for MVA IDs. Make sure it is also added to the sequence!
+process.load("RecoEgamma.ElectronIdentification.ElectronMVAValueMapProducer_cfi")
+
 process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.options.allowUnscheduled = cms.untracked.bool(True)
 
@@ -159,4 +163,4 @@ process.TFileService = cms.Service("TFileService",
 	fileName = cms.string('ttH_sync_exercise.root')
 )
 
-process.p = cms.Path(process.ttHsyncExercise)
+process.p = cms.Path(process.electronMVAValueMapProducer * process.ttHsyncExercise)

@@ -516,8 +516,8 @@ class TTHMiniAODAnalyzer : public edm::EDAnalyzer {
   TH1D* h_met_pt;
   TH1D* h_met_phi;
 
-  TH1D* h_raw_met_pt;
-  TH1D* h_raw_met_phi;
+  // TH1D* h_raw_met_pt;
+  // TH1D* h_raw_met_phi;
 
   TH1D* h_H_pt;
   TH1D* h_H_eta;
@@ -1088,8 +1088,8 @@ TTHMiniAODAnalyzer::TTHMiniAODAnalyzer(const edm::ParameterSet& iConfig)
   h_met_pt = fs_->make<TH1D>("h_met_pt",";MET p_{T}", NptBins, 0, ptmax );
   h_met_phi = fs_->make<TH1D>("h_met_phi",";MET #phi", 34, -3.4, 3.4 );
 
-  h_raw_met_pt = fs_->make<TH1D>("h_raw_met_pt",";uncorrected MET p_{T}", NptBins, 0, ptmax );
-  h_raw_met_phi = fs_->make<TH1D>("h_raw_met_phi",";uncorrected MET #phi", 34, -3.4, 3.4 );
+  // h_raw_met_pt = fs_->make<TH1D>("h_raw_met_pt",";uncorrected MET p_{T}", NptBins, 0, ptmax );
+  // h_raw_met_phi = fs_->make<TH1D>("h_raw_met_phi",";uncorrected MET #phi", 34, -3.4, 3.4 );
 
   h_H_pt = fs_->make<TH1D>("h_H_pt",";H p_{T}", NjetptBins, 0, jetptmax );
   h_H_eta = fs_->make<TH1D>("h_H_eta",";H #eta", 70, -3.5, 3.5 );
@@ -2666,8 +2666,8 @@ TTHMiniAODAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   h_met_pt->Fill(std::min(double(correctedMET.pt()),jetptmax)-0.0001,wgt);
   h_met_phi->Fill(correctedMET.phi(),wgt);
 
-  h_raw_met_pt->Fill(std::min(double(correctedMET.uncorrectedPt()),jetptmax)-0.0001,wgt);
-  h_raw_met_phi->Fill(correctedMET.uncorrectedPhi(),wgt);
+  // h_raw_met_pt->Fill(std::min(double(correctedMET.uncorrectedPt()),jetptmax)-0.0001,wgt);
+  // h_raw_met_phi->Fill(correctedMET.uncorrectedPhi(),wgt);
 
   h_numJet_nocc->Fill(std::min(numJet_nocc,NjetMax),wgt);
 

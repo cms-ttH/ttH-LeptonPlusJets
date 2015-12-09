@@ -140,6 +140,12 @@ class TTHSyncExercise : public edm::EDAnalyzer {
   edm::EDGetTokenT <edm::TriggerResults> triggerResultsToken;
   edm::EDGetTokenT <edm::TriggerResults> filterResultsToken;
 
+  // new MVAelectron
+  edm::EDGetTokenT< edm::View<pat::Electron> > EDMElectronsToken;
+  // MVA values and categories
+  edm::EDGetTokenT<edm::ValueMap<float> > EDMeleMVAvaluesToken;
+  edm::EDGetTokenT<edm::ValueMap<int> > EDMeleMVAcategoriesToken;
+
   edm::EDGetTokenT <reco::VertexCollection> vertexToken;
   edm::EDGetTokenT <reco::VertexCompositePtrCandidateCollection> secondaryVertexToken;
   edm::EDGetTokenT <pat::ElectronCollection> electronToken;
@@ -153,7 +159,7 @@ class TTHSyncExercise : public edm::EDAnalyzer {
   edm::EDGetTokenT <pat::PackedCandidateCollection> packedpfToken;
 
   edm::EDGetTokenT <reco::BeamSpot> beamspotToken;
-  edm::EDGetTokenT <reco::ConversionCollection> EDMConversionCollectionToken;
+  // edm::EDGetTokenT <reco::ConversionCollection> EDMConversionCollectionToken;
   edm::EDGetTokenT <double> rhoToken;
   edm::EDGetTokenT <reco::GenParticleCollection> mcparicleToken;
   edm::EDGetTokenT <std::vector< PileupSummaryInfo > > puInfoToken;
@@ -280,6 +286,11 @@ TTHSyncExercise::TTHSyncExercise(const edm::ParameterSet& iConfig):
   triggerResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), hltTag));
   filterResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), filterTag));
 
+  // new MVAelectron
+  EDMElectronsToken = consumes< edm::View<pat::Electron> >(edm::InputTag("slimmedElectrons","",""));
+  EDMeleMVAvaluesToken           = consumes<edm::ValueMap<float> >(edm::InputTag("electronMVAValueMapProducer","ElectronMVAEstimatorRun2Spring15Trig25nsV1Values",""));
+  EDMeleMVAcategoriesToken       = consumes<edm::ValueMap<int> >(edm::InputTag("electronMVAValueMapProducer","ElectronMVAEstimatorRun2Spring15Trig25nsV1Categories",""));
+
   vertexToken = consumes <reco::VertexCollection> (edm::InputTag(std::string("offlineSlimmedPrimaryVertices")));
   secondaryVertexToken = consumes <reco::VertexCompositePtrCandidateCollection> (edm::InputTag(std::string("slimmedSecondaryVertices")));
   electronToken = consumes <pat::ElectronCollection> (edm::InputTag(std::string("slimmedElectrons")));
@@ -296,7 +307,7 @@ TTHSyncExercise::TTHSyncExercise(const edm::ParameterSet& iConfig):
   rhoToken = consumes <double> (edm::InputTag(std::string("fixedGridRhoFastjetAll")));
   mcparicleToken = consumes <reco::GenParticleCollection> (edm::InputTag(std::string("prunedGenParticles")));
   puInfoToken = consumes <std::vector< PileupSummaryInfo > > (edm::InputTag(std::string("addPileupInfo")));
-  EDMConversionCollectionToken = consumes <reco::ConversionCollection > (edm::InputTag("reducedEgamma","reducedConversions",""));
+  // EDMConversionCollectionToken = consumes <reco::ConversionCollection > (edm::InputTag("reducedEgamma","reducedConversions",""));
   genInfoProductToken = consumes <GenEventInfoProduct> (edm::InputTag(std::string("generator")));
   EDMBoostedJetsToken     = consumes< boosted::BoostedJetCollection >(edm::InputTag("BoostedJetMatcher","boostedjets","p"));
 
@@ -407,7 +418,7 @@ TTHSyncExercise::TTHSyncExercise(const edm::ParameterSet& iConfig):
 
   miniAODhelper.SetUp(era, insample_, iAnalysisType, isData);
   miniAODhelper.SetJetCorrectorUncertainty();
-   miniAODhelper.SetUpElectronMVA("MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EB1_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml","MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EB2_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml","MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EE_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml");
+   // miniAODhelper.SetUpElectronMVA("MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EB1_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml","MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EB2_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml","MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EE_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml");
   
 
   toptagger = TopTagger(TopTag::Likelihood, TopTag::CSV, "toplikelihoodtaggerhistos.root");
@@ -594,9 +605,20 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   edm::Handle<reco::VertexCompositePtrCandidateCollection> secondaryVtxs;
   iEvent.getByToken(secondaryVertexToken,secondaryVtxs);
 
-  edm::Handle<pat::ElectronCollection> electrons;
-  iEvent.getByToken(electronToken,electrons);
+  /// old way of getting electrons
+  // edm::Handle<pat::ElectronCollection> electrons;
+  // iEvent.getByToken(electronToken,electrons);
+  //// MVAelectrons
+  edm::Handle< edm::View<pat::Electron> > h_electrons;
+  iEvent.getByToken( EDMElectronsToken,h_electrons );
+  // add electron mva info to electrons
+  edm::Handle<edm::ValueMap<float> > h_mvaValues; 
+  edm::Handle<edm::ValueMap<int> > h_mvaCategories;
+  iEvent.getByToken(EDMeleMVAvaluesToken,h_mvaValues);
+  iEvent.getByToken(EDMeleMVAcategoriesToken,h_mvaCategories);  
+  std::vector<pat::Electron> electrons = miniAODhelper.GetElectronsWithMVAid(h_electrons,h_mvaValues,h_mvaCategories);
 
+  ////
   edm::Handle<pat::MuonCollection> muons;
   iEvent.getByToken(muonToken,muons);
 
@@ -612,8 +634,8 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   edm::Handle<reco::BeamSpot> bsHandle;
   iEvent.getByToken(beamspotToken,bsHandle);
   
-  edm::Handle<reco::ConversionCollection> h_conversioncollection;
-  iEvent.getByToken( EDMConversionCollectionToken,h_conversioncollection );
+  // edm::Handle<reco::ConversionCollection> h_conversioncollection;
+  // iEvent.getByToken( EDMConversionCollectionToken,h_conversioncollection );
 
   edm::Handle<reco::GenParticleCollection> mcparticles;
   iEvent.getByToken(mcparicleToken,mcparticles);
@@ -716,15 +738,15 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   ////////
   
   bool isDL=false;
- miniAODhelper.SetElectronMVAinfo(h_conversioncollection, bsHandle);
+ // miniAODhelper.SetElectronMVAinfo(h_conversioncollection, bsHandle);
  
  //std::vector<pat::Electron> selectedElectrons = miniAODhelper.GetSelectedElectrons( *electrons, 15.0, electronID::electronPhys14L, 2.4 );
   //std::vector<pat::Electron> selectedElectrons_Tight = miniAODhelper.GetSelectedElectrons( *electrons, 30.0, electronID::electronPhys14M, 2.1 );
  
-  std::vector<pat::Electron> selectedElectrons = miniAODhelper.GetSelectedElectrons( *electrons, 15.0, electronID::electronEndOf15MVAmedium, 2.4 );
-  std::vector<pat::Electron> selectedElectrons_Tight = miniAODhelper.GetSelectedElectrons( *electrons, 30.0, electronID::electronEndOf15MVAmedium, 2.1 );
-  std::vector<pat::Electron> selectedElectrons_DL = miniAODhelper.GetSelectedElectrons( *electrons, 15.0, electronID::electronEndOf15MVAmedium, 2.4 );
-  std::vector<pat::Electron> selectedElectrons_Tight_DL = miniAODhelper.GetSelectedElectrons( *electrons, 20.0, electronID::electronEndOf15MVAmedium, 2.4 );
+  std::vector<pat::Electron> selectedElectrons = miniAODhelper.GetSelectedElectrons( electrons, 15.0, electronID::electronEndOf15MVA80iso0p1, 2.4 );
+  std::vector<pat::Electron> selectedElectrons_Tight = miniAODhelper.GetSelectedElectrons( electrons, 30.0, electronID::electronEndOf15MVA80iso0p1, 2.1 );
+  std::vector<pat::Electron> selectedElectrons_DL = miniAODhelper.GetSelectedElectrons( electrons, 15.0, electronID::electronEndOf15MVA80iso0p1, 2.4 );
+  std::vector<pat::Electron> selectedElectrons_Tight_DL = miniAODhelper.GetSelectedElectrons( electrons, 20.0, electronID::electronEndOf15MVA80iso0p1, 2.4 );
   
   if(isDL)selectedElectrons = selectedElectrons_DL;
   if(isDL)selectedElectrons_Tight = selectedElectrons_Tight_DL;
@@ -815,7 +837,7 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
 
   int numEle=0;
-  for( std::vector<pat::Electron>::const_iterator pfele = electrons->begin(); pfele!=electrons->end(); ++pfele ){
+  for( std::vector<pat::Electron>::const_iterator pfele = electrons.begin(); pfele!=electrons.end(); ++pfele ){
     int ncut = 0;
     h_electron_selection->Fill(0.5+ncut++, 1);
 

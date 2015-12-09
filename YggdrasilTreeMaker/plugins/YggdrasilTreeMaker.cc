@@ -131,6 +131,12 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   edm::EDGetTokenT <edm::TriggerResults> triggerResultsToken;
   edm::EDGetTokenT <edm::TriggerResults> filterResultsToken;
 
+  // new MVAelectron
+  edm::EDGetTokenT< edm::View<pat::Electron> > EDMElectronsToken;
+  // MVA values and categories
+  edm::EDGetTokenT<edm::ValueMap<float> > EDMeleMVAvaluesToken;
+  edm::EDGetTokenT<edm::ValueMap<int> > EDMeleMVAcategoriesToken;
+
   edm::EDGetTokenT <reco::VertexCollection> vertexToken;
   edm::EDGetTokenT <pat::ElectronCollection> electronToken;
   edm::EDGetTokenT <pat::MuonCollection> muonToken;
@@ -151,7 +157,7 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
 
   edm::EDGetTokenT <pat::JetCollection> tempjetToken;
   
-  edm::EDGetTokenT <reco::ConversionCollection> EDMConversionCollectionToken;
+  // edm::EDGetTokenT <reco::ConversionCollection> EDMConversionCollectionToken;
   edm::EDGetTokenT< boosted::BoostedJetCollection > EDMBoostedJetsToken;
   
 
@@ -257,6 +263,11 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   triggerResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), hltTag));
   filterResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), filterTag));
 
+  // new MVAelectron
+  EDMElectronsToken = consumes< edm::View<pat::Electron> >(edm::InputTag("slimmedElectrons","",""));
+  EDMeleMVAvaluesToken           = consumes<edm::ValueMap<float> >(edm::InputTag("electronMVAValueMapProducer","ElectronMVAEstimatorRun2Spring15Trig25nsV1Values",""));
+  EDMeleMVAcategoriesToken       = consumes<edm::ValueMap<int> >(edm::InputTag("electronMVAValueMapProducer","ElectronMVAEstimatorRun2Spring15Trig25nsV1Categories",""));
+
   vertexToken = consumes <reco::VertexCollection> (edm::InputTag(std::string("offlineSlimmedPrimaryVertices")));
   electronToken = consumes <pat::ElectronCollection> (edm::InputTag(std::string("slimmedElectrons")));
   muonToken = consumes <pat::MuonCollection> (edm::InputTag(std::string("slimmedMuons")));
@@ -277,7 +288,7 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   
   tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
   
-  EDMConversionCollectionToken = consumes <reco::ConversionCollection > (edm::InputTag("reducedEgamma","reducedConversions",""));
+  // EDMConversionCollectionToken = consumes <reco::ConversionCollection > (edm::InputTag("reducedEgamma","reducedConversions",""));
   EDMBoostedJetsToken     = consumes< boosted::BoostedJetCollection >(edm::InputTag("BoostedJetMatcher","boostedjets","p"));
 
   
@@ -331,7 +342,7 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
 
   miniAODhelper.SetJetCorrectorUncertainty();
 
-   miniAODhelper.SetUpElectronMVA("MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EB1_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml","MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EB2_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml","MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EE_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml");
+   // miniAODhelper.SetUpElectronMVA("MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EB1_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml","MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EB2_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml","MiniAOD/MiniAODHelper/data/ElectronMVA/EIDmva_EE_10_oldTrigSpring15_25ns_data_1_VarD_TMVA412_Sig6BkgAll_MG_noSpec_BDT.weights.xml");
   
 
   toptagger = TopTagger(TopTag::Likelihood, TopTag::CSV, "toplikelihoodtaggerhistos.root");
@@ -393,9 +404,20 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   iEvent.getByToken(vertexToken,vtxHandle);
   reco::VertexCollection vtxs = *vtxHandle;
 
-  edm::Handle<pat::ElectronCollection> electrons;
-  iEvent.getByToken(electronToken,electrons);
+  /// old way of getting electrons
+  // edm::Handle<pat::ElectronCollection> electrons;
+  // iEvent.getByToken(electronToken,electrons);
+  //// MVAelectrons
+  edm::Handle< edm::View<pat::Electron> > h_electrons;
+  iEvent.getByToken( EDMElectronsToken,h_electrons );
+  // add electron mva info to electrons
+  edm::Handle<edm::ValueMap<float> > h_mvaValues; 
+  edm::Handle<edm::ValueMap<int> > h_mvaCategories;
+  iEvent.getByToken(EDMeleMVAvaluesToken,h_mvaValues);
+  iEvent.getByToken(EDMeleMVAcategoriesToken,h_mvaCategories);  
+  std::vector<pat::Electron> electrons = miniAODhelper.GetElectronsWithMVAid(h_electrons,h_mvaValues,h_mvaCategories);
 
+  ////
   edm::Handle<pat::MuonCollection> muons;
   iEvent.getByToken(muonToken,muons);
 
@@ -436,8 +458,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   edm::Handle<boosted::BoostedJetCollection> h_boostedjet;
   iEvent.getByToken( EDMBoostedJetsToken,h_boostedjet);
   
-   edm::Handle<reco::ConversionCollection> h_conversioncollection;
-  iEvent.getByToken( EDMConversionCollectionToken,h_conversioncollection );
+  //  edm::Handle<reco::ConversionCollection> h_conversioncollection;
+  // iEvent.getByToken( EDMConversionCollectionToken,h_conversioncollection );
 
   double GenEventInfoWeight = GenEventInfoHandle.product()->weight();
 
@@ -705,14 +727,14 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   ///
   ////////
   
-  miniAODhelper.SetElectronMVAinfo(h_conversioncollection, bsHandle);
+  // miniAODhelper.SetElectronMVAinfo(h_conversioncollection, bsHandle);
   
   minTightLeptonPt = 30.0;
   looseLeptonPt = 15.0;
   
   //std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( *electrons, minTightLeptonPt, electronID::electronEndOf15MVAmedium, 2.1 );
-  std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( *electrons, looseLeptonPt, electronID::electronEndOf15MVAmedium, 2.4 );
-  std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( *electrons, looseLeptonPt, electronID::electronEndOf15MVAmedium, 2.4 );
+  std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( electrons, looseLeptonPt, electronID::electronEndOf15MVA80iso0p1, 2.4 );
+  std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( electrons, looseLeptonPt, electronID::electronEndOf15MVA80iso0p1, 2.4 );
 
   int numTightElectrons = int(selectedElectrons_tight.size());
   int numLooseElectrons = int(selectedElectrons_loose.size());// - numTightElectrons;
@@ -1123,7 +1145,7 @@ if(outputwords)cout<<selectedElectrons_tight.at(0).genLepton()->pdgId();
   }
 
   // Loop over electrons
-  for( std::vector<pat::Electron>::const_iterator iEle = electrons->begin(); iEle != electrons->end(); iEle++ ){ 
+  for( std::vector<pat::Electron>::const_iterator iEle = electrons.begin(); iEle != electrons.end(); iEle++ ){ 
 
     int genId=-99, genParentId=-99, genGrandParentId=-99;
     if( (iEle->genLepton()) ){
