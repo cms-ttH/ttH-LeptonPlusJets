@@ -2555,8 +2555,8 @@ TTHSyncExercise::beginJob()
   
   totalele=0;
 
-  TFile* f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_hf_IT_FlatSF_2015_11_03.root").c_str());
-  TFile* f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_lf_IT_FlatSF_2015_11_03.root").c_str());
+  TFile* f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/MiniAOD/MiniAODHelper/data/csv_rwt_fit_hf_2015_11_20.root").c_str());
+  TFile* f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/MiniAOD/MiniAODHelper/data/csv_rwt_fit_lf_2015_11_20.root").c_str());
 
   fillCSVhistos(f_CSVwgt_HF, f_CSVwgt_LF);
 
