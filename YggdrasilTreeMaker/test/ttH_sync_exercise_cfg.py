@@ -2,13 +2,23 @@ import FWCore.ParameterSet.Config as cms
 
 process = cms.Process("MAOD")
 
+
+isMC=False
+
+
 # initialize MessageLogger and output report
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 #### caution: use the correct global tag for MC or Data 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
-process.GlobalTag.globaltag = '74X_mcRun2_asymptotic_v4'  ##MC
+
+
+if isMC :
+    process.GlobalTag.globaltag = '74X_mcRun2_asymptotic_v4'  ##MC
+else: 
+    process.GlobalTag.globaltag = '74X_dataRun2_v5'  ##data
+
 
 # Load the producer for MVA IDs. Make sure it is also added to the sequence!
 process.load("RecoEgamma.ElectronIdentification.ElectronMVAValueMapProducer_cfi")
@@ -32,17 +42,35 @@ process.ak4PFCHSL1Fastjet = cms.ESProducer(
 process.ak4PFchsL2Relative = ak4CaloL2Relative.clone( algorithm = 'AK4PFchs' )
 process.ak4PFchsL3Absolute = ak4CaloL3Absolute.clone( algorithm = 'AK4PFchs' )
 
-process.ak4PFchsL1L2L3 = cms.ESProducer("JetCorrectionESChain",
-    correctors = cms.vstring(
-	'ak4PFCHSL1Fastjet', 
-        'ak4PFchsL2Relative', 
-        'ak4PFchsL3Absolute')
-)
+if isMC :
+    process.ak4PFchsL1L2L3 = cms.ESProducer("JetCorrectionESChain",
+                                            correctors = cms.vstring(
+            'ak4PFCHSL1Fastjet', 
+            'ak4PFchsL2Relative', 
+            'ak4PFchsL3Absolute')
+             )
+else:
+    process.ak4PFchsL1L2L3 = cms.ESProducer("JetCorrectionESChain",
+                                            correctors = cms.vstring(
+            'ak4PFCHSL1Fastjet', 
+            'ak4PFchsL2Relative', 
+            'ak4PFchsL3Absolute',
+            'ak4PFchsResidual'
+            )
+            )
+    
+
 
 process.source = cms.Source("PoolSource",
         fileNames = cms.untracked.vstring(
 #        'root://xrootd-cms.infn.it//store/user/shwillia/Spring15_HbbSync/ttHTobb_Spring15_HbbSync.root',
-        'root://xrootd-cms.infn.it//store/user/shwillia/Spring15_HbbSync/ttbar_Spring15_HbbSync.root',
+#        'root://xrootd-cms.infn.it//store/user/shwillia/Spring15_HbbSync/ttbar_Spring15_HbbSync.root',
+        
+
+        'root://cmsxrootd.fnal.gov///store/user/hmildner/el_skim_3loosejets.root'
+#(Dec2015 Data sync) 'root://cmsxrootd.fnal.gov///store/user/hmildner/el_skim_3loosejets.root'
+#(Dec2015 Data sync) 'root://cmsxrootd.fnal.gov///store/user/hmildner/mu_skim_3loosejets.root'
+#(Dec2015 Data sync) 'root://cmsxrootd.fnal.gov///store/user/hmildner/muel_skim_2loosejets.root'
 
 #        'root://xrootd-cms.infn.it//store/user/shwillia/Spring15_Sync/ttHbb_spring15_25ns_plusboostedjets.root',
 #        '/store/mc/Phys14DR/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_PHYS14_25_V1-v1/00000/00C90EFC-3074-E411-A845-002590DB9262.root',
@@ -66,95 +94,113 @@ process.source = cms.Source("PoolSource",
 )
 
 
+
+if isMC :
 ###############
 #### tt+X
 ###############
-# Setting input particle collections to be used by the tools
-genJetCollection = 'ak4GenJetsCustom'
-genParticleCollection = 'prunedGenParticles'
-genJetInputParticleCollection = 'packedGenParticles'
-
+    # Setting input particle collections to be used by the tools
+    genJetCollection = 'ak4GenJetsCustom'
+    genParticleCollection = 'prunedGenParticles'
+    genJetInputParticleCollection = 'packedGenParticles'
+    
 ## producing a subset of particles to be used for jet clustering
-from RecoJets.Configuration.GenJetParticles_cff import genParticlesForJetsNoNu
-process.genParticlesForJetsNoNu = genParticlesForJetsNoNu.clone(
+    from RecoJets.Configuration.GenJetParticles_cff import genParticlesForJetsNoNu
+    process.genParticlesForJetsNoNu = genParticlesForJetsNoNu.clone(
 	src = genJetInputParticleCollection
-)
-
+        )
+    
 # Supplies PDG ID to real name resolution of MC particles
-process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
-
+    process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
+    
 # Producing own jets for testing purposes
-from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
-process.ak4GenJetsCustom = ak4GenJets.clone(
-    src = 'genParticlesForJetsNoNu',
-#    src = genJetInputParticleCollection,
-    rParam = cms.double(0.4),
-    jetAlgorithm = cms.string("AntiKt")
-)
-
-# Ghost particle collection used for Hadron-Jet association 
-# MUST use proper input particle collection
-from PhysicsTools.JetMCAlgos.HadronAndPartonSelector_cfi import selectedHadronsAndPartons
-process.selectedHadronsAndPartons = selectedHadronsAndPartons.clone(
-    particles = genParticleCollection
-)
-
-# Input particle collection for matching to gen jets (partons + leptons) 
-# MUST use use proper input jet collection: the jets to which hadrons should be associated
-# rParam and jetAlgorithm MUST match those used for jets to be associated with hadrons
-# More details on the tool: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagMCTools#New_jet_flavour_definition
-from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import genJetFlavourPlusLeptonInfos
-process.genJetFlavourPlusLeptonInfos = genJetFlavourPlusLeptonInfos.clone(
-    jets = genJetCollection,
-    rParam = cms.double(0.4),
-    jetAlgorithm = cms.string("AntiKt")
-)
-
-
-# Plugin for analysing B hadrons
-# MUST use the same particle collection as in selectedHadronsAndPartons
-from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import matchGenBHadron
-process.matchGenBHadron = matchGenBHadron.clone(
-    genParticles = genParticleCollection
-)
-
-# Plugin for analysing C hadrons
-# MUST use the same particle collection as in selectedHadronsAndPartons
-from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import matchGenCHadron
-process.matchGenCHadron = matchGenCHadron.clone(
-    genParticles = genParticleCollection
-)
-
+    from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
+    process.ak4GenJetsCustom = ak4GenJets.clone(
+        src = 'genParticlesForJetsNoNu',
+        #    src = genJetInputParticleCollection,
+        rParam = cms.double(0.4),
+        jetAlgorithm = cms.string("AntiKt")
+        )
+    
+    # Ghost particle collection used for Hadron-Jet association 
+    # MUST use proper input particle collection
+    from PhysicsTools.JetMCAlgos.HadronAndPartonSelector_cfi import selectedHadronsAndPartons
+    process.selectedHadronsAndPartons = selectedHadronsAndPartons.clone(
+        particles = genParticleCollection
+        )
+    
+    # Input particle collection for matching to gen jets (partons + leptons) 
+    # MUST use use proper input jet collection: the jets to which hadrons should be associated
+    # rParam and jetAlgorithm MUST match those used for jets to be associated with hadrons
+    # More details on the tool: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagMCTools#New_jet_flavour_definition
+    from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import genJetFlavourPlusLeptonInfos
+    process.genJetFlavourPlusLeptonInfos = genJetFlavourPlusLeptonInfos.clone(
+        jets = genJetCollection,
+        rParam = cms.double(0.4),
+        jetAlgorithm = cms.string("AntiKt")
+        )
+    
+    
+    # Plugin for analysing B hadrons
+    # MUST use the same particle collection as in selectedHadronsAndPartons
+    from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import matchGenBHadron
+    process.matchGenBHadron = matchGenBHadron.clone(
+        genParticles = genParticleCollection
+        )
+    
+    # Plugin for analysing C hadrons
+    # MUST use the same particle collection as in selectedHadronsAndPartons
+    from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import matchGenCHadron
+    process.matchGenCHadron = matchGenCHadron.clone(
+        genParticles = genParticleCollection
+        )
+    
 ## Producer for ttbar categorisation ID
 # MUST use same genJetCollection as used for tools above
-from PhysicsTools.JetMCAlgos.GenTtbarCategorizer_cfi import categorizeGenTtbar
-process.categorizeGenTtbar = categorizeGenTtbar.clone(
-    genJetPtMin = 20.,
-    genJetAbsEtaMax = 2.4,
-    genJets = genJetCollection,
-)
+    from PhysicsTools.JetMCAlgos.GenTtbarCategorizer_cfi import categorizeGenTtbar
+    process.categorizeGenTtbar = categorizeGenTtbar.clone(
+        genJetPtMin = 20.,
+        genJetAbsEtaMax = 2.4,
+        genJets = genJetCollection,
+        )
 
-process.ttHsyncExercise = cms.EDAnalyzer('TTHSyncExercise',
-    genTtbarId = cms.InputTag("categorizeGenTtbar", "genTtbarId"),
-    SysType = cms.string(""),
-#    # phase space of jets to be stored
-#    genJetPtMin = cms.double(20),
-#    genJetAbsEtaMax = cms.double(2.4),
-#    # input tags holding information about matching
-#    genJets = cms.InputTag(genJetCollection),
-#    genBHadJetIndex = cms.InputTag("matchGenBHadron", "genBHadJetIndex"),
-#    genBHadFlavour = cms.InputTag("matchGenBHadron", "genBHadFlavour"),
-#    genBHadFromTopWeakDecay = cms.InputTag("matchGenBHadron", "genBHadFromTopWeakDecay"),
-#    genBHadPlusMothers = cms.InputTag("matchGenBHadron", "genBHadPlusMothers"),
-#    genBHadPlusMothersIndices = cms.InputTag("matchGenBHadron", "genBHadPlusMothersIndices"),
-#    genBHadIndex = cms.InputTag("matchGenBHadron", "genBHadIndex"),
-#    genBHadLeptonHadronIndex = cms.InputTag("matchGenBHadron", "genBHadLeptonHadronIndex"),
-#    genBHadLeptonViaTau = cms.InputTag("matchGenBHadron", "genBHadLeptonViaTau"),
-#    genCHadJetIndex = cms.InputTag("matchGenCHadron", "genCHadJetIndex"),
-#    genCHadFlavour = cms.InputTag("matchGenCHadron", "genCHadFlavour"),
-#    genCHadFromTopWeakDecay = cms.InputTag("matchGenCHadron", "genCHadFromTopWeakDecay"),
-#    genCHadBHadronId = cms.InputTag("matchGenCHadron", "genCHadBHadronId"),
-    )
+
+
+
+
+if isMC:
+
+    process.ttHsyncExercise = cms.EDAnalyzer('TTHSyncExercise',
+                                             genTtbarId = cms.InputTag("categorizeGenTtbar", "genTtbarId"),
+                                             SysType = cms.string(""),
+                                             isMC    =  cms.string("MC")
+                                             #    # phase space of jets to be stored
+                                             #    genJetPtMin = cms.double(20),
+                                             #    genJetAbsEtaMax = cms.double(2.4),
+                                             #    # input tags holding information about matching
+                                             #    genJets = cms.InputTag(genJetCollection),
+                                             #    genBHadJetIndex = cms.InputTag("matchGenBHadron", "genBHadJetIndex"),
+                                             #    genBHadFlavour = cms.InputTag("matchGenBHadron", "genBHadFlavour"),
+                                             #    genBHadFromTopWeakDecay = cms.InputTag("matchGenBHadron", "genBHadFromTopWeakDecay"),
+                                             #    genBHadPlusMothers = cms.InputTag("matchGenBHadron", "genBHadPlusMothers"),
+                                             #    genBHadPlusMothersIndices = cms.InputTag("matchGenBHadron", "genBHadPlusMothersIndices"),
+                                             #    genBHadIndex = cms.InputTag("matchGenBHadron", "genBHadIndex"),
+                                             #    genBHadLeptonHadronIndex = cms.InputTag("matchGenBHadron", "genBHadLeptonHadronIndex"),
+                                             #    genBHadLeptonViaTau = cms.InputTag("matchGenBHadron", "genBHadLeptonViaTau"),
+                                             #    genCHadJetIndex = cms.InputTag("matchGenCHadron", "genCHadJetIndex"),
+                                             #    genCHadFlavour = cms.InputTag("matchGenCHadron", "genCHadFlavour"),
+                                             #    genCHadFromTopWeakDecay = cms.InputTag("matchGenCHadron", "genCHadFromTopWeakDecay"),
+                                             #    genCHadBHadronId = cms.InputTag("matchGenCHadron", "genCHadBHadronId"),
+                                             )
+
+else : 
+
+    process.ttHsyncExercise = cms.EDAnalyzer('TTHSyncExercise',
+                                             genTtbarId = cms.InputTag("categorizeGenTtbar", "genTtbarId"),
+                                             SysType = cms.string(""),
+                                             isMC    =  cms.string("data")
+                                             )
+
 
 
 
