@@ -50,6 +50,7 @@ if isMC :
             'ak4PFchsL3Absolute')
              )
 else:
+    process.ak4PFchsResidual  = ak4CaloResidual.clone( algorithm = 'AK4PFchs' )
     process.ak4PFchsL1L2L3 = cms.ESProducer("JetCorrectionESChain",
                                             correctors = cms.vstring(
             'ak4PFCHSL1Fastjet', 
@@ -67,7 +68,8 @@ process.source = cms.Source("PoolSource",
 #        'root://xrootd-cms.infn.it//store/user/shwillia/Spring15_HbbSync/ttbar_Spring15_HbbSync.root',
         
 
-        'root://cmsxrootd.fnal.gov///store/user/hmildner/el_skim_3loosejets.root'
+# xrdcp root://cmsxrootd.fnal.gov///store/user/hmildner/el_skim_3loosejets.root /tmp/satoshi/
+        'file:///tmp/satoshi/el_skim_3loosejets.root'                                                                                            
 #(Dec2015 Data sync) 'root://cmsxrootd.fnal.gov///store/user/hmildner/el_skim_3loosejets.root'
 #(Dec2015 Data sync) 'root://cmsxrootd.fnal.gov///store/user/hmildner/mu_skim_3loosejets.root'
 #(Dec2015 Data sync) 'root://cmsxrootd.fnal.gov///store/user/hmildner/muel_skim_2loosejets.root'
@@ -174,23 +176,6 @@ if isMC:
                                              genTtbarId = cms.InputTag("categorizeGenTtbar", "genTtbarId"),
                                              SysType = cms.string(""),
                                              isMC    =  cms.string("MC")
-                                             #    # phase space of jets to be stored
-                                             #    genJetPtMin = cms.double(20),
-                                             #    genJetAbsEtaMax = cms.double(2.4),
-                                             #    # input tags holding information about matching
-                                             #    genJets = cms.InputTag(genJetCollection),
-                                             #    genBHadJetIndex = cms.InputTag("matchGenBHadron", "genBHadJetIndex"),
-                                             #    genBHadFlavour = cms.InputTag("matchGenBHadron", "genBHadFlavour"),
-                                             #    genBHadFromTopWeakDecay = cms.InputTag("matchGenBHadron", "genBHadFromTopWeakDecay"),
-                                             #    genBHadPlusMothers = cms.InputTag("matchGenBHadron", "genBHadPlusMothers"),
-                                             #    genBHadPlusMothersIndices = cms.InputTag("matchGenBHadron", "genBHadPlusMothersIndices"),
-                                             #    genBHadIndex = cms.InputTag("matchGenBHadron", "genBHadIndex"),
-                                             #    genBHadLeptonHadronIndex = cms.InputTag("matchGenBHadron", "genBHadLeptonHadronIndex"),
-                                             #    genBHadLeptonViaTau = cms.InputTag("matchGenBHadron", "genBHadLeptonViaTau"),
-                                             #    genCHadJetIndex = cms.InputTag("matchGenCHadron", "genCHadJetIndex"),
-                                             #    genCHadFlavour = cms.InputTag("matchGenCHadron", "genCHadFlavour"),
-                                             #    genCHadFromTopWeakDecay = cms.InputTag("matchGenCHadron", "genCHadFromTopWeakDecay"),
-                                             #    genCHadBHadronId = cms.InputTag("matchGenCHadron", "genCHadBHadronId"),
                                              )
 
 else : 
