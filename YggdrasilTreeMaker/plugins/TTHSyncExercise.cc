@@ -539,15 +539,15 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       int prescale = -1;//hlt_config_.prescaleValue(iEvent, iSetup, pathName);
 
      if( accept ){
-     // if(pathName=="HLT_Ele27_eta2p_WPLoose_Gsf_v1") passSingleElectronTrigger = true; //data
-		 if(pathName=="HLT_Ele27_WP85_Gsf_v1")passSingleElectronTrigger = true;
-		// if(pathName=="HLT_IsoMu18_v1")passSingleMuonTrigger = true; //data
-		 if(pathName=="HLT_IsoMu17_eta2p1_v1")passSingleMuonTrigger = true; //data
-		 if(pathName=="HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v1")passDiElectronTrigger = true;
-		 if(pathName=="HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v1")passEleMuonTrigger = true;
-		 if(pathName=="HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v1")passEleMuonTrigger = true;
-		 if(pathName=="HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v1")passDiMuonTrigger = true;
-		 if(pathName=="HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v1")passDiMuonTrigger = true;
+		 if( pathName . find( "HLT_Ele27_WP85_Gsf_v") != std::string::npos )passSingleElectronTrigger = true;
+		 if( pathName . find( "HLT_Ele27_eta2p1_WPLoose_Gsf_v") != std::string::npos )passSingleElectronTrigger = true;
+		 if( pathName . find( "HLT_IsoMu17_eta2p1_v") != std::string::npos )passSingleMuonTrigger = true; //data
+		 if( pathName . find( "HLT_IsoMu18_v") != std::string::npos )passSingleMuonTrigger = true; //data
+		 if( pathName . find( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v") != std::string::npos )passDiElectronTrigger = true;
+		 if( pathName . find( "HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v") != std::string::npos )passEleMuonTrigger = true;
+		 if( pathName . find( "HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v") != std::string::npos )passEleMuonTrigger = true;
+		 if( pathName . find( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v") != std::string::npos )passDiMuonTrigger = true;
+		 if( pathName . find( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v") != std::string::npos )passDiMuonTrigger = true;
 		  bool usedata = false;
   bool use2= false;
   if(usedata)passSingleElectronTrigger = passSingleElectronTrigger_data;
