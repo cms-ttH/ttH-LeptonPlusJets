@@ -248,6 +248,8 @@ class TTHSyncExercise : public edm::EDAnalyzer {
   std::string SysType_;
   sysType::sysType iSysType;
 
+  const bool isMC ;
+
   // ofstream syncOutputFile;
 };
 
@@ -265,6 +267,7 @@ class TTHSyncExercise : public edm::EDAnalyzer {
 TTHSyncExercise::TTHSyncExercise(const edm::ParameterSet& iConfig):
   genTtbarIdToken_(consumes<int>(iConfig.getParameter<edm::InputTag>("genTtbarId"))),
   SysType_(iConfig.getParameter<std::string>("SysType"))
+  , isMC(iConfig.getParameter<std::string>("isMC") == "MC" )
 {
 
 //SysType_=="JERup";
@@ -281,7 +284,11 @@ TTHSyncExercise::TTHSyncExercise(const edm::ParameterSet& iConfig):
   dumpHLT_ = false;
 
   hltTag = "HLT";
-  filterTag = "PAT";
+  if( isMC ){
+    filterTag = "PAT";
+  }else{
+    filterTag = "HLT";
+  }
 
   triggerResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), hltTag));
   filterResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), filterTag));
@@ -464,6 +471,11 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
   double wgt = 1;
 
+  double GenEventInfoWeight = 1;
+
+
+  if( isMC ){
+
   double xSec = mySample_xSec_;
   double nGen = mySample_nGen_;
 
@@ -473,18 +485,28 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   edm::Handle<GenEventInfoProduct> GenEventInfoHandle;
   iEvent.getByToken(genInfoProductToken,GenEventInfoHandle);
 
-  double GenEventInfoWeight = GenEventInfoHandle.product()->weight();
+  GenEventInfoWeight = GenEventInfoHandle.product()->weight();
 
   if (GenEventInfoWeight > 0) numPos_++;
   else numNeg_++;
 
   wgt *= GenEventInfoWeight;
 
+  }
+
   //double minTightLeptonPt = 30.;
 
 
-  h_hlt->Fill(0.,1);
-  h_flt->Fill(0.,1);
+  if( h_hlt == 0 ){
+    std::cout <<"h_hlt == 0 " << std::endl ; 
+  }else{
+    h_hlt->Fill(0.,1);
+  }
+  if( h_flt == 0 ) {
+    std::cout <<"h_flt == 0 " << std::endl ; 
+  }else{
+    h_flt->Fill(0.,1);
+  }
   bool passSingleElectronTrigger = false;
   bool passSingleElectronTrigger_data = false;
   bool passSingleMuonTrigger = false;
@@ -517,51 +539,55 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
       int prescale = -1;//hlt_config_.prescaleValue(iEvent, iSetup, pathName);
 
      if( accept ){
-     // if(pathName=="HLT_Ele27_eta2p_WPLoose_Gsf_v1") passSingleElectronTrigger = true; //data
-		 if(pathName=="HLT_Ele27_WP85_Gsf_v1")passSingleElectronTrigger = true;
-		// if(pathName=="HLT_IsoMu18_v1")passSingleMuonTrigger = true; //data
-		 if(pathName=="HLT_IsoMu17_eta2p1_v1")passSingleMuonTrigger = true; //data
-		 if(pathName=="HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v1")passDiElectronTrigger = true;
-		 if(pathName=="HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v1")passEleMuonTrigger = true;
-		 if(pathName=="HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v1")passEleMuonTrigger = true;
-		 if(pathName=="HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v1")passDiMuonTrigger = true;
-		 if(pathName=="HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v1")passDiMuonTrigger = true;
+		 if( pathName . find( "HLT_Ele27_WP85_Gsf_v") != std::string::npos )passSingleElectronTrigger = true;
+		 if( pathName . find( "HLT_Ele27_eta2p1_WPLoose_Gsf_v") != std::string::npos )passSingleElectronTrigger = true;
+		 if( pathName . find( "HLT_IsoMu17_eta2p1_v") != std::string::npos )passSingleMuonTrigger = true; //data
+		 if( pathName . find( "HLT_IsoMu18_v") != std::string::npos )passSingleMuonTrigger = true; //data
+		 if( pathName . find( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v") != std::string::npos )passDiElectronTrigger = true;
+		 if( pathName . find( "HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v") != std::string::npos )passEleMuonTrigger = true;
+		 if( pathName . find( "HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v") != std::string::npos )passEleMuonTrigger = true;
+		 if( pathName . find( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v") != std::string::npos )passDiMuonTrigger = true;
+		 if( pathName . find( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v") != std::string::npos )passDiMuonTrigger = true;
 		  bool usedata = false;
   bool use2= false;
   if(usedata)passSingleElectronTrigger = passSingleElectronTrigger_data;
   if(usedata)passSingleMuonTrigger= passSingleMuonTrigger_data;
   if(use2)passEleMuonTrigger=passEleMuonTrigger2;
   if(use2)passDiMuonTrigger=passDiMuonTrigger2;
+
 	//if( pathName=="HLT_Ele27_eta2p1_WP85_Gsf_HT200_v1" )    passSingleElectronTrigger = true;
 	//if( pathName=="HLT_IsoMu24_eta2p1_v1" ) passSingleMuonTrigger = true;
 	//if( pathName=="HLT_Ele23_Ele12_CaloId_TrackId_Iso_v1" ) passDiElectronTrigger = true;
 	//if( pathName=="HLT_Mu30_TkMu11_v1" || pathName=="HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v1" || pathName=="HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v1" ) passDiMuonTrigger = true;
 	//if( pathName=="HLT_Mu23_TrkIsoVVL_Ele12_Gsf_CaloId_TrackId_Iso_MediumWP_v1" || pathName=="HLT_Mu8_TrkIsoVVL_Ele23_Gsf_CaloId_TrackId_Iso_MediumWP_v1" ) passEleMuonTrigger = true;
-      }
+     }
 
       if( verbose_ && dumpHLT_ ) std::cout << " =====>  HLT: path name = " << pathName << ",\t prescale = " << prescale << ",\t pass = " << accept << std::endl; 
+
 
       std::string pathNameNoVer = hlt_config_.removeVersion(pathName);
 
       if( accept ) hlt_cppath_[pathNameNoVer]+=1;
 
       if( accept ){
-	TAxis * axis = h_hlt->GetXaxis();
-	if( !axis ) continue;
-	int bin_num = axis->FindBin(pathNameNoVer.c_str());
-	int bn = bin_num - 1;
-	h_hlt->Fill(bn, 1);
+	if( h_hlt != 0 ){
+	  TAxis * axis = h_hlt->GetXaxis();
+	  if( !axis ) continue;
+	  int bin_num = axis->FindBin(pathNameNoVer.c_str());
+	  int bn = bin_num - 1;
+	  h_hlt->Fill(bn, 1);
+	}
       }
     }
-  }
   
- 
-  
-  else{
+  }else{
     //std::cout << "Trigger results not valid for tag " << hltTag << std::endl;
   }
   // std::cout << passSingleMuonTrigger << passSingleElectronTrigger << passDiMuonTrigger << passDiElectronTrigger << passEleMuonTrigger << std::endl;
   if (passSingleMuonTrigger == passSingleElectronTrigger || passDiMuonTrigger || passDiElectronTrigger || passEleMuonTrigger) ;
+
+
+
 
   edm::Handle<edm::TriggerResults> filterResults;
   iEvent.getByToken(filterResultsToken, filterResults);
@@ -638,8 +664,9 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // iEvent.getByToken( EDMConversionCollectionToken,h_conversioncollection );
 
   edm::Handle<reco::GenParticleCollection> mcparticles;
-  iEvent.getByToken(mcparicleToken,mcparticles);
-
+  if( isMC ){
+    iEvent.getByToken(mcparicleToken,mcparticles);
+  }
   edm::Handle<double> rhoHandle;
   iEvent.getByToken(rhoToken,rhoHandle);
 
@@ -659,8 +686,10 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   ////---- tt+X Categorization
   ////----------------------
   edm::Handle<int> genTtbarId;
-  iEvent.getByToken(genTtbarIdToken_, genTtbarId);
-  int additionalJetEventId = *genTtbarId%100;
+  if( isMC ) {
+    iEvent.getByToken(genTtbarIdToken_, genTtbarId);
+  }
+  int additionalJetEventId = (isMC ? (*genTtbarId%100 ) : 0 ) ;
 
 
     ////----------- set up rho for lepton effArea Isolation correction
@@ -2555,8 +2584,8 @@ TTHSyncExercise::beginJob()
   
   totalele=0;
 
-  TFile* f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_hf_IT_FlatSF_2015_11_03.root").c_str());
-  TFile* f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/AnalysisCode/data/csv_rwt_lf_IT_FlatSF_2015_11_03.root").c_str());
+  TFile* f_CSVwgt_HF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/MiniAOD/MiniAODHelper/data/csv_rwt_fit_hf_2015_11_20.root").c_str());
+  TFile* f_CSVwgt_LF = new TFile ((string(getenv("CMSSW_BASE")) + "/src/MiniAOD/MiniAODHelper/data/csv_rwt_fit_lf_2015_11_20.root").c_str());
 
   fillCSVhistos(f_CSVwgt_HF, f_CSVwgt_LF);
 
@@ -2652,6 +2681,9 @@ TTHSyncExercise::beginRun(edm::Run const&, edm::EventSetup const&)
 void 
 TTHSyncExercise::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
 {
+
+  h_hlt = 0;
+  h_flt = 0;
 
   bool hltchanged = true;
   if (!hlt_config_.init(iRun, iSetup, hltTag, hltchanged)) {
