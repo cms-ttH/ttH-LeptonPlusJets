@@ -143,6 +143,9 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   edm::EDGetTokenT <pat::JetCollection> jetToken;
   edm::EDGetTokenT <pat::METCollection> metToken;
 
+  edm::EDGetTokenT < edm::View<pat::Muon> > muonview_Token;
+  edm::EDGetTokenT< edm::ValueMap<double> > token_PuppuMuIso_Combined ; 
+
   // edm::EDGetTokenT< boosted::HEPTopJetCollection > topJetsToken;
   // edm::EDGetTokenT< boosted::SubFilterJetCollection > subFilterJetsToken;
 
@@ -273,6 +276,9 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   muonToken = consumes <pat::MuonCollection> (edm::InputTag(std::string("slimmedMuons")));
   jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
   metToken = consumes <pat::METCollection> (edm::InputTag(std::string("slimmedMETs")));
+
+  muonview_Token = consumes < edm::View<pat::Muon> > (edm::InputTag(std::string("slimmedMuons")));
+  token_PuppuMuIso_Combined =  consumes< edm::ValueMap<double> >(edm::InputTag("PUPPIMuonRelIso","PuppiCombined" ,"") ) ; 
 
   // topJetsToken    = consumes< boosted::HEPTopJetCollection >(edm::InputTag("HEPTopJetsPFMatcher","heptopjets","p"));
   // subFilterJetsToken = consumes< boosted::SubFilterJetCollection >(edm::InputTag("CA12JetsCA3FilterjetsPFMatcher","subfilterjets","p"));
@@ -420,6 +426,11 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   ////
   edm::Handle<pat::MuonCollection> muons;
   iEvent.getByToken(muonToken,muons);
+  edm::Handle<edm::View<pat::Muon> > muons_view;
+  iEvent.getByToken(muonview_Token, muons_view);
+
+  edm::Handle< edm::ValueMap<double> > iso_PuppiCombined ; 
+  iEvent.getByToken( token_PuppuMuIso_Combined , iso_PuppiCombined );
 
   edm::Handle<pat::JetCollection> pfjets;
   iEvent.getByToken(jetToken,pfjets);
@@ -1000,6 +1011,7 @@ if(outputwords)cout<<selectedElectrons_tight.at(0).genLepton()->pdgId();
   vdouble lepton_iso_sumNeutralHadronEt;
   vdouble lepton_iso_sumPhotonEt;
   vdouble lepton_iso_sumPUPt;
+  vdouble lepton_PuppiRelIso;
   vdouble lepton_mvaTrigValue;
   vint    lepton_numMissingHits;
   vdouble lepton_scSigmaIEtaIEta;
@@ -1099,6 +1111,7 @@ if(outputwords)cout<<selectedElectrons_tight.at(0).genLepton()->pdgId();
     lepton_iso_sumNeutralHadronEt.push_back(iMu->pfIsolationR03().sumNeutralHadronEt);
     lepton_iso_sumPhotonEt.push_back(iMu->pfIsolationR03().sumPhotonEt);
     lepton_iso_sumPUPt.push_back(iMu->pfIsolationR03().sumPUPt);
+    lepton_PuppiRelIso.push_back(  (*iso_PuppiCombined)[ muons_view->ptrAt(  iMu - muons->begin()  ) ] ) ;
     lepton_mvaTrigValue.push_back(-99);
     lepton_scSigmaIEtaIEta.push_back(-99);
     lepton_full5x5_scSigmaIEtaIEta.push_back(-99);
@@ -1246,6 +1259,7 @@ if(outputwords)cout<<selectedElectrons_tight.at(0).genLepton()->pdgId();
     lepton_iso_sumNeutralHadronEt.push_back(iEle->pfIsolationVariables().sumNeutralHadronEt);
     lepton_iso_sumPhotonEt.push_back(iEle->pfIsolationVariables().sumPhotonEt);
     lepton_iso_sumPUPt.push_back(iEle->pfIsolationVariables().sumPUPt);
+    lepton_PuppiRelIso.push_back( 100 );
     lepton_mvaTrigValue.push_back(mvaTrigValue);
     lepton_scSigmaIEtaIEta.push_back(iEle->scSigmaIEtaIEta());
     lepton_full5x5_scSigmaIEtaIEta.push_back(iEle->full5x5_sigmaIetaIeta());
@@ -1311,6 +1325,7 @@ if(outputwords)cout<<selectedElectrons_tight.at(0).genLepton()->pdgId();
   eve->lepton_iso_sumNeutralHadronEt_ = lepton_iso_sumNeutralHadronEt;
   eve->lepton_iso_sumPhotonEt_        = lepton_iso_sumPhotonEt;
   eve->lepton_iso_sumPUPt_            = lepton_iso_sumPUPt;
+  eve->lepton_PuppiRelIso_            = lepton_PuppiRelIso;
   eve->lepton_mvaTrigValue_     = lepton_mvaTrigValue;
   eve->lepton_scSigmaIEtaIEta_  = lepton_scSigmaIEtaIEta;
   eve->lepton_full5x5_scSigmaIEtaIEta_ = lepton_full5x5_scSigmaIEtaIEta;
