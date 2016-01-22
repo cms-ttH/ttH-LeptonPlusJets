@@ -248,6 +248,8 @@ class TTHSyncExercise : public edm::EDAnalyzer {
   std::string SysType_;
   sysType::sysType iSysType;
 
+  std::string channel;
+
   const bool isMC ;
 
   // ofstream syncOutputFile;
@@ -267,6 +269,7 @@ class TTHSyncExercise : public edm::EDAnalyzer {
 TTHSyncExercise::TTHSyncExercise(const edm::ParameterSet& iConfig):
   genTtbarIdToken_(consumes<int>(iConfig.getParameter<edm::InputTag>("genTtbarId"))),
   SysType_(iConfig.getParameter<std::string>("SysType"))
+  , channel  (iConfig.getParameter<std::string>("channel" ) )
   , isMC(iConfig.getParameter<std::string>("isMC") == "MC" )
 {
 
@@ -1869,7 +1872,7 @@ if((run==1)&&(lumi==19713)&&(event==3929894))printf("%d,%d,%d,1,0,%f,%+f,%+f,%f,
   //if(n_fatjets>0)cout<<"* "<<n_fatjets<<" "<<pt_fatjet_1<<" "<<endl;
   bool synch_MEM = true; //false;
   if( synch_MEM && !isDL ){
-    if( passSingleMuonTrigger ){ 
+    if( channel == "mu" && passSingleMuonTrigger ){ 
       if (GenEventInfoWeight > 0) h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, 1);
       else h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, -1);
 
@@ -1975,7 +1978,7 @@ if((run==1)&&(lumi==19713)&&(event==3929894))printf("%d,%d,%d,1,0,%f,%+f,%+f,%f,
   h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++);
 
   if( synch_MEM && !isDL){ 
-    if( passSingleElectronTrigger ){
+    if( channel == "el" && passSingleElectronTrigger ){
       if (GenEventInfoWeight > 0) h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, 1);
       else h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, -1);
       
