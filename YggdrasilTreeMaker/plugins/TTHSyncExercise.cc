@@ -1872,7 +1872,7 @@ if((run==1)&&(lumi==19713)&&(event==3929894))printf("%d,%d,%d,1,0,%f,%+f,%+f,%f,
   //if(n_fatjets>0)cout<<"* "<<n_fatjets<<" "<<pt_fatjet_1<<" "<<endl;
   bool synch_MEM = true; //false;
   if( synch_MEM && !isDL ){
-    if( channel == "mu" && passSingleMuonTrigger ){ 
+    if( ( isMC || channel == "mu" ) && passSingleMuonTrigger ){ 
       if (GenEventInfoWeight > 0) h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, 1);
       else h_tth_syncex1_mu->Fill(0.5+n_tth_syncex1_mu++, -1);
 
@@ -1978,7 +1978,7 @@ if((run==1)&&(lumi==19713)&&(event==3929894))printf("%d,%d,%d,1,0,%f,%+f,%+f,%f,
   h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++);
 
   if( synch_MEM && !isDL){ 
-    if( channel == "el" && passSingleElectronTrigger ){
+    if( ( isMC || channel == "el" ) && passSingleElectronTrigger ){
       if (GenEventInfoWeight > 0) h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, 1);
       else h_tth_syncex1_ele->Fill(0.5+n_tth_syncex1_ele++, -1);
       
