@@ -775,10 +775,10 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
  //std::vector<pat::Electron> selectedElectrons = miniAODhelper.GetSelectedElectrons( *electrons, 15.0, electronID::electronPhys14L, 2.4 );
   //std::vector<pat::Electron> selectedElectrons_Tight = miniAODhelper.GetSelectedElectrons( *electrons, 30.0, electronID::electronPhys14M, 2.1 );
  
-  std::vector<pat::Electron> selectedElectrons = miniAODhelper.GetSelectedElectrons( electrons, 15.0, electronID::electronEndOf15MVA80iso0p1, 2.4 );
-  std::vector<pat::Electron> selectedElectrons_Tight = miniAODhelper.GetSelectedElectrons( electrons, 30.0, electronID::electronEndOf15MVA80iso0p1, 2.1 );
-  std::vector<pat::Electron> selectedElectrons_DL = miniAODhelper.GetSelectedElectrons( electrons, 15.0, electronID::electronEndOf15MVA80iso0p1, 2.4 );
-  std::vector<pat::Electron> selectedElectrons_Tight_DL = miniAODhelper.GetSelectedElectrons( electrons, 20.0, electronID::electronEndOf15MVA80iso0p1, 2.4 );
+  std::vector<pat::Electron> selectedElectrons = miniAODhelper.GetSelectedElectrons( electrons, 15.0, electronID::electronEndOf15MVA80iso0p15, 2.4 );
+  std::vector<pat::Electron> selectedElectrons_Tight = miniAODhelper.GetSelectedElectrons( electrons, 30.0, electronID::electronEndOf15MVA80iso0p15, 2.1 );
+  std::vector<pat::Electron> selectedElectrons_DL = miniAODhelper.GetSelectedElectrons( electrons, 15.0, electronID::electronEndOf15MVA80iso0p15, 2.4 );
+  std::vector<pat::Electron> selectedElectrons_Tight_DL = miniAODhelper.GetSelectedElectrons( electrons, 20.0, electronID::electronEndOf15MVA80iso0p15, 2.4 );
   
   if(isDL)selectedElectrons = selectedElectrons_DL;
   if(isDL)selectedElectrons_Tight = selectedElectrons_Tight_DL;
