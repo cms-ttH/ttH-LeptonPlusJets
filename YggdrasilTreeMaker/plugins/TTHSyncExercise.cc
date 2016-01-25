@@ -798,7 +798,7 @@ TTHSyncExercise::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   //std::vector<pat::Muon> selectedMuons = miniAODhelper.GetSelectedMuons( *muons, 10.0, muonID::muonLoose );
   //std::vector<pat::Muon> selectedMuons_Tight = miniAODhelper.GetSelectedMuons( *muons, minTightLeptonPt, muonID::muonTight, coneSize::R04, corrType::deltaBeta, 2.1 );
   std::vector<pat::Muon> selectedMuons_Tight = miniAODhelper.GetSelectedMuons( *muons, 25, muonID::muonTight, coneSize::R04, corrType::deltaBeta, 2.1 );
-  std::vector<pat::Muon> selectedMuons = miniAODhelper.GetSelectedMuons( *muons, 15, muonID::muonTight, coneSize::R04, corrType::deltaBeta, 2.4 );
+  std::vector<pat::Muon> selectedMuons = miniAODhelper.GetSelectedMuons( *muons, 15, muonID::muonTightDL, coneSize::R04, corrType::deltaBeta, 2.4 );
   std::vector<pat::Muon> selectedMuons_Tight_DL = miniAODhelper.GetSelectedMuons( *muons, 20, muonID::muonTight, coneSize::R04, corrType::deltaBeta, 2.4 );
   std::vector<pat::Muon> selectedMuons_DL = miniAODhelper.GetSelectedMuons( *muons, 15, muonID::muonTight, coneSize::R04, corrType::deltaBeta, 2.4 );
  
