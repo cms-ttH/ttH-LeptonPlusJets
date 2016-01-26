@@ -733,8 +733,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   looseLeptonPt = 15.0;
   
   //std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( *electrons, minTightLeptonPt, electronID::electronEndOf15MVAmedium, 2.1 );
-  std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( electrons, looseLeptonPt, electronID::electronEndOf15MVA80iso0p1, 2.4 );
-  std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( electrons, looseLeptonPt, electronID::electronEndOf15MVA80iso0p1, 2.4 );
+  std::vector<pat::Electron> selectedElectrons_tight = miniAODhelper.GetSelectedElectrons( electrons, looseLeptonPt, electronID::electronEndOf15MVA80iso0p15, 2.4 );
+  std::vector<pat::Electron> selectedElectrons_loose = miniAODhelper.GetSelectedElectrons( electrons, looseLeptonPt, electronID::electronEndOf15MVA80iso0p15, 2.4 );
 
   int numTightElectrons = int(selectedElectrons_tight.size());
   int numLooseElectrons = int(selectedElectrons_loose.size());// - numTightElectrons;
@@ -747,7 +747,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   ////////
   //std::vector<pat::Muon> selectedMuons_tight = miniAODhelper.GetSelectedMuons( *muons, 25, muonID::muonTight, coneSize::R04, corrType::deltaBeta, 2.1 );
   std::vector<pat::Muon> selectedMuons_tight = miniAODhelper.GetSelectedMuons( *muons, 15, muonID::muonTight, coneSize::R04, corrType::deltaBeta, 2.4);
-  std::vector<pat::Muon> selectedMuons_loose = miniAODhelper.GetSelectedMuons( *muons, 15, muonID::muonTight, coneSize::R04, corrType::deltaBeta,2.4 );
+  std::vector<pat::Muon> selectedMuons_loose = miniAODhelper.GetSelectedMuons( *muons, 15, muonID::muonTightDL, coneSize::R04, corrType::deltaBeta,2.4 );
 
   int numTightMuons = int(selectedMuons_tight.size());
   int numLooseMuons = int(selectedMuons_loose.size());// - numTightMuons;
@@ -1047,7 +1047,7 @@ if(outputwords)cout<<selectedElectrons_tight.at(0).genLepton()->pdgId();
     if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
 
     int isTight = ( miniAODhelper.isGoodMuon(*iMu, minTightLeptonPt, 2.1, muonID::muonTight, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
-    int isLoose = ( miniAODhelper.isGoodMuon(*iMu, looseLeptonPt, 2.4, muonID::muonLoose, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
+    int isLoose = ( miniAODhelper.isGoodMuon(*iMu, looseLeptonPt, 2.4, muonID::muonTightDL, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
 
     int isPhys14L = false;
     int isPhys14M = false;
