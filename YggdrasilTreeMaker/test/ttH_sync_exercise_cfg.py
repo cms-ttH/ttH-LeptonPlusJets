@@ -105,6 +105,10 @@ process.source = cms.Source("PoolSource",
             )
 )
 
+if not isMC :
+    # apply JSON 
+    import FWCore.PythonUtilities.LumiList as LumiList
+    process.source.lumisToProcess = LumiList.LumiList(filename = 'Cert_246908-260627_13TeV_PromptReco_Collisions15_25ns_JSON.txt').getVLuminosityBlockRange()
 
 
 if isMC :
