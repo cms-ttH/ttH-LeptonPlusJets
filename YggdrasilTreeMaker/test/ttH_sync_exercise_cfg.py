@@ -3,8 +3,8 @@ import FWCore.ParameterSet.Config as cms
 process = cms.Process("MAOD")
 
 
-isMC=False
-# isMC=True
+# isMC=False
+isMC=True
 
 #--- Select channle (affect the trigger requirement. "el" channel only use single electron.)
 ch="mu"
@@ -71,12 +71,12 @@ process.source = cms.Source("PoolSource",
 #        'root://xrootd-cms.infn.it//store/user/shwillia/Spring15_HbbSync/ttHTobb_Spring15_HbbSync.root',
 #        'root://xrootd-cms.infn.it//store/user/shwillia/Spring15_HbbSync/ttbar_Spring15_HbbSync.root',
         
-
 #'/store/mc/RunIISpring15MiniAODv2/ttHTobb_M125_13TeV_powheg_pythia8/MINIAODSIM/74X_mcRun2_asymptotic_v2-v1/30000/DA1B6FD6-C46D-E511-9C7B-00A0D1EE29B8.root'
+'file:///tmp/satoshi/DA1B6FD6-C46D-E511-9C7B-00A0D1EE29B8.root'
 # '/store/mc/RunIISpring15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/74X_mcRun2_asymptotic_v2-v1/40000/0EE7E064-BE6F-E511-BB41-E4115BB4C4BC.root'
 
 # 'file:///tmp/satoshi/el_skim_3loosejets.root'
-'file:///tmp/satoshi/mu_skim_3loosejets.root'
+#'file:///tmp/satoshi/mu_skim_3loosejets.root'
 
 # xrdcp root://cmsxrootd.fnal.gov///store/user/hmildner/el_skim_3loosejets.root /tmp/satoshi/
 #        'file:///tmp/satoshi/el_skim_3loosejets.root'                                                                                            
@@ -108,7 +108,7 @@ process.source = cms.Source("PoolSource",
 if not isMC :
     # apply JSON 
     import FWCore.PythonUtilities.LumiList as LumiList
-    process.source.lumisToProcess = LumiList.LumiList(filename = 'Cert_246908-260627_13TeV_PromptReco_Collisions15_25ns_JSON.txt').getVLuminosityBlockRange()
+    process.source.lumisToProcess = LumiList.LumiList(filename = '../data/Cert_246908-260627_13TeV_PromptReco_Collisions15_25ns_JSON.txt').getVLuminosityBlockRange()
 
 
 if isMC :
