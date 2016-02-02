@@ -720,6 +720,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   mHdecay = miniAODhelper.GetHiggsDecay(mcparticles);
   eve->higgsDecayType_=mHdecay;
 
+  eve->ttbarDecayType_ = miniAODhelper.GetTTbarDecay(mcparticles);
+
 
   /////////
   ///
