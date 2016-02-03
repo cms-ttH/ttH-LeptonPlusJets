@@ -64,7 +64,7 @@
 
 #include "MiniAOD/MiniAODHelper/interface/MiniAODHelper.h"
 #include "MiniAOD/MiniAODHelper/interface/TopTagger.h"
-#include "BoostedTTH/BoostedAnalyzer/interface/BoostedUtils.hpp"
+#include "MiniAOD/BoostedObjects/interface/BoostedUtils.hpp"
 #include "MiniAOD/MiniAODHelper/interface/HiggsTagger.h"
 #include "ttH-LeptonPlusJets/AnalysisCode/interface/YggdrasilEventVars.h"
 
@@ -1960,10 +1960,10 @@ jcntn++;
       vjets.push_back(iJet->energy());
       vvjets.push_back(vjets);
 
-      jet_vtxMass.push_back(iJet->userFloat("vtxMass"));
-      jet_vtxNtracks.push_back(iJet->userFloat("vtxNtracks"));
-      jet_vtx3DVal.push_back(iJet->userFloat("vtx3DVal"));
-      jet_vtx3DSig.push_back(iJet->userFloat("vtx3DSig"));
+      //jet_vtxMass.push_back(iJet->userFloat("vtxMass"));
+     // jet_vtxNtracks.push_back(iJet->userFloat("vtxNtracks"));
+     // jet_vtx3DVal.push_back(iJet->userFloat("vtx3DVal"));
+     // jet_vtx3DSig.push_back(iJet->userFloat("vtx3DSig"));
 
       // Get CSV discriminant, check if passes Med WP 
       double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
@@ -2088,12 +2088,12 @@ jcntn++;
       numJet_loose++;
       jet_flavour_vect_loose.push_back(iJet->partonFlavour());
 
-      jet_loose_vtxMass.push_back(iJet->userFloat("vtxMass"));
-      jet_loose_vtxNtracks.push_back(iJet->userFloat("vtxNtracks"));
-      jet_loose_vtx3DVal.push_back(iJet->userFloat("vtx3DVal"));
-      jet_loose_vtx3DSig.push_back(iJet->userFloat("vtx3DSig"));
+      //jet_loose_vtxMass.push_back(iJet->userFloat("vtxMass"));
+      //jet_loose_vtxNtracks.push_back(iJet->userFloat("vtxNtracks"));
+      //jet_loose_vtx3DVal.push_back(iJet->userFloat("vtx3DVal"));
+      //jet_loose_vtx3DSig.push_back(iJet->userFloat("vtx3DSig"));
 
-      jet_loose_pileupJetId_fullDiscriminant.push_back(iJet->userFloat("pileupJetId:fullDiscriminant"));
+      //jet_loose_pileupJetId_fullDiscriminant.push_back(iJet->userFloat("pileupJetId:fullDiscriminant"));
 
       TLorentzVector jet0p4;	  
       jet0p4.SetPxPyPzE(iJet->px(),iJet->py(),iJet->pz(),iJet->energy());

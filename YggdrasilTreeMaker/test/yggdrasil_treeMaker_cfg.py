@@ -17,7 +17,7 @@ process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.options.allowUnscheduled = cms.untracked.bool(True)
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(10000)
     )
 
 from JetMETCorrections.Configuration.JetCorrectionServices_cff import *
@@ -90,8 +90,8 @@ process.selectedHadronsAndPartons = selectedHadronsAndPartons.clone(
 # MUST use use proper input jet collection: the jets to which hadrons should be associated
 # rParam and jetAlgorithm MUST match those used for jets to be associated with hadrons
 # More details on the tool: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagMCTools#New_jet_flavour_definition
-from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import genJetFlavourPlusLeptonInfos
-process.genJetFlavourPlusLeptonInfos = genJetFlavourPlusLeptonInfos.clone(
+from PhysicsTools.JetMCAlgos.AK4PFJetsMCFlavourInfos_cfi import ak4JetFlavourInfos
+process.genJetFlavourInfos = ak4JetFlavourInfos.clone(
     jets = genJetCollection,
     rParam = cms.double(0.4),
     jetAlgorithm = cms.string("AntiKt")
@@ -100,21 +100,21 @@ process.genJetFlavourPlusLeptonInfos = genJetFlavourPlusLeptonInfos.clone(
 
 # Plugin for analysing B hadrons
 # MUST use the same particle collection as in selectedHadronsAndPartons
-from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import matchGenBHadron
+from PhysicsTools.JetMCAlgos.GenHFHadronMatcher_cff import matchGenBHadron
 process.matchGenBHadron = matchGenBHadron.clone(
     genParticles = genParticleCollection
 )
 
 # Plugin for analysing C hadrons
 # MUST use the same particle collection as in selectedHadronsAndPartons
-from PhysicsTools.JetMCAlgos.sequences.GenHFHadronMatching_cff import matchGenCHadron
+from PhysicsTools.JetMCAlgos.GenHFHadronMatcher_cff import matchGenCHadron
 process.matchGenCHadron = matchGenCHadron.clone(
     genParticles = genParticleCollection
 )
 
 ## Producer for ttbar categorisation ID
 # MUST use same genJetCollection as used for tools above
-from PhysicsTools.JetMCAlgos.GenTtbarCategorizer_cfi import categorizeGenTtbar
+from TopQuarkAnalysis.TopTools.GenTtbarCategorizer_cfi import categorizeGenTtbar
 process.categorizeGenTtbar = categorizeGenTtbar.clone(
     genJetPtMin = 20.,
     genJetAbsEtaMax = 2.4,
