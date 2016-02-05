@@ -44,6 +44,7 @@ struct yggdrasilEventVars{
   Int_t   passMuonTrigger_;
   Int_t   leptonType_;
   Int_t   higgsDecayType_;
+  Int_t   ttbarDecayType_;
 
   Int_t  PassLJ_;
   Int_t  PassDIL_;
@@ -354,6 +355,7 @@ void yggdrasilEventVars::initialize(){
   passMuonTrigger_     = 0;
   leptonType_          = 0;
   higgsDecayType_      = -1;
+  ttbarDecayType_      = 0 ;
 
   PassLJ_ = 0;
   PassDIL_ = 0;
