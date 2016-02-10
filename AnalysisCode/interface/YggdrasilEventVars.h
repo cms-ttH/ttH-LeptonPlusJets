@@ -275,8 +275,8 @@ struct yggdrasilEventVars{
   vdouble jet_vtx3DVal_[rNumSys];
   vdouble jet_vtx3DSig_[rNumSys];
   vint jet_genId_[rNumSys];
+  vint jet_partonflavour_[rNumSys];
   vint jet_flavour_[rNumSys];
-  vint jet_hadronflavour_[rNumSys];
   vint jet_genParentId_[rNumSys];
   vint jet_genGrandParentId_[rNumSys];
 
@@ -296,22 +296,22 @@ struct yggdrasilEventVars{
   vdouble jet_loose_vtx3DVal_[rNumSys];
   vdouble jet_loose_vtx3DSig_[rNumSys];  
   vdouble jet_loose_pileupJetId_fullDiscriminant_[rNumSys];
+  vint jet_loose_partonflavour_[rNumSys];
   vint jet_loose_flavour_[rNumSys];
-  vint jet_loose_hadronflavour_[rNumSys];
 
   // temp loose jets
   vvdouble jet_temp_loose_vect_TLV_[rNumSys];
   vdouble jet_temp_loose_CSV_[rNumSys];
   vint jet_temp_loose_flavour_[rNumSys];
-  vint jet_temp_loose_hadronflavour_[rNumSys];
+  vint jet_temp_loose_partonflavour_[rNumSys];
 
   // no cc loose jets
   vvdouble jet_nocc_loose_vect_TLV_[rNumSys];
   vdouble jet_nocc_loose_CSV_[rNumSys];
   vdouble jet_nocc_loose_combinedMVABJetTags_[rNumSys];
   vdouble jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags_[rNumSys];
+  vint jet_nocc_loose_partonflavour_[rNumSys];
   vint jet_nocc_loose_flavour_[rNumSys];
-  vint jet_nocc_loose_hadronflavour_[rNumSys];
 
   // additional BDTvars
   double maxeta_jet_jet_[rNumSys];  
@@ -594,8 +594,8 @@ void yggdrasilEventVars::initialize(){
     jet_vtxNtracks_[iSys].clear();
     jet_vtx3DVal_[iSys].clear();
     jet_vtx3DSig_[iSys].clear();
+    jet_partonflavour_[iSys].clear();
     jet_flavour_[iSys].clear();
-    jet_hadronflavour_[iSys].clear();
     jet_genId_[iSys].clear();
     jet_genParentId_[iSys].clear();
     jet_genGrandParentId_[iSys].clear();
@@ -608,20 +608,20 @@ void yggdrasilEventVars::initialize(){
     jet_loose_vtxNtracks_[iSys].clear();
     jet_loose_vtx3DVal_[iSys].clear();
     jet_loose_vtx3DSig_[iSys].clear();
+    jet_loose_partonflavour_[iSys].clear();
     jet_loose_flavour_[iSys].clear();
-    jet_loose_hadronflavour_[iSys].clear();
 
     jet_temp_loose_vect_TLV_[iSys].clear();
     jet_temp_loose_CSV_[iSys].clear();
+    jet_temp_loose_partonflavour_[iSys].clear();
     jet_temp_loose_flavour_[iSys].clear();
-    jet_temp_loose_hadronflavour_[iSys].clear();
 
     jet_nocc_loose_vect_TLV_[iSys].clear();
     jet_nocc_loose_CSV_[iSys].clear();
     jet_nocc_loose_combinedMVABJetTags_[iSys].clear();
     jet_nocc_loose_combinedInclusiveSecondaryVertexV2BJetTags_[iSys].clear();
+    jet_nocc_loose_partonflavour_[iSys].clear();
     jet_nocc_loose_flavour_[iSys].clear();
-    jet_nocc_loose_hadronflavour_[iSys].clear();
 
     IsTauTauLeptonEvent_[iSys] = -99;
 
