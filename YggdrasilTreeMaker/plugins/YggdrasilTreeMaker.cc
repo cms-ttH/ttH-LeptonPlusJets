@@ -1916,8 +1916,8 @@ if(n_fatjets==2)pt_fatjet_2=topJet->fatjet.pt();
 
 
     vint jet_genId_vect;
+    vint jet_partonflavour_vect;
     vint jet_flavour_vect;
-    vint jet_hadronflavour_vect;
     vint jet_genParentId_vect;
     vint jet_genGrandParentId_vect;
 
@@ -1925,8 +1925,8 @@ int jcntn=0;
     // Loop over selected jets
     for( std::vector<pat::Jet>::const_iterator iJet = selectedJets.begin(); iJet != selectedJets.end(); iJet++ ){ 
 jcntn++;
-      jet_flavour_vect.push_back(iJet->partonFlavour());
-      jet_hadronflavour_vect.push_back(iJet->hadronFlavour());
+      jet_partonflavour_vect.push_back(iJet->partonFlavour());
+      jet_flavour_vect.push_back(iJet->hadronFlavour());
 
       int genPartonId=-99, genPartonMotherId=-99, genPartonGrandMotherId=-99;
       if( (iJet->genParton()) ){ // if there is a matched parton, fill variables
@@ -2050,8 +2050,8 @@ jcntn++;
     std::vector<double> jet_loose_vtx3DVal;
     std::vector<double> jet_loose_vtx3DSig;
     std::vector<double> jet_loose_pileupJetId_fullDiscriminant;
+    vint jet_partonflavour_vect_loose;
     vint jet_flavour_vect_loose;
-    vint jet_hadronflavour_vect_loose;
     vecTLorentzVector jetV_loose;
 
     int numJet_loose = 0;
@@ -2089,8 +2089,8 @@ jcntn++;
       //if( iJet->pt()>=30. ) continue;
 
       numJet_loose++;
-      jet_flavour_vect_loose.push_back(iJet->partonFlavour());
-      jet_hadronflavour_vect_loose.push_back(iJet->hadronFlavour());
+      jet_partonflavour_vect_loose.push_back(iJet->partonFlavour());
+      jet_flavour_vect_loose.push_back(iJet->hadronFlavour());
 
       //jet_loose_vtxMass.push_back(iJet->userFloat("vtxMass"));
       //jet_loose_vtxNtracks.push_back(iJet->userFloat("vtxNtracks"));
@@ -2442,8 +2442,8 @@ jcntn++;
     eve->jet_vtxNtracks_[iSys] = jet_vtxNtracks;
     eve->jet_vtx3DVal_[iSys]   = jet_vtx3DVal;
     eve->jet_vtx3DSig_[iSys]   = jet_vtx3DSig;
+    eve->jet_partonflavour_[iSys]          = jet_partonflavour_vect;
     eve->jet_flavour_[iSys]          = jet_flavour_vect;
-    eve->jet_hadronflavour_[iSys]          = jet_hadronflavour_vect;
     eve->jet_genId_[iSys]            = jet_genId_vect;
     eve->jet_genParentId_[iSys]      = jet_genParentId_vect;
     eve->jet_genGrandParentId_[iSys] = jet_genGrandParentId_vect;
@@ -2463,8 +2463,8 @@ jcntn++;
     eve->jet_loose_vtx3DVal_[iSys]   = jet_loose_vtx3DVal;
     eve->jet_loose_vtx3DSig_[iSys]   = jet_loose_vtx3DSig;
     eve->jet_loose_pileupJetId_fullDiscriminant_[iSys] = jet_loose_pileupJetId_fullDiscriminant;
+    eve->jet_loose_partonflavour_[iSys]  = jet_partonflavour_vect_loose;
     eve->jet_loose_flavour_[iSys]  = jet_flavour_vect_loose;
-    eve->jet_loose_hadronflavour_[iSys]  = jet_hadronflavour_vect_loose;
 
 
    
