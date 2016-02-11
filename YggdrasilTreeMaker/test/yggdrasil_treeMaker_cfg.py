@@ -8,7 +8,10 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 #### caution: use the correct global tag for MC or Data 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
-process.GlobalTag.globaltag = '74X_mcRun2_asymptotic_v4'  ##MC
+process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_v12'  ##MC
+
+# MC   : 76X_mcRun2_asymptotic_v12
+# data : 76X_dataRun2_v15
 
 # Load the producer for MVA IDs. Make sure it is also added to the sequence!
 process.load("RecoEgamma.ElectronIdentification.ElectronMVAValueMapProducer_cfi")
