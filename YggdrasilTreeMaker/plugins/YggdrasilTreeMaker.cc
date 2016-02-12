@@ -98,16 +98,13 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
       // ----------member data ---------------------------
 
   //--------tt+X categorization
-  const edm::EDGetTokenT<int> genTtbarIdToken_;
+  edm::EDGetTokenT<int> genTtbarIdToken_;
   // Histogram for ttbar event categorization ID including information about b jets from top in acceptance
   TH1* h_ttbarId_;
         
   // Histogram for ttbar event categorization ID based on additional jets only
   TH1* h_ttbarAdditionalJetId_;
 
-  // Jets configuration
-  const double genJetPtMin_;
-  const double genJetAbsEtaMax_;
   
   // Input tags
   const edm::EDGetTokenT<reco::GenJetCollection> genJetsToken_;
@@ -214,6 +211,8 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   
   TopTagger toptagger;
 
+  const bool isMC ;
+
 };
 
 //
@@ -235,31 +234,18 @@ typedef std::vector< TLorentzVector >          vecTLorentzVector;
 // constructors and destructor
 //
 YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
-  genTtbarIdToken_(consumes<int>(iConfig.getParameter<edm::InputTag>("genTtbarId"))),
-//---tt+X Categorization
-    genJetPtMin_(iConfig.getParameter<double>("genJetPtMin")),
-    genJetAbsEtaMax_(iConfig.getParameter<double>("genJetAbsEtaMax")),
-    genJetsToken_(consumes<reco::GenJetCollection>(iConfig.getParameter<edm::InputTag>("genJets"))),
-    genBHadJetIndexToken_(consumes<std::vector<int> >(iConfig.getParameter<edm::InputTag>("genBHadJetIndex"))),
-    genBHadFlavourToken_(consumes<std::vector<int> >(iConfig.getParameter<edm::InputTag>("genBHadFlavour"))),
-    genBHadFromTopWeakDecayToken_(consumes<std::vector<int> >(iConfig.getParameter<edm::InputTag>("genBHadFromTopWeakDecay"))),
-    genBHadPlusMothersToken_(consumes<std::vector<reco::GenParticle> >(iConfig.getParameter<edm::InputTag>("genBHadPlusMothers"))),
-    genBHadPlusMothersIndicesToken_(consumes<std::vector<std::vector<int> > >(iConfig.getParameter<edm::InputTag>("genBHadPlusMothersIndices"))),
-    genBHadIndexToken_(consumes<std::vector<int> >(iConfig.getParameter<edm::InputTag>("genBHadIndex"))),
-    genBHadLeptonHadronIndexToken_(consumes<std::vector<int> >(iConfig.getParameter<edm::InputTag>("genBHadLeptonHadronIndex"))),
-    genBHadLeptonViaTauToken_(consumes<std::vector<int> >(iConfig.getParameter<edm::InputTag>("genBHadLeptonViaTau"))),
-    genCHadJetIndexToken_(consumes<std::vector<int> >(iConfig.getParameter<edm::InputTag>("genCHadJetIndex"))),
-    genCHadFlavourToken_(consumes<std::vector<int> >(iConfig.getParameter<edm::InputTag>("genCHadFlavour"))),
-    genCHadFromTopWeakDecayToken_(consumes<std::vector<int> >(iConfig.getParameter<edm::InputTag>("genCHadFromTopWeakDecay"))),
-    genCHadBHadronIdToken_(consumes<std::vector<int> >(iConfig.getParameter<edm::InputTag>("genCHadBHadronId")))
+  isMC(iConfig.getParameter<std::string>("isMC") == "MC" )
 {
    //now do what ever initialization is needed
   verbose_ = false;
   isLJ_ = true;
 
   hltTag = "HLT";
-  filterTag = "PAT";
-
+  if( isMC ){
+    filterTag = "PAT";
+  }else{
+    filterTag = "HLT";
+  }
   triggerResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), hltTag));
   filterResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), filterTag));
 
@@ -284,15 +270,18 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   mcparicleToken = consumes <reco::GenParticleCollection> (edm::InputTag(std::string("prunedGenParticles")));
   puInfoToken = consumes <std::vector< PileupSummaryInfo > > (edm::InputTag(std::string("addPileupInfo")));
 
-  genInfoProductToken = consumes <GenEventInfoProduct> (edm::InputTag(std::string("generator")));
-  
+  if( isMC ){
+    genInfoProductToken = consumes <GenEventInfoProduct> (edm::InputTag(std::string("generator")));
+  }
+
   tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
   
   // EDMConversionCollectionToken = consumes <reco::ConversionCollection > (edm::InputTag("reducedEgamma","reducedConversions",""));
   EDMBoostedJetsToken     = consumes< boosted::BoostedJetCollection >(edm::InputTag("BoostedJetMatcher","boostedjets","p"));
 
-  
-
+  if( isMC ){
+  genTtbarIdToken_ = consumes<int>( edm::InputTag( "categorizeGenTtbar", "genTtbarId","" ) )  ;
+  }
 
   edm::Service<TFileService> fs_;
   worldTree = fs_->make<TTree>("worldTree", "worldTree");
@@ -435,7 +424,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   iEvent.getByToken(beamspotToken,bsHandle);
 
   edm::Handle<reco::GenParticleCollection> mcparticles;
-  iEvent.getByToken(mcparicleToken,mcparticles);
+  if( isMC ){
+    iEvent.getByToken(mcparicleToken,mcparticles);
+  }
 
   edm::Handle<double> rhoHandle;
   iEvent.getByToken(rhoToken,rhoHandle);
@@ -453,15 +444,17 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   // iEvent.getByToken( subFilterJetsToken,h_subfilterjet );
 
   edm::Handle<GenEventInfoProduct> GenEventInfoHandle;
+  if( isMC ){
   iEvent.getByToken(genInfoProductToken,GenEventInfoHandle);
-  
+  }
+
   edm::Handle<boosted::BoostedJetCollection> h_boostedjet;
   iEvent.getByToken( EDMBoostedJetsToken,h_boostedjet);
   
   //  edm::Handle<reco::ConversionCollection> h_conversioncollection;
   // iEvent.getByToken( EDMConversionCollectionToken,h_conversioncollection );
 
-  double GenEventInfoWeight = GenEventInfoHandle.product()->weight();
+  double GenEventInfoWeight = isMC ? GenEventInfoHandle.product()->weight() : 1.0 ;
 
 
   edm::Handle<edm::TriggerResults> triggerResults;
@@ -578,6 +571,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   ////----------------------
   ////---- tt+X Categorization
   ////----------------------
+  if( isMC ){
   edm::Handle<int> genTtbarId;
   iEvent.getByToken(genTtbarIdToken_, genTtbarId);
   // eve->additionalJetEventId_ = *genTtbarId%100;
@@ -587,54 +581,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     
   // Fill ID based only on additional b/c jets
   h_ttbarAdditionalJetId_->Fill(*genTtbarId%100);
-
-    // Reading gen jets from the event
-    edm::Handle<reco::GenJetCollection> genJets;
-    iEvent.getByToken(genJetsToken_, genJets);
-    
-    // Reading B hadrons related information
-    edm::Handle<std::vector<int> > genBHadFlavour;
-    iEvent.getByToken(genBHadFlavourToken_, genBHadFlavour);
-    
-    edm::Handle<std::vector<int> > genBHadJetIndex;
-    iEvent.getByToken(genBHadJetIndexToken_, genBHadJetIndex);
-    
-    edm::Handle<std::vector<int> > genBHadFromTopWeakDecay;
-    iEvent.getByToken(genBHadFromTopWeakDecayToken_, genBHadFromTopWeakDecay);
-    
-    edm::Handle<std::vector<reco::GenParticle> > genBHadPlusMothers;
-    iEvent.getByToken(genBHadPlusMothersToken_, genBHadPlusMothers);
-    
-    edm::Handle<std::vector<std::vector<int> > > genBHadPlusMothersIndices;
-    iEvent.getByToken(genBHadPlusMothersIndicesToken_, genBHadPlusMothersIndices);
-    
-    edm::Handle<std::vector<int> > genBHadIndex;
-    iEvent.getByToken(genBHadIndexToken_, genBHadIndex);
-    
-    edm::Handle<std::vector<int> > genBHadLeptonHadronIndex;
-    iEvent.getByToken(genBHadLeptonHadronIndexToken_, genBHadLeptonHadronIndex);
-    
-    edm::Handle<std::vector<int> > genBHadLeptonViaTau;
-    iEvent.getByToken(genBHadLeptonViaTauToken_, genBHadLeptonViaTau);
-    
-    // Reading C hadrons related information
-    edm::Handle<std::vector<int> > genCHadFlavour;
-    iEvent.getByToken(genCHadFlavourToken_, genCHadFlavour);
-    
-    edm::Handle<std::vector<int> > genCHadJetIndex;
-    iEvent.getByToken(genCHadJetIndexToken_, genCHadJetIndex);
-    
-    edm::Handle<std::vector<int> > genCHadFromTopWeakDecay;
-    iEvent.getByToken(genCHadFromTopWeakDecayToken_, genCHadFromTopWeakDecay);
-    
-    edm::Handle<std::vector<int> > genCHadBHadronId;
-    iEvent.getByToken(genCHadBHadronIdToken_, genCHadBHadronId);
-    
-
-    int additionalJetEventId = miniAODhelper.ttHFCategorization(*genJets, *genBHadIndex, *genBHadJetIndex, *genBHadFlavour, *genBHadFromTopWeakDecay, *genBHadPlusMothers, *genBHadPlusMothersIndices, *genBHadLeptonHadronIndex, *genBHadLeptonViaTau, *genCHadFlavour, *genCHadJetIndex, *genCHadFromTopWeakDecay, *genCHadBHadronId, genJetPtMin_, genJetAbsEtaMax_);
-
-    eve->additionalJetEventId_ = additionalJetEventId;
-  ////-------
+  }
 
   math::XYZPoint beamSpotPosition;
   beamSpotPosition.SetCoordinates(0,0,0);
@@ -717,10 +664,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   miniAODhelper.SetJetCorrector(corrector);
   
   int mHdecay = -1;
-  mHdecay = miniAODhelper.GetHiggsDecay(mcparticles);
+  mHdecay = isMC ? miniAODhelper.GetHiggsDecay(mcparticles) : -1 ;
   eve->higgsDecayType_=mHdecay;
 
-  eve->ttbarDecayType_ = miniAODhelper.GetTTbarDecay(mcparticles);
+  eve->ttbarDecayType_ = isMC ? miniAODhelper.GetTTbarDecay(mcparticles) : -10 ;
 
 
   /////////
@@ -2517,7 +2464,7 @@ jcntn++;
 	     cout<<std::setprecision(6)<<numJet<<",";
 	     cout<<std::setprecision(6)<<numTag<<",";
 	     cout<<std::setprecision(6)<<bWeight<<",";
-	     cout<<std::setprecision(6)<<additionalJetEventId<<",0,0,";
+	     //	     cout<<std::setprecision(6)<<additionalJetEventId<<",0,0,";
 	     cout<<std::setprecision(6)<<n_fatjets<<",";
 	     cout<<std::setprecision(6)<<pt_fatjet_1<<",";
 	     cout<<std::setprecision(6)<<pt_fatjet_2<<",";
