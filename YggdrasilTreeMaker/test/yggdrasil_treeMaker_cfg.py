@@ -1,5 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 
+#isMC=True
+isMC=False
+
+
 process = cms.Process("MAOD")
 
 # initialize MessageLogger and output report
@@ -8,7 +12,14 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 #### caution: use the correct global tag for MC or Data 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
-process.GlobalTag.globaltag = '74X_mcRun2_asymptotic_v4'  ##MC
+
+if isMC:
+    process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_RunIIFall15DR76_v0'
+else :
+    process.GlobalTag.globaltag = '76X_dataRun2_v15'
+
+
+
 
 # Load the producer for MVA IDs. Make sure it is also added to the sequence!
 process.load("RecoEgamma.ElectronIdentification.ElectronMVAValueMapProducer_cfi")
@@ -121,27 +132,15 @@ process.categorizeGenTtbar = categorizeGenTtbar.clone(
     genJets = genJetCollection,
 )
 
-process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
-    genTtbarId = cms.InputTag("categorizeGenTtbar", "genTtbarId"),
-    # phase space of jets to be stored
-    genJetPtMin = cms.double(20),
-    genJetAbsEtaMax = cms.double(2.4),
-    # input tags holding information about matching
-    genJets = cms.InputTag(genJetCollection),
-    genBHadJetIndex = cms.InputTag("matchGenBHadron", "genBHadJetIndex"),
-    genBHadFlavour = cms.InputTag("matchGenBHadron", "genBHadFlavour"),
-    genBHadFromTopWeakDecay = cms.InputTag("matchGenBHadron", "genBHadFromTopWeakDecay"),
-    genBHadPlusMothers = cms.InputTag("matchGenBHadron", "genBHadPlusMothers"),
-    genBHadPlusMothersIndices = cms.InputTag("matchGenBHadron", "genBHadPlusMothersIndices"),
-    genBHadIndex = cms.InputTag("matchGenBHadron", "genBHadIndex"),
-    genBHadLeptonHadronIndex = cms.InputTag("matchGenBHadron", "genBHadLeptonHadronIndex"),
-    genBHadLeptonViaTau = cms.InputTag("matchGenBHadron", "genBHadLeptonViaTau"),
-    genCHadJetIndex = cms.InputTag("matchGenCHadron", "genCHadJetIndex"),
-    genCHadFlavour = cms.InputTag("matchGenCHadron", "genCHadFlavour"),
-    genCHadFromTopWeakDecay = cms.InputTag("matchGenCHadron", "genCHadFromTopWeakDecay"),
-    genCHadBHadronId = cms.InputTag("matchGenCHadron", "genCHadBHadronId"),
-    )
-
+if isMC :
+    process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
+                                          isMC    =  cms.string("MC")
+                                          )
+else :
+    process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
+                                          isMC    =  cms.string("data")
+                                          )
+    
 process.TFileService = cms.Service("TFileService",
 	fileName = cms.string('yggdrasil_treeMaker.root')
 )
