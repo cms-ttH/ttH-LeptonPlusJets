@@ -460,9 +460,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   edm::Handle<edm::TriggerResults> triggerResults;
   iEvent.getByToken(triggerResultsToken, triggerResults);
   
-  bool passDiElectronTrigger = false;
-  bool passEleMuonTrigger = false;
-  bool passDiMuonTrigger =false;
+//  bool passDiElectronTrigger = false;
+//  bool passEleMuonTrigger = false;
+//  bool passDiMuonTrigger =false;
 
   bool passSingleElectronTrigger = false;
   bool passSingleMuonTrigger = false;
@@ -506,59 +506,38 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
       if( accept ){
       
-      //EndOf15_Triggers
-      
-       if(pathName=="HLT_Ele27_WP85_Gsf_v1")passSingleElectronTrigger = true;
-	// if(pathName=="HLT_IsoMu18_v1")passSingleMuonTrigger = true; //data
-	if(pathName=="HLT_IsoMu17_eta2p1_v1")passSingleMuonTrigger = true; //data
-	if(pathName=="HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v1")passDiElectronTrigger = true;
-	 if(pathName=="HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v1")passEleMuonTrigger = true;
-	 if(pathName=="HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v1")passEleMuonTrigger = true;
-	 if(pathName=="HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v1")passDiMuonTrigger = true;
-	 if(pathName=="HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v1")passDiMuonTrigger = true;
-	 
-	 if(false && (passDiMuonTrigger || passEleMuonTrigger || passDiElectronTrigger))cout<<"ok!";
-      
-      
-      //cout<<pathName<<endl;
-	/*
-	if( pathName=="HLT_Ele27_eta2p1_WP85_Gsf_v1" ) passSingleElectronTrigger = true;
-	if( pathName=="HLT_IsoMu24_eta2p1_IterTrk02_v1" ) passSingleMuonTrigger = true;
-	if( pathName=="HLT_Ele23_Ele12_CaloId_TrackId_Iso_v1" ) passDoubleElectronTrigger = true;
-	if( pathName=="HLT_Mu30_TkMu11_v1" ||
-	    pathName=="HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v1" ||
-	    pathName=="HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v1" ) passDoubleMuonTrigger = true;
-	if( pathName=="HLT_Mu23_TrkIsoVVL_Ele12_Gsf_CaloId_TrackId_Iso_MediumWP_v1" ||
-	    pathName=="HLT_Mu8_TrkIsoVVL_Ele23_Gsf_CaloId_TrackId_Iso_MediumWP_v1" ) passElectronMuonTrigger = true;
-      	if( pathName=="HLT_Ele27_eta2p1_WP85_Gsf_HT200_v1" )passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1 = true;
-	*/
-	
-	if( pathName=="HLT_IsoMu20_v1")passHLT_IsoMu20_v = true;
-	if( pathName=="HLT_IsoMu20_eta2p1_v1")passHLT_IsoMu20_eta2p1_v = true;
-	if( pathName=="HLT_IsoMu24_eta2p1_v1")passHLT_IsoMu24_eta2p1_v = true;
-	
-	// if( pathName=="HLT_IsoMu24_eta2p1_v")cout<<" v ";
-	// if( pathName=="HLT_IsoMu24_eta2p1_v1")cout<<" 1 ";
-	// if( pathName=="HLT_IsoMu24_eta2p1_v2")cout<<" 2" ;
-	
-	if( pathName=="HLT_Ele27_WP85_Gsf_v1")passHLT_Ele27_WP85_Gsf_v = true;
-	if( pathName=="HLT_Ele27_eta2p1_WPLoose_Gsf_v1")passHLT_Ele27_eta2p1_WPLoose_Gsf_v = true;
-	if( pathName=="HLT_Ele27_eta2p1_WP75_Gsf_v1")passHLT_Ele27_eta2p1_WP75_Gsf_v = true;
-	
-	if( pathName=="HLT_Ele27_eta2p1_WP85_Gsf_HT200_v1")passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v = true;
-	if( pathName=="HLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v1")passHLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v = true;
-	
-	if( pathName=="HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v1")passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v = true;
-	
-	if( pathName=="HLT_Mu30_TkMu11_v1")passHLT_Mu30_TkMu11_v = true;
-	if( pathName=="HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v1")passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v = true;
-	if( pathName=="HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v1")passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v = true;
-	if( pathName=="HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v1")passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v = true;
-	
-	if( pathName=="HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v1")passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v = true;
-	
-	if( pathName=="HLT_Ele25WP60_SC4_Mass55_v1")passHLT_Ele25WP60_SC4_Mass55_v = true;
-	
+	const unsigned long MatchedAtTheBegining = 0 ; 
+
+	if( pathName.find( "HLT_Ele27_eta2p1_WPLoose_Gsf_v" ,0) == MatchedAtTheBegining ){    passSingleElectronTrigger = true;}
+	if( pathName.find( "HLT_IsoMu20_v" ,0) == MatchedAtTheBegining ){    passSingleMuonTrigger = true; }
+//	if( pathName.find( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v"       ,0) == MatchedAtTheBegining ){ passDiElectronTrigger = true;}
+//	if( pathName.find( "HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v" ,0) == MatchedAtTheBegining ){ passEleMuonTrigger = true;}
+//	if( pathName.find( "HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v"  ,0) == MatchedAtTheBegining ){ passEleMuonTrigger = true;}
+//	if( pathName.find( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"             ,0) == MatchedAtTheBegining ){ passDiMuonTrigger = true;}
+//	if( pathName.find( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"           ,0) == MatchedAtTheBegining ){ passDiMuonTrigger = true;}
+
+	if( pathName.find( "HLT_IsoMu20_v"        ,0) == MatchedAtTheBegining ){ passHLT_IsoMu20_v = true;}
+	if( pathName.find( "HLT_IsoMu20_eta2p1_v" ,0) == MatchedAtTheBegining ){ passHLT_IsoMu20_eta2p1_v = true;}
+	if( pathName.find( "HLT_IsoMu24_eta2p1_v" ,0) == MatchedAtTheBegining ){ passHLT_IsoMu24_eta2p1_v = true;}
+
+	if( pathName.find( "HLT_Ele27_WP85_Gsf_v"          ,0) == MatchedAtTheBegining ){ passHLT_Ele27_WP85_Gsf_v = true;}
+	if( pathName.find( "HLT_Ele27_eta2p1_WPLoose_Gsf_v",0) == MatchedAtTheBegining ){ passHLT_Ele27_eta2p1_WPLoose_Gsf_v = true;}
+	if( pathName.find( "HLT_Ele27_eta2p1_WP75_Gsf_v"   ,0) == MatchedAtTheBegining ){ passHLT_Ele27_eta2p1_WP75_Gsf_v = true;}
+
+	if( pathName.find( "HLT_Ele27_eta2p1_WP85_Gsf_HT200_v"   ,0) == MatchedAtTheBegining ){ passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v = true;}
+	if( pathName.find( "HLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v",0) == MatchedAtTheBegining ){ passHLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v = true;}
+
+	if( pathName.find( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v" ,0) == MatchedAtTheBegining ){passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v = true;}
+
+	if( pathName.find( "HLT_Mu30_TkMu11_v" ,0) == MatchedAtTheBegining ){passHLT_Mu30_TkMu11_v = true;}
+	if( pathName.find( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v"               ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v = true;}
+	if( pathName.find( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v"             ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v = true;}
+	if( pathName.find( "HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v",0) == MatchedAtTheBegining ){ passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v = true;}
+
+	if( pathName.find( "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v" ,0) == MatchedAtTheBegining ){ passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v = true;}
+
+	if( pathName.find( "HLT_Ele25WP60_SC4_Mass55_v"                       ,0) == MatchedAtTheBegining ){ passHLT_Ele25WP60_SC4_Mass55_v = true;}
+
 	
       }
     }
