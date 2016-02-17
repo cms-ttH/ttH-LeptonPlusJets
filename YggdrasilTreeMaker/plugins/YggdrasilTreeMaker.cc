@@ -1825,7 +1825,7 @@ if(n_fatjets==2)pt_fatjet_2=topJet->fatjet.pt();
       // 	// }
 
       // 	if( !(filterjets[ijet].pt()>20. && abs(filterjets[ijet].eta()) < 2.4) ) continue;
-      // 	if( !(filterjets[ijet].bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.89) ) continue;
+      // 	if( !(filterjets[ijet].bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.800) ) continue;
       // 	numBtagFiltJets++;
       // }
 
@@ -1971,8 +1971,8 @@ jcntn++;
       double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
       csvV.push_back(myCSV);
     
-      int csvM0 = ( myCSV > 0.890 ) ? 1 : 0;
-      if( myCSV>0.890 ){
+      int csvM0 = ( myCSV > 0.8000 ) ? 1 : 0;
+      if( myCSV>0.8000 ){
 	numtag += 1;
 	sum_btag_disc_btags += myCSV;
       }
@@ -1995,7 +1995,7 @@ jcntn++;
 	// Get second jet 4Vector and check bTag discriminant
 	TLorentzVector jet1p4;
 	jet1p4.SetPxPyPzE(jJet->px(),jJet->py(),jJet->pz(),jJet->energy());
-	int csvM1 = ( jJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.890 ) ? 1 : 0;
+	int csvM1 = ( jJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.8000 ) ? 1 : 0;
 
 	// Third loop over selected jets
 	for( std::vector<pat::Jet>::const_iterator kJet = jJet; kJet != selectedJets.end(); kJet++ ){ 
@@ -2006,7 +2006,7 @@ jcntn++;
 	  // Get third jet 4Vector and chekc bTag discriminant
 	  TLorentzVector jet2p4;
 	  jet2p4.SetPxPyPzE(kJet->px(),kJet->py(),kJet->pz(),kJet->energy());
-	  int csvM2 = ( kJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.890 ) ? 1 : 0;
+	  int csvM2 = ( kJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.8000 ) ? 1 : 0;
 
 	  // Get sum of three jet 4Vectors
 	  TLorentzVector sum_jet = jet0p4 + jet1p4 + jet2p4;
@@ -2108,7 +2108,7 @@ jcntn++;
 
       // Get CSV discriminant, check if passes Med WP 
       csvV_loose.push_back(myCSV);
-      if( myCSV>0.890 ) numTag_loose++;
+      if( myCSV>0.8000 ) numTag_loose++;
     }
 
 
