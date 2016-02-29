@@ -3,6 +3,7 @@ import FWCore.ParameterSet.Config as cms
 #isMC=True
 isMC=False
 
+enableJECFromLocalDB=False
 
 process = cms.Process("MAOD")
 
@@ -30,6 +31,40 @@ process.options.allowUnscheduled = cms.untracked.bool(True)
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(10000)
     )
+
+
+
+if enableJECFromLocalDB :
+    print "JEC is applied with LOCAL DB."
+
+    import sys
+    import os.path
+   
+
+    #
+    # taken from https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#JecSqliteFile
+    #
+    process.load("CondCore.DBCommon.CondDBCommon_cfi")
+    from CondCore.DBCommon.CondDBSetup_cfi import *
+    process.jec = cms.ESSource("PoolDBESSource",
+      DBParameters = cms.PSet(
+        messageLevel = cms.untracked.int32(0)
+        ),
+      timetype = cms.string('runnumber'),
+      toGet = cms.VPSet(
+      cms.PSet(
+            record = cms.string('JetCorrectionsRecord'),
+            tag    = cms.string('JetCorrectorParametersCollection_Fall15_25nsV2_DATA_AK4PFchs'),
+            label  = cms.untracked.string('AK4PFchs')
+            ),
+      ), 
+#      connect = cms.string( 'sqlite:' + os.environ['CMSSW_BASE'] + '/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Fall15_25nsV2_DATA.db' )
+      connect = cms.string( 'sqlite:Fall15_25nsV2_DATA.db' )
+                            )
+      ## add an es_prefer statement to resolve a possible conflict from simultaneous connection to a global tag
+    process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
+
+
 
 from JetMETCorrections.Configuration.JetCorrectionServices_cff import *
 
