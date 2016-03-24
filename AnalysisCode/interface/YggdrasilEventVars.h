@@ -288,6 +288,12 @@ struct yggdrasilEventVars{
   int IsTauTauLeptonEvent_[rNumSys];
 
 
+  vdouble genjet_pt_[rNumSys];
+  vdouble genjet_eta_[rNumSys];
+  vdouble genjet_phi_[rNumSys];
+  vdouble genjet_m_[rNumSys];
+  vint    genjet_BhadronMatch_[rNumSys];
+
   // loose jets
   Float_t numJets_loose_float_[rNumSys];
   Float_t numTags_loose_float_[rNumSys];
@@ -603,6 +609,12 @@ void yggdrasilEventVars::initialize(){
     jet_phi_[iSys].clear();
     jet_eta_[iSys].clear();
     jet_m_  [iSys].clear();
+
+    genjet_pt_ [iSys].clear();
+    genjet_phi_[iSys].clear();
+    genjet_eta_[iSys].clear();
+    genjet_m_  [iSys].clear();
+    genjet_BhadronMatch_[iSys].clear();
 
     jet_flavour_[iSys].clear();
     jet_genId_[iSys].clear();

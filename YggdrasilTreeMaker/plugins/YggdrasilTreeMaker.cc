@@ -107,9 +107,9 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
 
   
   // Input tags
-  const edm::EDGetTokenT<reco::GenJetCollection> genJetsToken_;
+  edm::EDGetTokenT<reco::GenJetCollection> genJetsToken_;
   
-  const edm::EDGetTokenT<std::vector<int> > genBHadJetIndexToken_;
+  edm::EDGetTokenT<std::vector<int> > genBHadJetIndexToken_;
   const edm::EDGetTokenT<std::vector<int> > genBHadFlavourToken_;
   const edm::EDGetTokenT<std::vector<int> > genBHadFromTopWeakDecayToken_;
   const edm::EDGetTokenT<std::vector<reco::GenParticle> > genBHadPlusMothersToken_;
@@ -265,6 +265,9 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
 
   packedpfToken = consumes <pat::PackedCandidateCollection> (edm::InputTag(std::string("packedPFCandidates")));
 
+  genJetsToken_ = consumes <reco::GenJetCollection> ( edm::InputTag( std::string("slimmedGenJets") ) );
+
+
   beamspotToken = consumes <reco::BeamSpot> (edm::InputTag(std::string("offlineBeamSpot")));
   rhoToken = consumes <double> (edm::InputTag(std::string("fixedGridRhoFastjetAll")));
   mcparicleToken = consumes <reco::GenParticleCollection> (edm::InputTag(std::string("prunedGenParticles")));
@@ -287,6 +290,8 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   worldTree = fs_->make<TTree>("worldTree", "worldTree");
   eve=0; 
   worldTree->Branch("eve.", "yggdrasilEventVars", &eve, 8000, 1);
+
+  genBHadJetIndexToken_ = consumes< std::vector<int> >( edm::InputTag("matchGenBHadron", "genBHadJetIndex", "") );
 
 
   for( int i=0; i<rNumSys; i++ ) neventsFillTree[i] = 0;
@@ -406,6 +411,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   iEvent.getByToken(EDMeleMVAcategoriesToken,h_mvaCategories);  
   std::vector<pat::Electron> electrons = miniAODhelper.GetElectronsWithMVAid(h_electrons,h_mvaValues,h_mvaCategories);
 
+
   ////
   edm::Handle<pat::MuonCollection> muons;
   iEvent.getByToken(muonToken,muons);
@@ -424,8 +430,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   iEvent.getByToken(beamspotToken,bsHandle);
 
   edm::Handle<reco::GenParticleCollection> mcparticles;
+  edm::Handle<reco::GenJetCollection> genjetCollection;
   if( isMC ){
     iEvent.getByToken(mcparicleToken,mcparticles);
+    iEvent.getByToken( genJetsToken_ , genjetCollection );
   }
 
   edm::Handle<double> rhoHandle;
@@ -542,6 +550,45 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       }
     }
   }
+
+
+
+  ///-- Genjet Information 
+  vdouble genjet_pt;
+  vdouble genjet_eta;
+  vdouble genjet_phi;
+  vdouble genjet_m;
+  vint   genjet_BhadronMatch;
+  if( isMC  ){
+
+    //    genjets
+    
+    edm::Handle<std::vector<int> > genBHadJetIndex;
+    iEvent.getByToken(genBHadJetIndexToken_, genBHadJetIndex);
+    
+    const std::vector<reco::GenJet> * genjets  = genjetCollection.product();
+
+    for( unsigned int iGen = 0 ; iGen < genjets->size() ; iGen ++){
+	reco::GenJet jet = genjets->at( iGen );
+
+	genjet_pt  . push_back( jet . pt() );
+	genjet_phi . push_back( jet . phi() );
+	genjet_eta . push_back( jet . eta() );
+	genjet_m   . push_back( jet . mass () );
+	
+	bool b_associateWithBHadron = false;
+	for( unsigned int i = 0 ; i < genBHadJetIndex->size() && ! b_associateWithBHadron ; i++ ){
+	  if( iGen == (unsigned int) genBHadJetIndex->at(i) ){ b_associateWithBHadron = true ; }
+	}
+	genjet_BhadronMatch . push_back( b_associateWithBHadron ? 1 : 0 );
+
+      }
+	   
+
+    // memo : https://github.com/hsatoshi/MiniAODPrivateTuple/blob/master/TupleMaker/plugins/TupleMaker.cc#L3303
+
+  }
+
 
 
   edm::Handle<pat::JetCollection> pftempjets;
@@ -2388,6 +2435,14 @@ int jcntn=0;
     eve->jet_phi_ [iSys]= jet_phi ;
     eve->jet_eta_ [iSys]= jet_eta ;
     eve->jet_m_   [iSys]= jet_m   ;
+
+
+    eve ->  genjet_pt_ [iSys] = genjet_pt ;
+    eve ->  genjet_eta_[iSys] = genjet_eta ; 
+    eve ->  genjet_phi_[iSys] = genjet_phi ;  
+    eve ->  genjet_m_  [iSys] = genjet_m ; 
+    eve ->  genjet_BhadronMatch_[iSys] = genjet_BhadronMatch ; 
+
 
     // loose jets
 
