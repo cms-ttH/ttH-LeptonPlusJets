@@ -1,7 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 
 #isMC=True
-isMC=False
+isMC=True
+
+
+isPUPPI=False
+#--> if isPUPPI=true, change the code too.
 
 enableJECFromLocalDB=False
 
@@ -29,7 +33,7 @@ process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.options.allowUnscheduled = cms.untracked.bool(True)
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10000)
+    input = cms.untracked.int32(10)
     )
 
 
@@ -68,15 +72,26 @@ if enableJECFromLocalDB :
 
 from JetMETCorrections.Configuration.JetCorrectionServices_cff import *
 
-process.ak4PFCHSL1Fastjet = cms.ESProducer(
-    'L1FastjetCorrectionESProducer',
-    level       = cms.string('L1FastJet'),
-    algorithm   = cms.string('AK4PFchs'),
-    srcRho      = cms.InputTag( 'fixedGridRhoFastjetAll' )
+if isPUPPI :
+    process.ak4PFCHSL1Fastjet = cms.ESProducer(
+        'L1FastjetCorrectionESProducer',
+        level       = cms.string('L1FastJet'),
+        algorithm   = cms.string('AK4PFPuppi'),
+        srcRho      = cms.InputTag( 'fixedGridRhoFastjetAll' )
     )
+    process.ak4PFchsL2Relative = ak4CaloL2Relative.clone( algorithm = 'AK4PFPuppi' )
+    process.ak4PFchsL3Absolute = ak4CaloL3Absolute.clone( algorithm = 'AK4PFPuppi' )
 
-process.ak4PFchsL2Relative = ak4CaloL2Relative.clone( algorithm = 'AK4PFchs' )
-process.ak4PFchsL3Absolute = ak4CaloL3Absolute.clone( algorithm = 'AK4PFchs' )
+else :
+    process.ak4PFCHSL1Fastjet = cms.ESProducer(
+        'L1FastjetCorrectionESProducer',
+        level       = cms.string('L1FastJet'),
+        algorithm   = cms.string('AK4PFchs'),
+        srcRho      = cms.InputTag( 'fixedGridRhoFastjetAll' )
+    )
+    process.ak4PFchsL2Relative = ak4CaloL2Relative.clone( algorithm = 'AK4PFchs' )
+    process.ak4PFchsL3Absolute = ak4CaloL3Absolute.clone( algorithm = 'AK4PFchs' )
+
 
 process.ak4PFchsL1L2L3 = cms.ESProducer("JetCorrectionESChain",
     correctors = cms.vstring(
@@ -201,13 +216,29 @@ process.categorizeGenTtbar = categorizeGenTtbar.clone(
 )
 
 if isMC :
-    process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
-                                          isMC    =  cms.string("MC")
+    if isPUPPI :
+        process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
+                                          isMC    =  cms.string("MC"),
+                                          jetPU = cms.string( "PUPPI" )
                                           )
+    else:
+        process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
+                                          isMC    =  cms.string("MC"),
+                                          jetPU = cms.string( "CHS" )
+                                          )
+
 else :
-    process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
-                                          isMC    =  cms.string("data")
+    if isPUPPI :
+        process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
+                                          isMC    =  cms.string("data"),
+                                          jetPU = cms.string( "PUPPI" )
                                           )
+    else:
+        process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
+                                          isMC    =  cms.string("data"),
+                                          jetPU = cms.string( "CHS" )
+                                          )
+        
     
 process.TFileService = cms.Service("TFileService",
 	fileName = cms.string('yggdrasil_treeMaker.root')

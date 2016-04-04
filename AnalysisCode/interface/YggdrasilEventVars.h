@@ -279,6 +279,12 @@ struct yggdrasilEventVars{
   vdouble jet_eta_[rNumSys];
   vdouble jet_phi_[rNumSys];
   vdouble jet_m_[rNumSys];
+
+  vdouble jet_AssociatedGenJet_pt_[rNumSys];
+  vdouble jet_AssociatedGenJet_eta_[rNumSys];
+  vdouble jet_AssociatedGenJet_phi_[rNumSys];
+  vdouble jet_AssociatedGenJet_m_[rNumSys];
+
   vint jet_genId_[rNumSys];
   vint jet_partonflavour_[rNumSys];
   vint jet_flavour_[rNumSys];
@@ -610,6 +616,11 @@ void yggdrasilEventVars::initialize(){
     jet_eta_[iSys].clear();
     jet_m_  [iSys].clear();
 
+    jet_AssociatedGenJet_pt_[iSys].clear();
+    jet_AssociatedGenJet_eta_[iSys].clear();
+    jet_AssociatedGenJet_phi_[iSys].clear();
+    jet_AssociatedGenJet_m_[iSys].clear();
+    
     genjet_pt_ [iSys].clear();
     genjet_phi_[iSys].clear();
     genjet_eta_[iSys].clear();

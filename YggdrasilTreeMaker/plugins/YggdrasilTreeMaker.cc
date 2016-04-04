@@ -212,6 +212,7 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   TopTagger toptagger;
 
   const bool isMC ;
+  const bool usePUPPI ;
 
 };
 
@@ -235,6 +236,7 @@ typedef std::vector< TLorentzVector >          vecTLorentzVector;
 //
 YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   isMC(iConfig.getParameter<std::string>("isMC") == "MC" )
+  , usePUPPI(iConfig.getParameter<std::string>("jetPU") == "PUPPI" )
 {
    //now do what ever initialization is needed
   verbose_ = false;
@@ -257,7 +259,11 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   vertexToken = consumes <reco::VertexCollection> (edm::InputTag(std::string("offlineSlimmedPrimaryVertices")));
   electronToken = consumes <pat::ElectronCollection> (edm::InputTag(std::string("slimmedElectrons")));
   muonToken = consumes <pat::MuonCollection> (edm::InputTag(std::string("slimmedMuons")));
+  if( usePUPPI ){
+  jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJetsPuppi")));
+  }else{
   jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
+  }
   metToken = consumes <pat::METCollection> (edm::InputTag(std::string("slimmedMETs")));
 
   // topJetsToken    = consumes< boosted::HEPTopJetCollection >(edm::InputTag("HEPTopJetsPFMatcher","heptopjets","p"));
@@ -277,8 +283,11 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
     genInfoProductToken = consumes <GenEventInfoProduct> (edm::InputTag(std::string("generator")));
   }
 
+  if( usePUPPI ) {
+  tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJetsPuppi")));
+  }else{
   tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
-  
+  }
   // EDMConversionCollectionToken = consumes <reco::ConversionCollection > (edm::InputTag("reducedEgamma","reducedConversions",""));
   EDMBoostedJetsToken     = consumes< boosted::BoostedJetCollection >(edm::InputTag("BoostedJetMatcher","boostedjets","p"));
 
@@ -770,7 +779,13 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
    
 
   // Do jets stuff
-  std::vector<pat::Jet> pfJets_ID = miniAODhelper.GetSelectedJets(*pfjets,0.,999,jetID::jetLoose,'-');
+  std::vector<pat::Jet> pfJets_ID = miniAODhelper.GetSelectedJets(*pfjets,0.,999,
+								  ( usePUPPI  ?
+								    jetID::none
+								    :
+								    jetID::jetLoose ),
+								  '-');
+
   std::vector<pat::Jet> pfJets_ID_clean = miniAODhelper.GetDeltaRCleanedJets( pfJets_ID, selectedMuons_loose, selectedElectrons_loose, 0.4);
   std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets(pfJets_ID_clean);
  // std::vector<pat::Jet> jetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons_loose, rawJets_ID);
@@ -1892,6 +1907,12 @@ if(n_fatjets==2)pt_fatjet_2=topJet->fatjet.pt();
     vdouble jet_phi;
     vdouble jet_m;
 
+    vdouble jet_AssociatedGenJet_pt;
+    vdouble jet_AssociatedGenJet_eta;
+    vdouble jet_AssociatedGenJet_phi;
+    vdouble jet_AssociatedGenJet_m;
+
+
     vint jet_genId_vect;
     vint jet_partonflavour_vect;
     vint jet_flavour_vect;
@@ -1908,6 +1929,19 @@ int jcntn=0;
       jet_eta .push_back( iJet -> eta() );
       jet_m   .push_back( iJet -> mass()   );
    
+      const reco::GenJet* ref = iJet -> genJet();
+      if (ref) {
+	jet_AssociatedGenJet_pt  .push_back( ref -> pt() );
+	jet_AssociatedGenJet_eta .push_back( ref -> eta() );
+	jet_AssociatedGenJet_phi .push_back( ref -> phi() );
+	jet_AssociatedGenJet_m   .push_back( ref -> mass() );
+      } else {
+	jet_AssociatedGenJet_pt  .push_back( -999 ) ;
+	jet_AssociatedGenJet_eta .push_back( -999 ) ;
+	jet_AssociatedGenJet_phi .push_back( -999 ) ;
+	jet_AssociatedGenJet_m   .push_back( -999 );
+      }
+
       jet_partonflavour_vect.push_back(iJet->partonFlavour());
       jet_flavour_vect.push_back(iJet->hadronFlavour());
 
@@ -2435,6 +2469,11 @@ int jcntn=0;
     eve->jet_phi_ [iSys]= jet_phi ;
     eve->jet_eta_ [iSys]= jet_eta ;
     eve->jet_m_   [iSys]= jet_m   ;
+
+    eve->jet_AssociatedGenJet_pt_[iSys] = jet_AssociatedGenJet_pt;
+    eve->jet_AssociatedGenJet_eta_[iSys]= jet_AssociatedGenJet_eta;
+    eve->jet_AssociatedGenJet_phi_[iSys]= jet_AssociatedGenJet_phi;
+    eve->jet_AssociatedGenJet_m_[iSys]  = jet_AssociatedGenJet_m;
 
 
     eve ->  genjet_pt_ [iSys] = genjet_pt ;
