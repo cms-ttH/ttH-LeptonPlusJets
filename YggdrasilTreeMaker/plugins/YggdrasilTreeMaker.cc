@@ -235,7 +235,8 @@ typedef std::vector< TLorentzVector >          vecTLorentzVector;
 // constructors and destructor
 //
 YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
-  isMC(iConfig.getParameter<std::string>("isMC") == "MC" )
+  genJetsToken_ ( consumes <reco::GenJetCollection> ( iConfig.getParameter<edm::InputTag>("genjet") ) )
+  ,  isMC(iConfig.getParameter<std::string>("isMC") == "MC" )
   , usePUPPI(iConfig.getParameter<std::string>("jetPU") == "PUPPI" )
 {
    //now do what ever initialization is needed
@@ -270,9 +271,6 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   // subFilterJetsToken = consumes< boosted::SubFilterJetCollection >(edm::InputTag("CA12JetsCA3FilterjetsPFMatcher","subfilterjets","p"));
 
   packedpfToken = consumes <pat::PackedCandidateCollection> (edm::InputTag(std::string("packedPFCandidates")));
-
-  genJetsToken_ = consumes <reco::GenJetCollection> ( edm::InputTag( std::string("slimmedGenJets") ) );
-
 
   beamspotToken = consumes <reco::BeamSpot> (edm::InputTag(std::string("offlineBeamSpot")));
   rhoToken = consumes <double> (edm::InputTag(std::string("fixedGridRhoFastjetAll")));

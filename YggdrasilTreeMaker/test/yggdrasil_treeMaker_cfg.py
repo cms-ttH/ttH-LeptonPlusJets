@@ -4,6 +4,11 @@ import FWCore.ParameterSet.Config as cms
 isMC=True
 
 
+#genjetInputTag = cms.InputTag("slimmedGenJets","","")
+#genjetInputTag = cms.InputTag("ak4GenJetsReproduced","","")
+genjetInputTag = cms.InputTag("ak4GenJetsWithChargedLepFromTop","","")
+
+
 isPUPPI=False
 #--> if isPUPPI=true, change the code too.
 
@@ -145,6 +150,53 @@ process.source = cms.Source("PoolSource",
 )
 
 
+###############
+### GenJet production from ChargedLeptonVetoedGenParticles
+
+from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
+
+setattr( process , 'myGenParticlesForJets' ,
+         cms.EDProducer("InputGenJetsParticleSelector",
+                        src = cms.InputTag("packedGenParticles"),
+                        ignoreParticleIDs = cms.vuint32(
+            1000022,
+            1000012, 1000014, 1000016,
+            2000012, 2000014, 2000016,
+            1000039, 5100039,
+            4000012, 4000014, 4000016,
+            9900012, 9900014, 9900016,
+            39, 12,14,16),
+                        partonicFinalState = cms.bool(False),
+                        excludeResonances = cms.bool(False),
+                        excludeFromResonancePids = cms.vuint32(12, 13, 14, 16),
+                        tausAsJets = cms.bool(False)
+                        ) )
+    
+genJetInputParticleCollection = 'myGenParticlesForJets' 
+
+from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
+process.ak4GenJetsReproduced = ak4GenJets.clone(
+    src = genJetInputParticleCollection,
+    rParam = cms.double(0.4),
+    jetAlgorithm = cms.string("AntiKt")
+    )
+
+
+process.GenParticleWithoutChargedLeptonFropTop = cms.EDProducer('GenParticleTopOriginChargedleptonFilter',
+                                                                PackedGenParticle = cms.InputTag( "packedGenParticles" )
+                                                                , PrunedGenParticle = cms.InputTag( "prunedGenParticles" )
+                                                                )
+
+process.myGenParticlesWithChargedLeptonFromTopForJet = process.myGenParticlesForJets . clone(
+    src = cms.InputTag("GenParticleWithoutChargedLeptonFropTop","TopOriginChargedleptonFilteredGenParticle","")
+    )
+process.ak4GenJetsWithChargedLepFromTop = ak4GenJets.clone(
+    src = cms.InputTag( 'myGenParticlesWithChargedLeptonFromTopForJet' ),
+    rParam = cms.double(0.4),
+    jetAlgorithm = cms.string("AntiKt")
+    )
+
+
 
 
 ###############
@@ -218,11 +270,13 @@ process.categorizeGenTtbar = categorizeGenTtbar.clone(
 if isMC :
     if isPUPPI :
         process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
-                                          isMC    =  cms.string("MC"),
-                                          jetPU = cms.string( "PUPPI" )
+                                              genjet =  genjetInputTag,
+                                              isMC    =  cms.string("MC"),
+                                              jetPU = cms.string( "PUPPI" )
                                           )
     else:
         process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
+                                              genjet =  genjetInputTag,
                                           isMC    =  cms.string("MC"),
                                           jetPU = cms.string( "CHS" )
                                           )
@@ -230,11 +284,13 @@ if isMC :
 else :
     if isPUPPI :
         process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
+                                              genjet =  genjetInputTag,
                                           isMC    =  cms.string("data"),
                                           jetPU = cms.string( "PUPPI" )
                                           )
     else:
         process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
+                                              genjet =  genjetInputTag,
                                           isMC    =  cms.string("data"),
                                           jetPU = cms.string( "CHS" )
                                           )
@@ -244,4 +300,7 @@ process.TFileService = cms.Service("TFileService",
 	fileName = cms.string('yggdrasil_treeMaker.root')
 )
 
-process.p = cms.Path(process.electronMVAValueMapProducer * process.ttHTreeMaker)
+process.p = cms.Path(
+#    process.myGenParticlesForJets * process.ak4GenJetsReproduced 
+     process.GenParticleWithoutChargedLeptonFropTop * process.myGenParticlesWithChargedLeptonFromTopForJet * process.ak4GenJetsWithChargedLepFromTop *  
+     process.electronMVAValueMapProducer * process.ttHTreeMaker)
