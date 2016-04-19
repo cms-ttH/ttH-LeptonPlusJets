@@ -1034,7 +1034,7 @@ if(outputwords)cout<<selectedElectrons_tight.at(0).genLepton()->pdgId();
     int trkCharge = -99;
     if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
 
-    int isTight = ( miniAODhelper.isGoodMuon(*iMu, minTightLeptonPt, 2.1, muonID::muonTight, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
+    int isTight = ( miniAODhelper.isGoodMuon(*iMu, 25.0 , 2.1, muonID::muonTight, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
     int isLoose = ( miniAODhelper.isGoodMuon(*iMu, looseLeptonPt, 2.4, muonID::muonTightDL, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
 
     int isPhys14L = false;
