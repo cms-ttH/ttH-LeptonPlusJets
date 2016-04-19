@@ -578,6 +578,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     for( unsigned int iGen = 0 ; iGen < genjets->size() ; iGen ++){
 	reco::GenJet jet = genjets->at( iGen );
 
+	if( jet . pt() < 8.0 ) continue ;
+
 	genjet_pt  . push_back( jet . pt() );
 	genjet_phi . push_back( jet . phi() );
 	genjet_eta . push_back( jet . eta() );
