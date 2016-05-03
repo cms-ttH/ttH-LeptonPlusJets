@@ -153,48 +153,50 @@ process.source = cms.Source("PoolSource",
 ###############
 ### GenJet production from ChargedLeptonVetoedGenParticles
 
-from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
 
-setattr( process , 'myGenParticlesForJets' ,
-         cms.EDProducer("InputGenJetsParticleSelector",
-                        src = cms.InputTag("packedGenParticles"),
-                        ignoreParticleIDs = cms.vuint32(
-            1000022,
-            1000012, 1000014, 1000016,
-            2000012, 2000014, 2000016,
-            1000039, 5100039,
-            4000012, 4000014, 4000016,
-            9900012, 9900014, 9900016,
-            39, 12,14,16),
-                        partonicFinalState = cms.bool(False),
-                        excludeResonances = cms.bool(False),
-                        excludeFromResonancePids = cms.vuint32(12, 13, 14, 16),
-                        tausAsJets = cms.bool(False)
-                        ) )
+if isMC :
+    from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
+
+    setattr( process , 'myGenParticlesForJets' ,
+             cms.EDProducer("InputGenJetsParticleSelector",
+                            src = cms.InputTag("packedGenParticles"),
+                            ignoreParticleIDs = cms.vuint32(
+                1000022,
+                1000012, 1000014, 1000016,
+                2000012, 2000014, 2000016,
+                1000039, 5100039,
+                4000012, 4000014, 4000016,
+                9900012, 9900014, 9900016,
+                39, 12,14,16),
+                            partonicFinalState = cms.bool(False),
+                            excludeResonances = cms.bool(False),
+                            excludeFromResonancePids = cms.vuint32(12, 13, 14, 16),
+                            tausAsJets = cms.bool(False)
+                            ) )
     
-genJetInputParticleCollection = 'myGenParticlesForJets' 
-
-from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
-process.ak4GenJetsReproduced = ak4GenJets.clone(
-    src = genJetInputParticleCollection,
-    rParam = cms.double(0.4),
-    jetAlgorithm = cms.string("AntiKt")
-    )
-
-
-process.GenParticleWithoutChargedLeptonFropTop = cms.EDProducer('GenParticleTopOriginChargedleptonFilter',
-                                                                PackedGenParticle = cms.InputTag( "packedGenParticles" )
-                                                                , PrunedGenParticle = cms.InputTag( "prunedGenParticles" )
-                                                                )
-
-process.myGenParticlesWithChargedLeptonFromTopForJet = process.myGenParticlesForJets . clone(
-    src = cms.InputTag("GenParticleWithoutChargedLeptonFropTop","TopOriginChargedleptonFilteredGenParticle","")
-    )
-process.ak4GenJetsWithChargedLepFromTop = ak4GenJets.clone(
-    src = cms.InputTag( 'myGenParticlesWithChargedLeptonFromTopForJet' ),
-    rParam = cms.double(0.4),
-    jetAlgorithm = cms.string("AntiKt")
-    )
+    genJetInputParticleCollection = 'myGenParticlesForJets' 
+    
+    from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
+    process.ak4GenJetsReproduced = ak4GenJets.clone(
+        src = genJetInputParticleCollection,
+        rParam = cms.double(0.4),
+        jetAlgorithm = cms.string("AntiKt")
+        )
+    
+    
+    process.GenParticleWithoutChargedLeptonFropTop = cms.EDProducer('GenParticleTopOriginChargedleptonFilter',
+                                                                    PackedGenParticle = cms.InputTag( "packedGenParticles" )
+                                                                    , PrunedGenParticle = cms.InputTag( "prunedGenParticles" )
+                                                                    )
+    
+    process.myGenParticlesWithChargedLeptonFromTopForJet = process.myGenParticlesForJets . clone(
+        src = cms.InputTag("GenParticleWithoutChargedLeptonFropTop","TopOriginChargedleptonFilteredGenParticle","")
+        )
+    process.ak4GenJetsWithChargedLepFromTop = ak4GenJets.clone(
+        src = cms.InputTag( 'myGenParticlesWithChargedLeptonFromTopForJet' ),
+        rParam = cms.double(0.4),
+        jetAlgorithm = cms.string("AntiKt")
+        )
 
 
 
@@ -203,69 +205,71 @@ process.ak4GenJetsWithChargedLepFromTop = ak4GenJets.clone(
 #### tt+X
 ###############
 # Setting input particle collections to be used by the tools
-genJetCollection = 'ak4GenJetsCustom'
-genParticleCollection = 'prunedGenParticles'
-genJetInputParticleCollection = 'packedGenParticles'
-
+    genJetCollection = 'ak4GenJetsCustom'
+    genParticleCollection = 'prunedGenParticles'
+    genJetInputParticleCollection = 'packedGenParticles'
+    
 ## producing a subset of particles to be used for jet clustering
-from RecoJets.Configuration.GenJetParticles_cff import genParticlesForJetsNoNu
-process.genParticlesForJetsNoNu = genParticlesForJetsNoNu.clone(
+    from RecoJets.Configuration.GenJetParticles_cff import genParticlesForJetsNoNu
+    process.genParticlesForJetsNoNu = genParticlesForJetsNoNu.clone(
 	src = genJetInputParticleCollection
-)
-
+        )
+    
 # Supplies PDG ID to real name resolution of MC particles
-process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
-
+    process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
+    
 # Producing own jets for testing purposes
-from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
-process.ak4GenJetsCustom = ak4GenJets.clone(
-    src = 'genParticlesForJetsNoNu',
-#    src = genJetInputParticleCollection,
-    rParam = cms.double(0.4),
-    jetAlgorithm = cms.string("AntiKt")
-)
-
-# Ghost particle collection used for Hadron-Jet association 
-# MUST use proper input particle collection
-from PhysicsTools.JetMCAlgos.HadronAndPartonSelector_cfi import selectedHadronsAndPartons
-process.selectedHadronsAndPartons = selectedHadronsAndPartons.clone(
-    particles = genParticleCollection
-)
-
-# Input particle collection for matching to gen jets (partons + leptons) 
-# MUST use use proper input jet collection: the jets to which hadrons should be associated
-# rParam and jetAlgorithm MUST match those used for jets to be associated with hadrons
-# More details on the tool: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagMCTools#New_jet_flavour_definition
-from PhysicsTools.JetMCAlgos.AK4PFJetsMCFlavourInfos_cfi import ak4JetFlavourInfos
-process.genJetFlavourInfos = ak4JetFlavourInfos.clone(
-    jets = genJetCollection,
-    rParam = cms.double(0.4),
-    jetAlgorithm = cms.string("AntiKt")
-)
-
-
+    from RecoJets.JetProducers.ak4GenJets_cfi import ak4GenJets
+    process.ak4GenJetsCustom = ak4GenJets.clone(
+        src = 'genParticlesForJetsNoNu',
+        #    src = genJetInputParticleCollection,
+        rParam = cms.double(0.4),
+        jetAlgorithm = cms.string("AntiKt")
+        )
+    
+    # Ghost particle collection used for Hadron-Jet association 
+    # MUST use proper input particle collection
+    from PhysicsTools.JetMCAlgos.HadronAndPartonSelector_cfi import selectedHadronsAndPartons
+    process.selectedHadronsAndPartons = selectedHadronsAndPartons.clone(
+        particles = genParticleCollection
+        )
+    
+    # Input particle collection for matching to gen jets (partons + leptons) 
+    # MUST use use proper input jet collection: the jets to which hadrons should be associated
+    # rParam and jetAlgorithm MUST match those used for jets to be associated with hadrons
+    # More details on the tool: https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagMCTools#New_jet_flavour_definition
+    from PhysicsTools.JetMCAlgos.AK4PFJetsMCFlavourInfos_cfi import ak4JetFlavourInfos
+    process.genJetFlavourInfos = ak4JetFlavourInfos.clone(
+        jets = genJetCollection,
+        rParam = cms.double(0.4),
+        jetAlgorithm = cms.string("AntiKt")
+        )
+    
+    
 # Plugin for analysing B hadrons
 # MUST use the same particle collection as in selectedHadronsAndPartons
-from PhysicsTools.JetMCAlgos.GenHFHadronMatcher_cff import matchGenBHadron
-process.matchGenBHadron = matchGenBHadron.clone(
-    genParticles = genParticleCollection
-)
-
-# Plugin for analysing C hadrons
-# MUST use the same particle collection as in selectedHadronsAndPartons
-from PhysicsTools.JetMCAlgos.GenHFHadronMatcher_cff import matchGenCHadron
-process.matchGenCHadron = matchGenCHadron.clone(
-    genParticles = genParticleCollection
-)
-
+    from PhysicsTools.JetMCAlgos.GenHFHadronMatcher_cff import matchGenBHadron
+    process.matchGenBHadron = matchGenBHadron.clone(
+        genParticles = genParticleCollection
+        )
+    
+    # Plugin for analysing C hadrons
+    # MUST use the same particle collection as in selectedHadronsAndPartons
+    from PhysicsTools.JetMCAlgos.GenHFHadronMatcher_cff import matchGenCHadron
+    process.matchGenCHadron = matchGenCHadron.clone(
+        genParticles = genParticleCollection
+        )
+    
 ## Producer for ttbar categorisation ID
 # MUST use same genJetCollection as used for tools above
-from TopQuarkAnalysis.TopTools.GenTtbarCategorizer_cfi import categorizeGenTtbar
-process.categorizeGenTtbar = categorizeGenTtbar.clone(
-    genJetPtMin = 20.,
-    genJetAbsEtaMax = 2.4,
-    genJets = genJetCollection,
-)
+    from TopQuarkAnalysis.TopTools.GenTtbarCategorizer_cfi import categorizeGenTtbar
+    process.categorizeGenTtbar = categorizeGenTtbar.clone(
+        genJetPtMin = 20.,
+        genJetAbsEtaMax = 2.4,
+        genJets = genJetCollection,
+        )
+    
+
 
 if isMC :
     if isPUPPI :
@@ -300,7 +304,10 @@ process.TFileService = cms.Service("TFileService",
 	fileName = cms.string('yggdrasil_treeMaker.root')
 )
 
-process.p = cms.Path(
-#    process.myGenParticlesForJets * process.ak4GenJetsReproduced 
-     process.GenParticleWithoutChargedLeptonFropTop * process.myGenParticlesWithChargedLeptonFromTopForJet * process.ak4GenJetsWithChargedLepFromTop *  
-     process.electronMVAValueMapProducer * process.ttHTreeMaker)
+if isMC : 
+    process.p = cms.Path(
+        process.GenParticleWithoutChargedLeptonFropTop * process.myGenParticlesWithChargedLeptonFromTopForJet * process.ak4GenJetsWithChargedLepFromTop *  
+        process.electronMVAValueMapProducer * process.ttHTreeMaker)
+else :
+    process.p = cms.Path(
+        process.electronMVAValueMapProducer * process.ttHTreeMaker)
