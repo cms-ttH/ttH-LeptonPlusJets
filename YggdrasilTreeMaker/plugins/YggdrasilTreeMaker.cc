@@ -2000,7 +2000,7 @@ int jcntn=0;
       
       
 
-      jet_combinedMVABJetTags.push_back( iJet->bDiscriminator("pfCombinedMVABJetTags") );
+      jet_combinedMVABJetTags.push_back( iJet->bDiscriminator("pfCombinedMVAV2BJetTags") );
       jet_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") );
 
       // Second Loop over selected jets
@@ -2093,7 +2093,7 @@ int jcntn=0;
 
       jet_all_flavour.push_back(iJet->partonFlavour());
 
-      jet_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("pfCombinedMVABJetTags") );
+      jet_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("pfCombinedMVAV2BJetTags") );
       jet_loose_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") );
 
       // MHT
