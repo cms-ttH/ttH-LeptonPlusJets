@@ -1152,8 +1152,11 @@ if(outputwords)cout<<selectedElectrons_tight.at(0).genLepton()->pdgId();
     int trkCharge = -99;
     if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
 
-    int isTight = ( miniAODhelper.isGoodElectron(*iEle, minTightLeptonPt, 2.1, electronID::electronTight) ) ? 1 : 0;
-    int isLoose = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, 2.4, electronID::electronLoose) ) ? 1 : 0;
+
+    const double ElTightPTCut = 30 ;
+    const double ElLoosePTCut = 15 ;
+    int isTight = ( miniAODhelper.isGoodElectron(*iEle, ElTightPTCut, 2.1, electronID::electronEndOf15MVA80iso0p15 ) ) ? 1 : 0;
+    int isLoose = ( miniAODhelper.isGoodElectron(*iEle, ElLoosePTCut, 2.4, electronID::electronEndOf15MVA80iso0p15) ) ? 1 : 0;
 
     int isPhys14L = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, 2.4, electronID::electronPhys14L) ) ? 1 : 0;
     int isPhys14M = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, 2.4, electronID::electronPhys14M) ) ? 1 : 0;
