@@ -23,10 +23,11 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 #### caution: use the correct global tag for MC or Data 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 
+# Update global tag based on : https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?rev=568
 if isMC:
-    process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_RunIIFall15DR76_v1'
+    process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_2016_v3'
 else :
-    process.GlobalTag.globaltag = '76X_dataRun2_16Dec2015_v0'
+    process.GlobalTag.globaltag = '80X_dataRun2_Express_v6'
 
 
 
