@@ -644,8 +644,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       iPV++;
       bool isGood = ( !(vtx->isFake()) &&
 		      (vtx->ndof() >= 4.0) &&
-		      (abs(vtx->z()) <= 24.0) &&
-		      (abs(vtx->position().Rho()) <= 2.0) 
+		      (fabs(vtx->z()) <= 24.0) &&
+		      (fabs(vtx->position().Rho()) <= 2.0) 
 		      );
 		      
       if( !isGood ) continue;
@@ -661,10 +661,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   eve->GoodFirstPV_=firstGoodPV;
 
-  // if( !firstGoodPV ){
-  //   std::cout << "ERROR!! First PV does not pass requirements! Skipping event" << std::endl;
-  //   return;
-  // }
+  if( !firstGoodPV ){
+    std::cout << "[NOTE] First PV does not pass requirements. Skipping event" << std::endl;
+    return;
+  }
 
   if( numpv>0 ) miniAODhelper.SetVertex(vertex);
 
