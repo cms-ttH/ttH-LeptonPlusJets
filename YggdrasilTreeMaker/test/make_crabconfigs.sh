@@ -14,10 +14,7 @@ diff yggdrasil_treeMaker_cfg.py __yggdrasil_treeMaker_MC_cfg.py
 cat yggdrasil_treeMaker_cfg.py | sed "s|isMC=True|isMC=False|g" > __yggdrasil_treeMaker_DATA_cfg.py 
 diff yggdrasil_treeMaker_cfg.py __yggdrasil_treeMaker_DATA_cfg.py
 
-
-nickname="CSVv2_Ygg_73f85e6_withDataNewJECResubmitForDataEl"
-#nickname="MVA_hogehoge"
-
+nickname="Satoshi_CHSJETS_2cb4bf82b_ElectronIdFlagUpdated"
 
 
 ds[1]=/ttHTobb_M125_13TeV_powheg_pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
@@ -91,8 +88,48 @@ ds[16]=/SingleElectron/Run2015D-16Dec2015-v1/MINIAOD
 name[16]=DataElD
 ismc[16]=DATA
 
+ds[17]=/TT_TuneCUETP8M1_13TeV-powheg-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext4-v1/MINIAODSIM
+name[17]=ttbarext4
+ismc[17]=MC
 
-for idx in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
+
+ds[18]=/TTToSemiLeptonic_13TeV-powheg/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext1-v1/MINIAODSIM
+name[18]=ttbarsemilep
+ismc[18]=MC
+
+
+
+ds[19]=/QCD_HT100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
+ds[20]=/QCD_HT200to300_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
+ds[21]=/QCD_HT300to500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
+ds[22]=/QCD_HT500to700_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
+name[19]=QCDHT100to200
+name[20]=QCDHT200to300
+name[21]=QCDHT300to500
+name[22]=QCDHT500to700
+ismc[19]=MC
+ismc[20]=MC
+ismc[21]=MC
+ismc[22]=MC
+
+
+ds[23]=/QCD_HT700to1000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
+ds[24]=/QCD_HT1000to1500_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
+ds[25]=/QCD_HT1500to2000_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
+ds[26]=/QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
+name[23]=QCDHT700to1000
+name[24]=QCDHT1000to1500
+name[25]=QCDHT1500to2000
+name[26]=QCDHT2000toInf
+ismc[23]=MC
+ismc[24]=MC
+ismc[25]=MC
+ismc[26]=MC
+
+
+
+
+for idx in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
 do
 
 
@@ -103,7 +140,7 @@ cat crabconfig_template.py | sed "s|XXXXX|${name[${idx}]}|g" | sed "s|YYYYY|${ni
 else
 cat crabconfig_template.py | sed "s|XXXXX|${name[${idx}]}|g" | sed "s|YYYYY|${nickname}|g" | sed "s|ZZZZZ|${ds[$idx]}|g" | \
                              sed "s|QQQQQ|${ismc[$idx]}|g" | \
-   sed "s|#PPPPP#|config.Data.lumiMask=\"../data/Cert_246908-260627_13TeV_PromptReco_Collisions15_25ns_JSON_v2.txt\"|g" \
+   sed "s|#PPPPP#|config.Data.lumiMask=\"../data/Cert_13TeV_16Dec2015ReReco_Collisions15_25ns_JSON_Silver.txt\"|g" \
     > __CRABCONFIG__${name[${idx}]}.py
 fi
 
