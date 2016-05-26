@@ -36,7 +36,7 @@ config.Data.inputDBS = 'global'
 config.Data.splitting = 'FileBased'
 config.Data.unitsPerJob = 1
 # config.Data.unitsPerJob = 10  # <<<<<<<- normal.
-config.Data.outLFNDirBase = '/store/user/%s/' % (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/group/lpctthrun2/'
 config.Data.publication = True
 
 #PPPPP#
