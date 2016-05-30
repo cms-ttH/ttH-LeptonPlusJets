@@ -15,9 +15,8 @@ cat yggdrasil_treeMaker_cfg.py | sed "s|isMC=True|isMC=False|g" > __yggdrasil_tr
 diff yggdrasil_treeMaker_cfg.py __yggdrasil_treeMaker_DATA_cfg.py
 
 
-nickname="80xMiniAOD_Ygg_a0a09b35c5"
+nickname="80xMiniAOD_Ygg_a0a09b35c5__GooldenCert_271036-273730"
 #nickname="MVA_hogehoge"
-
 
 
 # ds[1]=/ttHTobb_M125_13TeV_powheg_pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
@@ -46,7 +45,7 @@ ismc[6]=MC
 
 
 ds[7]=/SingleMuon/Run2016B-PromptReco-v1/MINIAOD
-name[7]=DataMuD
+name[7]=DataMuV1
 ismc[7]=DATA
 
 
@@ -79,11 +78,20 @@ ismc[7]=DATA
 
 
 ds[16]=/SingleElectron/Run2016B-PromptReco-v1/MINIAOD
-name[16]=DataElD
+name[16]=DataElV1
 ismc[16]=DATA
 
 
-for idx in 4 5 6 7 16
+ds[17]=/SingleMuon/Run2016B-PromptReco-v2/MINIAOD
+name[17]=DataMuV2
+ismc[17]=DATA
+
+
+ds[18]=/SingleElectron/Run2016B-PromptReco-v2/MINIAOD
+name[18]=DataElV2
+ismc[18]=DATA
+
+for idx in 7 16 17 18
 do
 
 
@@ -94,9 +102,14 @@ cat crabconfig_template.py | sed "s|XXXXX|${name[${idx}]}|g" | sed "s|YYYYY|${ni
 else
 cat crabconfig_template.py | sed "s|XXXXX|${name[${idx}]}|g" | sed "s|YYYYY|${nickname}|g" | sed "s|ZZZZZ|${ds[$idx]}|g" | \
                              sed "s|QQQQQ|${ismc[$idx]}|g" | \
-   sed "s|#PPPPP#|config.Data.lumiMask=\"../data/Cert_271036-273450_13TeV_PromptReco_Collisions16_JSON_NoL1T.txt\"|g" \
+   sed "s|#PPPPP#|config.Data.lumiMask=\"../data/Cert_271036-273730_13TeV_PromptReco_Collisions16_JSON.txt\"|g" \
     > __CRABCONFIG__${name[${idx}]}.py
 fi
+
+#   sed "s|#PPPPP#|config.Data.lumiMask=\"../data/json_DCSONLY___May26.txt\"|g" \
+
+
+#   sed "s|#PPPPP#|config.Data.lumiMask=\"../data/Cert_271036-273450_13TeV_PromptReco_Collisions16_JSON_NoL1T.txt\"|g" \
 
 
 # sed "s|#PPPPP#|config.Data.lumiMask=\"../data/Cert_246908-260627_13TeV_PromptReco_Collisions15_25ns_JSON.txt\"|g" \
