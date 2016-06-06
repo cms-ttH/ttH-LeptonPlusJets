@@ -70,8 +70,6 @@ struct yggdrasilEventVars{
   int lumi_;
   long evt_;
 
-  double top_pt_;
-  double antitop_pt_;
 
 
   int     numTruePV_;
@@ -186,9 +184,6 @@ void yggdrasilEventVars::initialize(){
   run_  = -99;
   lumi_ = -99;
   evt_ = -99;
-
-  top_pt_     = -99.9;
-  antitop_pt_ = -99.9;
 
 
   numTruePV_ = -99;
