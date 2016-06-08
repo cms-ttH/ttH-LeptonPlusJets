@@ -741,7 +741,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   vdouble lepton_eta;
   vdouble lepton_phi;
   vdouble lepton_relIso;
-  vdouble lepton_relIsoR04;
   vdouble lepton_iso_sumChargedHadronPt;
   vdouble lepton_iso_sumNeutralHadronEt;
   vdouble lepton_iso_sumPhotonEt;
@@ -839,8 +838,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     lepton_pt.push_back(iMu->pt());
     lepton_eta.push_back(iMu->eta());
     lepton_phi.push_back(iMu->phi());
-    lepton_relIso.push_back(miniAODhelper.GetMuonRelIso(*iMu));
-    lepton_relIsoR04.push_back(miniAODhelper.GetMuonRelIso(*iMu, coneSize::R04, corrType::deltaBeta));
+    lepton_relIso.push_back( miniAODhelper.GetMuonRelIso(*iMu, coneSize::R04, corrType::deltaBeta) ) ;
     lepton_iso_sumChargedHadronPt.push_back(iMu->pfIsolationR03().sumChargedHadronPt);
     lepton_iso_sumNeutralHadronEt.push_back(iMu->pfIsolationR03().sumNeutralHadronEt);
     lepton_iso_sumPhotonEt.push_back(iMu->pfIsolationR03().sumPhotonEt);
@@ -990,7 +988,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     lepton_eta.push_back(iEle->eta());
     lepton_phi.push_back(iEle->phi());
     lepton_relIso.push_back(miniAODhelper.GetElectronRelIso(*iEle));
-    lepton_relIsoR04.push_back(miniAODhelper.GetElectronRelIso(*iEle));
     lepton_iso_sumChargedHadronPt.push_back(iEle->pfIsolationVariables().sumChargedHadronPt);
     lepton_iso_sumNeutralHadronEt.push_back(iEle->pfIsolationVariables().sumNeutralHadronEt);
     lepton_iso_sumPhotonEt.push_back(iEle->pfIsolationVariables().sumPhotonEt);
