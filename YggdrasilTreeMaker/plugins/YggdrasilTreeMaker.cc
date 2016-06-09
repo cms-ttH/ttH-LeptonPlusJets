@@ -736,7 +736,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   
   vint lepton_genId, lepton_genParentId, lepton_genGrandParentId, lepton_trkCharge, lepton_isMuon, lepton_isTight, lepton_isLoose;
-  vint lepton_isPhys14L, lepton_isPhys14M, lepton_isPhys14T;
   vdouble lepton_pt;
   vdouble lepton_eta;
   vdouble lepton_phi;
@@ -791,12 +790,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     int trkCharge = -99;
     if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
 
-    int isTight = ( miniAODhelper.isGoodMuon(*iMu, 25.0 , 2.1, muonID::muonTight, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
-    int isLoose = ( miniAODhelper.isGoodMuon(*iMu, looseLeptonPt, 2.4, muonID::muonTightDL, coneSize::R04, corrType::deltaBeta) ) ? 1 : 0;
+    int isPOGTight = miniAODhelper.passesMuonPOGIdTight(*iMu) ? 1 : 0;
+    int isPOGLoose = 1 ; //
 
-    int isPhys14L = false;
-    int isPhys14M = false;
-    int isPhys14T = false;
 
     double d0 = -999;
     double dZ = -999;
@@ -827,11 +823,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
     lepton_trkCharge.push_back(trkCharge);
     lepton_isMuon.push_back(1);
-    lepton_isTight.push_back(isTight);
-    lepton_isLoose.push_back(isLoose);
-    lepton_isPhys14L.push_back(isPhys14L);
-    lepton_isPhys14M.push_back(isPhys14M);
-    lepton_isPhys14T.push_back(isPhys14T);
+    lepton_isTight.push_back(isPOGTight);
+    lepton_isLoose.push_back(isPOGLoose);
     lepton_genId.push_back(genId);
     lepton_genParentId.push_back(genParentId);
     lepton_genGrandParentId.push_back(genGrandParentId);
@@ -904,14 +897,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
 
 
-    const double ElTightPTCut = 30 ;
-    const double ElLoosePTCut = 15 ;
-    int isTight = ( miniAODhelper.isGoodElectron(*iEle, ElTightPTCut, 2.1, electronID::electronEndOf15MVA80iso0p15 ) ) ? 1 : 0;
-    int isLoose = ( miniAODhelper.isGoodElectron(*iEle, ElLoosePTCut, 2.4, electronID::electronEndOf15MVA80iso0p15) ) ? 1 : 0;
-
-    int isPhys14L = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, 2.4, electronID::electronPhys14L) ) ? 1 : 0;
-    int isPhys14M = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, 2.4, electronID::electronPhys14M) ) ? 1 : 0;
-    int isPhys14T = ( miniAODhelper.isGoodElectron(*iEle, looseLeptonPt, 2.4, electronID::electronPhys14T) ) ? 1 : 0;
+    int isPOGTight = miniAODhelper.PassesMVAid80(*iEle ) ? 1 : 0  ;
+    int isPOGLoose = miniAODhelper.PassesMVAid90(*iEle ) ? 1 : 0  ;
 
 
     double mvaTrigValue = -99;//myMVATrig->mvaValue(*iEle,false);
@@ -976,11 +963,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
     lepton_trkCharge.push_back(trkCharge);
     lepton_isMuon.push_back(0);
-    lepton_isTight.push_back(isTight);
-    lepton_isLoose.push_back(isLoose);
-    lepton_isPhys14L.push_back(isPhys14L);
-    lepton_isPhys14M.push_back(isPhys14M);
-    lepton_isPhys14T.push_back(isPhys14T);
+    lepton_isTight.push_back(isPOGTight);
+    lepton_isLoose.push_back(isPOGLoose);
     lepton_genId.push_back(genId);
     lepton_genParentId.push_back(genParentId);
     lepton_genGrandParentId.push_back(genGrandParentId);
@@ -1092,12 +1076,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
     // Get nontagged jet collection
     std::vector<pat::Jet> selectedJets_untag_unsorted = selectedJets_tag_unsorted;//miniAODhelper.GetSelectedJets( correctedJets, 20., 2.4, jetID::none, 'M' ); 
-    //std::vector<pat::Jet> selectedJets_untag_unsorted = miniAODhelper.GetSymmetricDifference( selectedJets_unsorted, selectedJets_tag_unsorted );
-
-
-
-    // // Require at least 2 tags
-    // if( !(selectedJets_tag_unsorted.size()>=2) ) continue;
 
   
     // Sort jet collections by pT
@@ -1105,10 +1083,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     std::vector<pat::Jet> selectedJets_tag_uncleaned   = miniAODhelper.GetSortedByPt( selectedJets_tag_unsorted );
     std::vector<pat::Jet> selectedJets_untag_uncleaned = miniAODhelper.GetSortedByPt( selectedJets_untag_unsorted );
     
-    std::vector<pat::Jet> selectedJets        = miniAODhelper.GetDeltaRCleanedJets( selectedJets_uncleaned,selectedMuons_loose,selectedElectrons_loose,0.4);
-    std::vector<pat::Jet> selectedJets_tag    = miniAODhelper.GetDeltaRCleanedJets( selectedJets_tag_uncleaned,selectedMuons_loose,selectedElectrons_loose,0.4);
-    std::vector<pat::Jet> selectedJets_untag = miniAODhelper.GetDeltaRCleanedJets( selectedJets_untag_uncleaned,selectedMuons_loose,selectedElectrons_loose,0.4);
-
 
   ///// HEP top tagged jet
   int numTopTags = 0;
@@ -1223,7 +1197,7 @@ n_fatjets++;
     vint jet_genGrandParentId_vect;
 
     // Loop over selected jets
-    for( std::vector<pat::Jet>::const_iterator iJet = selectedJets.begin(); iJet != selectedJets.end(); iJet++ ){ 
+    for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_unsorted.begin(); iJet != selectedJets_unsorted.end(); iJet++ ){ 
 
       jet_pt  .push_back( iJet -> pt()  );
       jet_phi .push_back( iJet -> phi() );
