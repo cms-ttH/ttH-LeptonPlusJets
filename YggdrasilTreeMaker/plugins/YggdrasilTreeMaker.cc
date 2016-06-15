@@ -679,8 +679,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 								    jetID::jetLoose ),
 								  '-');
 
-  std::vector<pat::Jet> pfJets_ID_clean = miniAODhelper.GetDeltaRCleanedJets( pfJets_ID, selectedMuons_loose, selectedElectrons_loose, 0.4);
-  std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets(pfJets_ID_clean);
+  std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets( pfJets_ID );
  // std::vector<pat::Jet> jetsNoMu = miniAODhelper.RemoveOverlaps(selectedMuons_loose, rawJets_ID);
  // std::vector<pat::Jet> jetsNoEle = miniAODhelper.RemoveOverlaps(selectedElectrons_loose, jetsNoMu);
   std::vector<pat::Jet> correctedJets_noSys = miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup);
@@ -1197,7 +1196,7 @@ n_fatjets++;
     vint jet_genGrandParentId_vect;
 
     // Loop over selected jets
-    for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_unsorted.begin(); iJet != selectedJets_unsorted.end(); iJet++ ){ 
+    for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_uncleaned.begin(); iJet != selectedJets_uncleaned.end(); iJet++ ){ 
 
       jet_pt  .push_back( iJet -> pt()  );
       jet_phi .push_back( iJet -> phi() );
