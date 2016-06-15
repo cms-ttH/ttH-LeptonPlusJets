@@ -790,7 +790,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
 
     int isPOGTight = miniAODhelper.passesMuonPOGIdTight(*iMu) ? 1 : 0;
-    int isPOGLoose = 1 ; //
+    int isPOGLoose = 1 ; //this is needed for the consistency of variables with electron.
 
 
     double d0 = -999;
@@ -818,6 +818,12 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     }
 
     int numberOfMatchedStations = iMu->numberOfMatchedStations();
+
+    // our pre-selections 
+    if( iMu->pt() < 15 ){ continue;}
+    if( fabs( iMu->eta() ) > 2.4 ){ continue;}
+
+    //
 
 
     lepton_trkCharge.push_back(trkCharge);
@@ -899,6 +905,12 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     int isPOGTight = miniAODhelper.PassesMVAid80(*iEle ) ? 1 : 0  ;
     int isPOGLoose = miniAODhelper.PassesMVAid90(*iEle ) ? 1 : 0  ;
 
+    // our pre-selections 
+    if( iEle->pt() < 15 ){ continue;}
+    if( fabs( iEle->eta() ) > 2.4 ){ continue;}
+    if( isPOGLoose != 1 ){ continue;}
+    //
+
 
     double mvaTrigValue = -99;//myMVATrig->mvaValue(*iEle,false);
 
@@ -970,7 +982,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     lepton_pt.push_back(iEle->pt());
     lepton_eta.push_back(iEle->eta());
     lepton_phi.push_back(iEle->phi());
-    lepton_relIso.push_back(miniAODhelper.GetElectronRelIso(*iEle));
+    lepton_relIso.push_back(miniAODhelper.GetElectronRelIso(*iEle, coneSize::R03, corrType::rhoEA,effAreaType::spring15) );
     lepton_iso_sumChargedHadronPt.push_back(iEle->pfIsolationVariables().sumChargedHadronPt);
     lepton_iso_sumNeutralHadronEt.push_back(iEle->pfIsolationVariables().sumNeutralHadronEt);
     lepton_iso_sumPhotonEt.push_back(iEle->pfIsolationVariables().sumPhotonEt);
