@@ -7,7 +7,7 @@ ttH-LeptonPlusJets
 
 
 cmsrel CMSSW_8_0_8_patch1
-cd CMSSW_7_6_3/src/
+cd CMSSW_8_0_8_patch1/src/
 cmsenv
 
 #git clone git@github.com:hsatoshi/MiniAOD.git  -b satoshi_80x
