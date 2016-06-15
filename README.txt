@@ -26,17 +26,23 @@ scram b
 
 
 Selection of electron
- - slimmedElectrons from miniAOD
- - No selection.
+ - slimmedElectrons from MiniAOD
+ - pt > 20 GeV
+ - |eta| < 2.4
 
 Selection of muon
- - slimmedMuons from miniAOD
- - No selection
+ - slimmedMuons from MiniAOD
+ - POG loose ID
+ - pt > 20 GeV
+ - |eta| < 2.4
 
 Selection of jets
- - slimmedJets from iniAOD 
- - Pt > 20 GeV after JEC.
- - |Eta| < 5.
+ - slimmedJets from MiniAOD 
+ - POG loose Jet ID (jetID::jetLoose) with MiniAODHelper
+ - Un-correct with MiniAODHelper
+ - Correct    with MiniAODHelper
+ - PT > 20 GeV, |eta|<5.
+ - Stored in PT-order.
 
 
 Selection of gen jets
@@ -55,12 +61,14 @@ Event
  run_  : run number
  lumi_ : lumi block
  evt_  : event number
- numTruePV_ : 
- numGenPV_  :
 
- GoodFirstPV_ :
- numPVs_ :
- numSys_ :
+ numTruePV_ : getTrueNumInteractions()
+ numGenPV_  : getPU_NumInteractions()
+
+ GoodFirstPV_ : if the LV is good (it checks !isFake, ndof, z and rho.)
+ numPVs_ : number of good vertex.
+
+ numSys_ : number of systematics in the tree.
 
  additionalJetEventId_;
 
@@ -76,13 +84,18 @@ passHLT_XXXX : trigger for the path. 1=pass
 
 Lepton.
 
-lepton_isMuon_  : If muon, 1. If electron, 0. 
-lepton_isTight_ : POG Tight ID. 1=pass. [*1] 
-lepton_isLoose_ : POG Loose ID. 1=pass. [*1]
 lepton_pt_      : pt
 lepton_eta_     : eta
-lepton_phi_      : phi
-lepton_relIso_   : delta_beta corrected relative isolation. cone 04.
+lepton_phi_     : phi
+lepton_isMuon_  : If muon, 1. If electron, 0. 
+lepton_relIso_  : Muon, delta_beta corrected relative isolation. cone 04. Calculated with MiniAODHelper.
+                : Ele , EffectiveArea-corrected isolation, cone 0.3 (Calculated with MiniAODHelper with effAreaType::spring15)
+lepton_isTight_ : POG Tight ID. 1=pass. [*1] 
+lepton_isLoose_ : POG Loose ID. 1=pass. [*1]
+
+[*1] POG lepton ID : 
+ Muon POG loose ID is not used at the moment. Always 1.
+ Electron POG tight=MVA80. Loose=MVA90.
 
 
 Reconstructed ak4 jet.
@@ -119,10 +132,5 @@ genjet_eta_: eta
 genjet_phi_: phi
 genjet_m_  : mass
 genjet_BhadronMatch_ : =1 if this gen jet is regarded as a B-hadron with by GenHFHadronMatcher --[*2]
-
-
-[*1] POG lepton ID : 
- Muon POG loose ID is not used at the moment. Always 1.
- Electron POG tight=MVA80. Loose=MVA90.
 
 [*2] GenHFHadronMatcher in PhysicsTools.JetMCAlgos.GenHFHadronMatcher_cff
