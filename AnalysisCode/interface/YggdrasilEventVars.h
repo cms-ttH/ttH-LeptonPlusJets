@@ -86,6 +86,7 @@ struct yggdrasilEventVars{
   vdouble lepton_pt_;
   vdouble lepton_eta_;
   vdouble lepton_phi_;
+  vdouble lepton_e_;
   vdouble lepton_relIso_;
 
   Float_t wgt_lumi_;
@@ -200,6 +201,7 @@ void yggdrasilEventVars::initialize(){
   lepton_pt_.clear();
   lepton_eta_.clear();
   lepton_phi_.clear();
+  lepton_e_.clear();
   lepton_relIso_.clear();
 
   wgt_generator_        = -99.9;
