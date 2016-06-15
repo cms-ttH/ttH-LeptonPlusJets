@@ -87,6 +87,7 @@ Lepton.
 lepton_pt_      : pt
 lepton_eta_     : eta
 lepton_phi_     : phi
+lepton_e_       : energy
 lepton_isMuon_  : If muon, 1. If electron, 0. 
 lepton_relIso_  : Muon, delta_beta corrected relative isolation. cone 04. Calculated with MiniAODHelper.
                 : Ele , EffectiveArea-corrected isolation, cone 0.3 (Calculated with MiniAODHelper with effAreaType::spring15)
