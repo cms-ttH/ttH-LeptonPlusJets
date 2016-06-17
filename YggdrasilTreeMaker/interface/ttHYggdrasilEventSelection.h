@@ -12,8 +12,8 @@ class ttHYggdrasilEventSelection{
   ttHYggdrasilEventSelection();
   ~ttHYggdrasilEventSelection();
 
-  void SetElTrigger( const long * trigFlag );
-  void SetMuTrigger( const long * trigFlag );
+  void SetElTrigger( const int * trigFlag );
+  void SetMuTrigger( const int * trigFlag );
   void SetLeptons( const std::vector<double> * pt, 
 		   const std::vector<double> * eta, 
 		   const std::vector<double> * phi,
@@ -65,8 +65,8 @@ class ttHYggdrasilEventSelection{
   double _calcDR2( double eta1, double eta2, double phi1, double phi2 );
 
 
-  const long * ElTrig ; 
-  const long * MuTrig ; 
+  const int * ElTrig ; 
+  const int * MuTrig ; 
 
   double Thre_TightMu_PT ;
   double Thre_TightMu_Eta ;

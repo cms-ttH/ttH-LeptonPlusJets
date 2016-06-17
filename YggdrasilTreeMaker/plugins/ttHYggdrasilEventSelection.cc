@@ -36,13 +36,13 @@ ttHYggdrasilEventSelection::~ttHYggdrasilEventSelection(){
 
 }
 
-void ttHYggdrasilEventSelection::SetElTrigger( const long * trigFlag){
+void ttHYggdrasilEventSelection::SetElTrigger( const int* trigFlag){
 
   ElTrig = trigFlag ;
 
 }
 
-void ttHYggdrasilEventSelection::SetMuTrigger( const long * trigFlag){
+void ttHYggdrasilEventSelection::SetMuTrigger( const int * trigFlag){
 
   MuTrig = trigFlag ;
 
