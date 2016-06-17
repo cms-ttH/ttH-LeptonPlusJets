@@ -1036,6 +1036,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     vvleptons.push_back(vleptons);
   }
 
+  eve->lepton_charge_           = lepton_trkCharge;
   eve->lepton_isMuon_           = lepton_isMuon;
   eve->lepton_isTight_          = lepton_isTight;
   eve->lepton_isLoose_          = lepton_isLoose;
