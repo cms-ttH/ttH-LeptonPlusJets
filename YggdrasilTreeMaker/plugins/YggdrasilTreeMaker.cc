@@ -1331,10 +1331,12 @@ n_fatjets++;
   worldTree->Fill();
 
   {
+
     ttHYggdrasilEventSelection selection;
-    long dummy_trigger_flag = 1 ; 
-    selection . SetElTrigger( & dummy_trigger_flag );
-    selection . SetMuTrigger( & dummy_trigger_flag );
+
+    int MuTrig = ( eve->passHLT_IsoMu20_v_ == 1 || eve->passHLT_IsoTkMu20_v_ == 1 ) ? 1 : 0 ; 
+    selection . SetElTrigger( & eve->passHLT_Ele27_eta2p1_WPLoose_Gsf_v_ );
+    selection . SetMuTrigger( & MuTrig );
     selection . SetLeptons( & eve->lepton_pt_, 
 			    & eve->lepton_eta_, 
 			    & eve->lepton_phi_,
@@ -1352,11 +1354,94 @@ n_fatjets++;
 
     selection . doEventSelection();
 
-    std::cout << "# of looseLep : " <<selection.looseLeptons().size()<<std::endl ;
-    std::cout << "# of tightLep : " <<selection.leptons()     .size()<<std::endl ;
-    std::cout << "# of jets     : " <<selection.jets()        .size()<<std::endl ;
-    std::cout << "# of bjets    : " <<selection.bjets()       .size()<<std::endl ;
 
+    std::cout << eve->run_ << "," ;
+    std::cout <<eve->lumi_ << "," ;
+    std::cout <<eve->evt_  << "," ;
+    
+    //      is_e, is_mu, is_ee, is_emu, is_mumu,
+    std::cout <<"ToBeAdded"  << "," ;
+    std::cout <<"ToBeAdded"  << "," ;
+    std::cout <<"ToBeAdded"  << "," ;
+    std::cout <<"ToBeAdded"  << "," ;
+    std::cout <<"ToBeAdded"  << "," ;
+
+
+    std::cout << selection.jets().size() << "," ;
+    std::cout << selection.bjets().size() << ",";
+
+    if( selection.looseLeptons().size() >=1 ){
+      long pdgid = 
+	( selection.looseLeptonsIsMuon().at(0) == 1 ? 13 : 11 )
+	*
+	( selection.looseLeptonsCharge().at(0) > 0 ? -1 : +1 ) ;
+      std::cout<< std::setprecision(4) << selection.looseLeptons().at(0)->Pt()<< "," ;
+      std::cout<< std::setprecision(4) << selection.looseLeptonsRelIso().at(0)<< "," ;
+      std::cout << pdgid << "," ;
+    }else{
+      std::cout << "-1,-1,-1," ;
+    }
+
+    if( selection.looseLeptons().size() >=2 ){
+      long pdgid = 
+	( selection.looseLeptonsIsMuon().at(1) == 1 ? 13 : 11 )
+	*
+	( selection.looseLeptonsCharge().at(1) > 0 ? -1 : +1 ) ;
+      std::cout<< std::setprecision(4) << selection.looseLeptons().at(1)->Pt()<< "," ;
+      std::cout<< std::setprecision(4) << selection.looseLeptonsRelIso().at(1)<< "," ;
+      std::cout << pdgid << "," ;
+    }else{
+      std::cout << "-1,-1,-1," ;
+    }
+    
+    {
+      bool nJet_ge_one = selection.jets().size() >=1;
+      bool nJet_ge_two = selection.jets().size() >=2;
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? selection.jets().at(0)->Pt() : -1 )<< "," ;
+      std::cout<< std::setprecision(4) << ( nJet_ge_two ? selection.jets().at(1)->Pt() : -1 )<< "," ;
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? selection.jetsBdiscriminant().at(0) : -1 )<< "," ;
+      std::cout<< std::setprecision(4) << ( nJet_ge_two ? selection.jetsBdiscriminant().at(1) : -1 )<< "," ;
+      // JetEnergyCorrection.
+      //        jet1_JecSF, jet1_JecSF_up, jet1_JecSF_down, 
+      // std::cout << ( nJet_ge_one ? selection.jets().at(0)->Pt() : -1 )<< "," ;
+      std::cout <<"ToBeAdded(JEC)"  << "," ;
+      std::cout <<"ToBeAdded(JECup)"  << "," ;
+      std::cout <<"ToBeAdded(JECdown)"  << "," ;
+    }
+    
+    std::cout<< std::setprecision(4) << eve->MET_[ 0 ] << "," ;
+    std::cout<< std::setprecision(4) << eve->MET_phi_[ 0 ] << "," ;
+
+    std::cout << eve->additionalJetEventId_ <<",";
+
+    std::cout <<"ToBeAdded(MCWeight)"  << "," ;
+    std::cout <<"ToBeAdded(PUWeight)"  << "," ;
+    // MCWeight,
+    // PUWeight,
+
+    double bWeight =-1 ; //for the moment.
+    std::cout << bWeight <<",";
+
+    double topWeight =-1 ; //for the moment.
+    std::cout << topWeight <<",";
+
+    double triggerSF =-1 ; //for the moment.
+    std::cout << triggerSF <<",";
+
+    double leptonSF =-1 ; //for the moment.
+    std::cout << leptonSF <<",";
+
+    double Q2_upup = -1 ; 
+    double Q2_downdown = -1 ;
+    std::cout << Q2_upup <<",";
+    std::cout << Q2_downdown <<",";
+
+    double pdf_up= -1, pdf_down = -1;
+    std::cout << pdf_up <<",";
+    std::cout << pdf_down ;
+
+
+    std::cout << std::endl ;
   }
 
 }
