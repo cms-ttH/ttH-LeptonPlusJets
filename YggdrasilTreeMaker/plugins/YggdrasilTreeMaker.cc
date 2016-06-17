@@ -437,6 +437,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   bool passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1 = false;
   
   bool passHLT_IsoMu20_v = false;
+  bool passHLT_IsoTkMu20_v = false;
   bool passHLT_IsoMu20_eta2p1_v = false;
   bool passHLT_IsoMu24_eta2p1_v = false;
 
@@ -474,6 +475,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	const unsigned long MatchedAtTheBegining = 0 ; 
 
 	if( pathName.find( "HLT_IsoMu20_v"        ,0) == MatchedAtTheBegining ){ passHLT_IsoMu20_v = true;}
+	if( pathName.find( "HLT_IsoTkMu20_v"      ,0) == MatchedAtTheBegining ){ passHLT_IsoTkMu20_v = true;}
 	if( pathName.find( "HLT_IsoMu20_eta2p1_v" ,0) == MatchedAtTheBegining ){ passHLT_IsoMu20_eta2p1_v = true;}
 	if( pathName.find( "HLT_IsoMu24_eta2p1_v" ,0) == MatchedAtTheBegining ){ passHLT_IsoMu24_eta2p1_v = true;}
 
@@ -696,6 +698,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1_ = ( passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1 ) ? 1 : 0;
   
   eve->passHLT_IsoMu20_v_ =  ( passHLT_IsoMu20_v) ? 1 : 0;
+  eve->passHLT_IsoTkMu20_v_ =  ( passHLT_IsoTkMu20_v) ? 1 : 0;
   eve->passHLT_IsoMu20_eta2p1_v_ = ( passHLT_IsoMu20_eta2p1_v ) ? 1 : 0;
   eve->passHLT_IsoMu24_eta2p1_v_ = ( passHLT_IsoMu24_eta2p1_v ) ? 1 : 0;
   
