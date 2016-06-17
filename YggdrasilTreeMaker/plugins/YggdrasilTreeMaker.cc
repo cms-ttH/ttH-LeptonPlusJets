@@ -560,6 +560,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     
   // Fill ID based only on additional b/c jets
   h_ttbarAdditionalJetId_->Fill(*genTtbarId%100);
+
+  eve->additionalJetEventId_ = *genTtbarId;
+  }else{
+    eve->additionalJetEventId_ = -10 ; 
   }
 
   math::XYZPoint beamSpotPosition;
