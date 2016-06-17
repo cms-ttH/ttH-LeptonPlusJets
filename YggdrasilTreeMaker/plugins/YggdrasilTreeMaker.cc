@@ -72,6 +72,8 @@
 
 #include "MiniAOD/MiniAODHelper/interface/BDTvars.h"
 
+#include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilEventSelection.h"
+
 //
 // class declaration
 //
@@ -1320,6 +1322,35 @@ n_fatjets++;
   // Fill tree if pass full selection
   //
   worldTree->Fill();
+
+  {
+    ttHYggdrasilEventSelection selection;
+    long dummy_trigger_flag = 1 ; 
+    selection . SetElTrigger( & dummy_trigger_flag );
+    selection . SetMuTrigger( & dummy_trigger_flag );
+    selection . SetLeptons( & eve->lepton_pt_, 
+			    & eve->lepton_eta_, 
+			    & eve->lepton_phi_,
+			    & eve->lepton_e_,
+			    & eve->lepton_charge_, 
+			    & eve->lepton_isMuon_, 
+			    & eve->lepton_relIso_,
+			    & eve->lepton_isLoose_,
+			    & eve->lepton_isTight_ );
+    selection . SetJets( & eve->jet_pt_  [0] , 
+			 & eve->jet_eta_ [0] , 
+			 & eve->jet_phi_ [0] , 
+			 & eve->jet_m_   [0] , 
+			 & eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[0]  );
+
+    selection . doEventSelection();
+
+    std::cout << "# of looseLep : " <<selection.looseLeptons().size()<<std::endl ;
+    std::cout << "# of tightLep : " <<selection.leptons()     .size()<<std::endl ;
+    std::cout << "# of jets     : " <<selection.jets()        .size()<<std::endl ;
+    std::cout << "# of bjets    : " <<selection.bjets()       .size()<<std::endl ;
+
+  }
 
 }
 
