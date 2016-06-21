@@ -1,5 +1,10 @@
 
+#ifdef STANDALONECOMPILE
+#include "./ttHYggdrasilEventSelection.h"
+#else
 #include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilEventSelection.h"
+#endif
+
 #include <iostream>
 
 ttHYggdrasilEventSelection::ttHYggdrasilEventSelection(){
