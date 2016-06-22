@@ -67,6 +67,12 @@ struct yggdrasilEventVars{
 
   int passHLT_Ele25WP60_SC4_Mass55_v_;
 
+  int passHLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_;
+  int passHLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v_;
+  int passHLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v_;
+  int passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v_;
+  int passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v_;
+
   int run_;
   int lumi_;
   long evt_;
@@ -184,6 +190,12 @@ void yggdrasilEventVars::initialize(){
   passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v_ = -99;
 
   passHLT_Ele25WP60_SC4_Mass55_v_ = -99;
+
+  passHLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_ = -99 ;
+  passHLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v_ = -99 ;
+  passHLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v_ = -99 ;
+  passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v_ = -99 ;
+  passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v_ = -99 ;
 
   run_  = -99;
   lumi_ = -99;
