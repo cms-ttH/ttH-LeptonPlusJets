@@ -1353,9 +1353,31 @@ n_fatjets++;
 
     ttHYggdrasilEventSelection selection;
 
+    // -----------------------
+    // start setting variables --> 
+
     int MuTrig = ( eve->passHLT_IsoMu20_v_ == 1 || eve->passHLT_IsoTkMu20_v_ == 1 ) ? 1 : 0 ; 
     selection . SetElTrigger( & eve->passHLT_Ele27_eta2p1_WPLoose_Gsf_v_ );
     selection . SetMuTrigger( & MuTrig );
+
+    // Dilep Trig
+    selection . SetElElTrigger( & ( eve->passHLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_  ) );
+
+    int ElMuTrig = ( eve->passHLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v_ ==1 
+		     ||
+		     eve->passHLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v_ == 1 
+		     ) ? 1 : 0 ; 
+    selection . SetElMuTrigger( & ElMuTrig );
+    
+    int MuMuTrig = ( eve->passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v_
+		     ||
+		     eve->passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v_ 
+		     ) ? 1 : 0 ;
+      
+    selection . SetMuMuTrigger( & MuMuTrig );
+
+    selection . SetGoodVtx( & ( eve->GoodFirstPV_ ) );
+
     selection . SetLeptons( & eve->lepton_pt_, 
 			    & eve->lepton_eta_, 
 			    & eve->lepton_phi_,
@@ -1371,6 +1393,12 @@ n_fatjets++;
 			 & eve->jet_m_   [0] , 
 			 & eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[0]  );
 
+    selection . SetMet( & ( eve->MET_[ 0 ] ) , &( eve->MET_phi_[ 0 ] ) );
+
+    // ---> end setting variables.
+    // -----------------------
+
+    
     selection . doEventSelection();
 
 
@@ -1379,11 +1407,11 @@ n_fatjets++;
     std::cout <<eve->evt_  << "," ;
     
     //      is_e, is_mu, is_ee, is_emu, is_mumu,
-    std::cout <<"ToBeAdded"  << "," ;
-    std::cout <<"ToBeAdded"  << "," ;
-    std::cout <<"ToBeAdded"  << "," ;
-    std::cout <<"ToBeAdded"  << "," ;
-    std::cout <<"ToBeAdded"  << "," ;
+    std::cout <<(selection . PassSingleElCh() ?1:0) << "," ;
+    std::cout <<(selection . PassSingleMuCh() ?1:0) << "," ;
+    std::cout <<(selection . PassElEl()       ?1:0) << "," ;
+    std::cout <<(selection . PassElMu()       ?1:0) << "," ;
+    std::cout <<(selection . PassMuMu()       ?1:0) << "," ;
 
 
     std::cout << selection.jets().size() << "," ;
@@ -1433,10 +1461,8 @@ n_fatjets++;
 
     std::cout << eve->additionalJetEventId_ <<",";
 
-    std::cout <<"ToBeAdded(MCWeight)"  << "," ;
-    std::cout <<"ToBeAdded(PUWeight)"  << "," ;
-    // MCWeight,
-    // PUWeight,
+    std::cout <<"1"  << "," ;    // MCWeight,
+    std::cout <<"1"  << "," ;    // PUWeight,
 
     double bWeight =-1 ; //for the moment.
     std::cout << bWeight <<",";
