@@ -68,11 +68,15 @@
 #include "MiniAOD/MiniAODHelper/interface/HiggsTagger.h"
 #include "ttH-LeptonPlusJets/AnalysisCode/interface/YggdrasilEventVars.h"
 
+#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+
 // #include "EgammaAnalysis/ElectronTools/interface/EGammaMvaEleEstimatorCSA14.h"
 
 #include "MiniAOD/MiniAODHelper/interface/BDTvars.h"
 
 #include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilEventSelection.h"
+
+#include "LHAPDF/LHAPDF.h"
 
 //
 // class declaration
@@ -154,6 +158,8 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
 
   edm::EDGetTokenT <GenEventInfoProduct> genInfoProductToken;
 
+  edm::EDGetTokenT <LHEEventProduct> LHEEventProductToken;
+
   edm::EDGetTokenT <pat::JetCollection> tempjetToken;
   
   // edm::EDGetTokenT <reco::ConversionCollection> EDMConversionCollectionToken;
@@ -195,6 +201,11 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
 
   const bool isMC ;
   const bool usePUPPI ;
+
+
+  // - - - - - - PDF uncertainty - - - - - - - - -
+  LHAPDF::PDFSet * CT14nlo_PDFSet;
+  std::vector<LHAPDF::PDF*> _systPDFs ;         
 
 };
 
@@ -261,6 +272,7 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   if( isMC ){
     mcparicleToken = consumes <reco::GenParticleCollection> (edm::InputTag(std::string("prunedGenParticles")));
     genInfoProductToken = consumes <GenEventInfoProduct> (edm::InputTag(std::string("generator")));
+    LHEEventProductToken = consumes<LHEEventProduct> ( edm::InputTag(std::string("externalLHEProducer") )  );
   }
 
   if( usePUPPI ) {
@@ -307,6 +319,10 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
 
   toptagger = TopTagger(TopTag::Likelihood, TopTag::CSV, "toplikelihoodtaggerhistos.root");
 
+
+  // - - - - - - PDF uncertainty - - - - - - - - -
+  CT14nlo_PDFSet = new   LHAPDF::PDFSet("CT14nlo");
+  _systPDFs = CT14nlo_PDFSet->mkPDFs();
 
 
   //std::vector<std::string> myManualCatWeigths;
@@ -418,8 +434,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   // iEvent.getByToken( subFilterJetsToken,h_subfilterjet );
 
   edm::Handle<GenEventInfoProduct> GenEventInfoHandle;
+  edm::Handle<LHEEventProduct> LHEEventProductHandle;
   if( isMC ){
   iEvent.getByToken(genInfoProductToken,GenEventInfoHandle);
+  iEvent.getByToken(LHEEventProductToken,  LHEEventProductHandle) ;
   }
 
   edm::Handle<boosted::BoostedJetCollection> h_boostedjet;
@@ -569,13 +587,46 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   // Fill ID including information about b jets from top in acceptance
   h_ttbarId_->Fill(*genTtbarId);
-    
+   
   // Fill ID based only on additional b/c jets
   h_ttbarAdditionalJetId_->Fill(*genTtbarId%100);
-
+  
   eve->additionalJetEventId_ = *genTtbarId;
+  
+    const int idx_Q2_upup     = 1005;
+    eve->weight_q2_upup_     = LHEEventProductHandle -> weights()[idx_Q2_upup]    .wgt / LHEEventProductHandle -> originalXWGTUP(); 
+    const int idx_Q2_downdown = 1009;
+    eve->weight_q2_downdown_ = LHEEventProductHandle -> weights()[idx_Q2_downdown].wgt / LHEEventProductHandle -> originalXWGTUP(); 
+
+
+    auto pdfInfos = GenEventInfoHandle -> pdf();
+    double pdfNominal = pdfInfos->xPDF.first * pdfInfos->xPDF.second;
+    
+    std::vector<double> pdfs;
+    for (size_t j = 0; j < _systPDFs.size(); ++j) {
+      double xpdf1 = _systPDFs[j]->xfxQ(pdfInfos->id.first,  pdfInfos->x.first,  pdfInfos->scalePDF);
+      double xpdf2 = _systPDFs[j]->xfxQ(pdfInfos->id.second, pdfInfos->x.second, pdfInfos->scalePDF);
+      pdfs.push_back(xpdf1 * xpdf2);
+    }
+    //  Combine the products and compute the 1 sigma shift 
+    const LHAPDF::PDFUncertainty pdfUnc = CT14nlo_PDFSet -> uncertainty(pdfs, 68.);
+
+    //  Calculate the up/down weights
+    if (std::isfinite(1./pdfNominal)) {
+      eve-> weight_PDF_CT14nlo_up_   = (pdfUnc.central + pdfUnc.errplus)  / pdfNominal;
+      eve-> weight_PDF_CT14nlo_down_ = (pdfUnc.central - pdfUnc.errminus) / pdfNominal;
+    }else{
+      eve-> weight_PDF_CT14nlo_up_   = 1.0;
+      eve-> weight_PDF_CT14nlo_down_ = 1.0;
+    }
+
   }else{
     eve->additionalJetEventId_ = -10 ; 
+    eve->weight_q2_upup_     = 1.0 ;
+    eve->weight_q2_downdown_ = 1.0 ;
+
+    eve-> weight_PDF_CT14nlo_up_   = 1.0;
+    eve-> weight_PDF_CT14nlo_down_ = 1.0;
   }
 
   math::XYZPoint beamSpotPosition;
@@ -1080,7 +1131,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   eve->wgt_generator_ = GenEventInfoWeight;
 
-
+  
 
   // Loop over systematics
   for( int iSys=0; iSys<rNumSys; iSys++ ){
@@ -1507,14 +1558,11 @@ n_fatjets++;
     double leptonSF =-1 ; //for the moment.
     std::cout << leptonSF <<",";
 
-    double Q2_upup = -1 ; 
-    double Q2_downdown = -1 ;
-    std::cout << Q2_upup <<",";
-    std::cout << Q2_downdown <<",";
+    std::cout << eve->weight_q2_upup_ <<",";
+    std::cout << eve->weight_q2_downdown_ <<",";
 
-    double pdf_up= -1, pdf_down = -1;
-    std::cout << pdf_up <<",";
-    std::cout << pdf_down ;
+    std::cout << eve-> weight_PDF_CT14nlo_up_ <<",";
+    std::cout << eve-> weight_PDF_CT14nlo_down_ ;
 
 
     std::cout << std::endl ;

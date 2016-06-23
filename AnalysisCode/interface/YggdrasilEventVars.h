@@ -104,6 +104,11 @@ struct yggdrasilEventVars{
   double  wgt_[rNumSys];
   double  wgt_csvSF_[rNumSys];  
 
+  double weight_q2_upup_ ;
+  double weight_q2_downdown_ ;
+
+  double weight_PDF_CT14nlo_up_ ;
+  double weight_PDF_CT14nlo_down_ ;
 
   Float_t MET_[rNumSys];
   Float_t uMET_[rNumSys];
@@ -224,7 +229,13 @@ void yggdrasilEventVars::initialize(){
   wgt_lumi_             = -99.9;
   wgt_xs_               = -99.9;
   wgt_nGen_             = -99.9;
+
+  weight_q2_upup_     = -99.9;
+  weight_q2_downdown_ = -99.9;
  
+  weight_PDF_CT14nlo_up_    = -99.9 ;
+  weight_PDF_CT14nlo_down_  = -99.9 ;
+
   for(int iSys=0; iSys<rNumSys; iSys++){
 
     wgt_[iSys] = -99.9;  

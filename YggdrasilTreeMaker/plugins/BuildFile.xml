@@ -14,4 +14,6 @@
 <use name="MiniAOD/MiniAODHelper"/>
 <use name="MiniAOD/BoostedObjects"/>
 <use name="BoostedTTH/BoostedAnalyzer"/>
+<use name="SimDataFormats/GeneratorProducts"/>
+<use name="lhapdf"/>
 <flags EDM_PLUGIN="1"/>
