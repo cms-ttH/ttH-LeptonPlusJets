@@ -1401,6 +1401,8 @@ n_fatjets++;
     
     selection . doEventSelection();
 
+   // "cout" for event sync.
+   std::cout << "run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,lep1_pt,lep1_iso,lep1_pdgId,lep2_pt,lep2_iso,lep2_pdgId,jet1_pt,jet2_pt,jet1_CSVv2,jet2_CSVv2,jet1_JecSF,jet1_JecSF_up,jet1_JecSF_down,MET_pt,MET_phi,mll,ttHFCategory,MCWeight,PUWeight,bWeight,topWeight,triggerSF,lepSF,Q2_upup,Q2_downdown,pdf_up,pdf_down" << std::endl;
 
     std::cout << eve->run_ << "," ;
     std::cout <<eve->lumi_ << "," ;
@@ -1451,9 +1453,38 @@ n_fatjets++;
       // JetEnergyCorrection.
       //        jet1_JecSF, jet1_JecSF_up, jet1_JecSF_down, 
       // std::cout << ( nJet_ge_one ? selection.jets().at(0)->Pt() : -1 )<< "," ;
-      std::cout <<"ToBeAdded(JEC)"  << "," ;
-      std::cout <<"ToBeAdded(JECup)"  << "," ;
-      std::cout <<"ToBeAdded(JECdown)"  << "," ;
+
+      double JEC = -1 ; 
+      double JECup = -1 ;       
+      double JECdown = -1 ; 
+
+      std::vector<pat::Jet> jet_JESUP   =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::JESup   );
+      std::vector<pat::Jet> jet_JESDOWN =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::JESdown );
+      if( nJet_ge_one ){
+
+	const double eta1 = selection.jets().at(0)->Eta();
+	const double phi1 = selection.jets().at(0)->Phi();
+
+	// Loop for JEC_nominal
+	for( unsigned int idxJet = 0 ; idxJet < rawJets.size(); idxJet ++ ){
+
+	  pat::Jet * iRawJet = & rawJets.at( idxJet );
+	  double d_eta =       eta1 -  iRawJet->eta();
+	  double d_phi = fabs( phi1 -  iRawJet->phi() ) ; 
+	  d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
+
+	  if(  d_eta*d_eta + d_phi*d_phi < 0.01 * 0.01 ){ // matching btw Raw and Corrected (physics) jet.
+	    JEC     =  selection.jets().at(0)->Pt() / iRawJet->pt();
+	    JECup   = jet_JESUP  .at( idxJet ).pt() / iRawJet->pt();
+	    JECdown = jet_JESDOWN.at( idxJet ).pt() / iRawJet->pt();
+	  }
+	}
+
+      }
+
+      std::cout << JEC  << "," ;
+      std::cout << JECup << "," ;
+      std::cout << JECdown << "," ;
     }
     
     std::cout<< std::setprecision(4) << eve->MET_[ 0 ] << "," ;
