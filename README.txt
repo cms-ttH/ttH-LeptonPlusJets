@@ -5,6 +5,8 @@ ttH-LeptonPlusJets
 +++  Install  +++
 +++++++++++++++++
 
+source /cvmfs/cms.cern.ch/cmsset_default.csh
+setenv SCRAM_ARCH slc6_amd64_gcc530
 
 cmsrel CMSSW_8_0_8_patch1
 cd CMSSW_8_0_8_patch1/src/
@@ -17,7 +19,11 @@ cmsenv
 git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi_80x
 git clone https://github.com/hsatoshi/ttH-LeptonPlusJets.git -b satoshi_cleanup_80x
 git clone https://github.com/hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
+
 scram b 
+scram b 
+# yes,.. compile twice for the moment. First compile claims errors while the second works. Need to be solved.
+
 
 
 +++++++++++++++++
