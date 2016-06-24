@@ -110,6 +110,8 @@ struct yggdrasilEventVars{
   double weight_PDF_CT14nlo_up_ ;
   double weight_PDF_CT14nlo_down_ ;
 
+  double weight_topPt_ ; 
+
   Float_t MET_[rNumSys];
   Float_t uMET_[rNumSys];
   Float_t MET_phi_[rNumSys];
@@ -235,6 +237,8 @@ void yggdrasilEventVars::initialize(){
  
   weight_PDF_CT14nlo_up_    = -99.9 ;
   weight_PDF_CT14nlo_down_  = -99.9 ;
+
+  weight_topPt_ = -99.9;
 
   for(int iSys=0; iSys<rNumSys; iSys++){
 

@@ -16,4 +16,5 @@
 <use name="BoostedTTH/BoostedAnalyzer"/>
 <use name="SimDataFormats/GeneratorProducts"/>
 <use name="lhapdf"/>
+<use name="AnalysisDataFormats/TopObjects"/>
 <flags EDM_PLUGIN="1"/>

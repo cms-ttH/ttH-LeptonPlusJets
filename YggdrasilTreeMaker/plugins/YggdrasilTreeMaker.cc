@@ -78,6 +78,8 @@
 
 #include "LHAPDF/LHAPDF.h"
 
+#include "AnalysisDataFormats/TopObjects/interface/TtGenEvent.h"
+
 //
 // class declaration
 //
@@ -164,6 +166,8 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   
   // edm::EDGetTokenT <reco::ConversionCollection> EDMConversionCollectionToken;
   edm::EDGetTokenT< boosted::BoostedJetCollection > EDMBoostedJetsToken;
+
+  edm::EDGetTokenT< TtGenEvent >   TtGenEventToken ;
   
 
   HLTConfigProvider hlt_config_;
@@ -200,6 +204,7 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   TopTagger toptagger;
 
   const bool isMC ;
+  const bool isTTbarMC ;
   const bool usePUPPI ;
 
 
@@ -229,7 +234,8 @@ typedef std::vector< TLorentzVector >          vecTLorentzVector;
 //
 YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   genJetsToken_ ( consumes <reco::GenJetCollection> ( iConfig.getParameter<edm::InputTag>("genjet") ) )
-  ,  isMC(iConfig.getParameter<std::string>("isMC") == "MC" )
+  ,  isMC(iConfig.getParameter<std::string>("inputfiletype") != "data" )
+  ,  isTTbarMC(iConfig.getParameter<std::string>("inputfiletype") == "TTbarMC" )
   , usePUPPI(iConfig.getParameter<std::string>("jetPU") == "PUPPI" )
 {
    //now do what ever initialization is needed
@@ -273,6 +279,7 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
     mcparicleToken = consumes <reco::GenParticleCollection> (edm::InputTag(std::string("prunedGenParticles")));
     genInfoProductToken = consumes <GenEventInfoProduct> (edm::InputTag(std::string("generator")));
     LHEEventProductToken = consumes<LHEEventProduct> ( edm::InputTag(std::string("externalLHEProducer") )  );
+    TtGenEventToken = consumes< TtGenEvent >( edm::InputTag("genEvt") );
   }
 
   if( usePUPPI ) {
@@ -713,8 +720,36 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   mHdecay = isMC ? miniAODhelper.GetHiggsDecay(mcparticles) : -1 ;
   eve->higgsDecayType_=mHdecay;
 
-  eve->ttbarDecayType_ = isMC ? miniAODhelper.GetTTbarDecay(mcparticles) : -10 ;
+  TLorentzVector GenTopQuark, GenAntitopQuark;
+  eve->ttbarDecayType_ = isMC ? miniAODhelper.GetTTbarDecay(mcparticles , & GenTopQuark , & GenAntitopQuark ) : -10 ;
 
+  if( isTTbarMC ){
+    edm::Handle<TtGenEvent> genEvt ;
+    iEvent.getByToken( TtGenEventToken, genEvt );
+    std::cout << ( genEvt-> isTtBar ()        ?"good ttbar" : "non ttbar" ) << std::endl ; ;
+    std::cout << ( genEvt-> isFullHadronic () ?"full had" : "nonfullhad" )<< std::endl ; ;
+    std::cout << ( genEvt-> isSemiLeptonic () ?"LJch " : "non LJ" )<< std::endl ; ;
+
+    // **** Ignore the genEvt since I can not pass the packed (in config.py).
+//    eve -> weight_topPt_ = sqrt( 
+//				exp( 0.156 -0.00137 * genEvt->leptonicDecayTop()->pt() )
+//				*
+//				exp( 0.156 -0.00137 * genEvt->hadronicDecayTop()->pt() )
+//				 );
+
+
+    eve -> weight_topPt_ = sqrt( 
+				exp( 0.156 -0.00137 * GenTopQuark . Pt() )
+				*
+				exp( 0.156 -0.00137 * GenAntitopQuark . Pt() )
+				 );
+
+    // parameters taken from https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting?rev=19
+
+
+  }else{
+    eve -> weight_topPt_ = 1.0;
+  }
 
   /////////
   ///
@@ -1549,8 +1584,8 @@ n_fatjets++;
     double bWeight =-1 ; //for the moment.
     std::cout << bWeight <<",";
 
-    double topWeight =-1 ; //for the moment.
-    std::cout << topWeight <<",";
+    //  top PT weight 
+    std::cout << eve -> weight_topPt_ <<",";
 
     double triggerSF =-1 ; //for the moment.
     std::cout << triggerSF <<",";

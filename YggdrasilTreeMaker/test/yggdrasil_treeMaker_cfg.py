@@ -1,16 +1,21 @@
 import FWCore.ParameterSet.Config as cms
 
+
+
+isPUPPI=False
+#--> if isPUPPI=true, change the code too.
+
+
 #isMC=True
 isMC=True
 
+isTTBARMC=True
 
 #genjetInputTag = cms.InputTag("slimmedGenJets","","")
 #genjetInputTag = cms.InputTag("ak4GenJetsReproduced","","")
 genjetInputTag = cms.InputTag("ak4GenJetsWithChargedLepFromTop","","")
 
 
-isPUPPI=False
-#--> if isPUPPI=true, change the code too.
 
 enableJECFromLocalDB=False
 
@@ -199,7 +204,16 @@ if isMC :
         jetAlgorithm = cms.string("AntiKt")
         )
 
-
+    if isTTBARMC :
+        process.load("TopQuarkAnalysis.TopEventProducers.sequences.ttGenEvent_cff")
+        process.initSubset.src=cms.InputTag("prunedGenParticles")
+        process.decaySubset.src=cms.InputTag("prunedGenParticles")
+        process.decaySubset.fillMode = cms.string("kStable")
+          ## define fill mode. The following modes are available:
+          ## 'kStable' : status 2 equivalents (after parton shower) are
+          ##             calculated and saved (as status 2 particles)
+          ## 'kME'     : status 3 particles (from matrix element, before
+          ##             parton shower) are saved (as status 3 particles)
 
 
 ###############
@@ -276,13 +290,13 @@ if isMC :
     if isPUPPI :
         process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
                                               genjet =  genjetInputTag,
-                                              isMC    =  cms.string("MC"),
+                                              inputfiletype   =  cms.string("TTbarMC") if isTTBARMC else cms.string("MC") ,
                                               jetPU = cms.string( "PUPPI" )
                                           )
     else:
         process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
                                               genjet =  genjetInputTag,
-                                          isMC    =  cms.string("MC"),
+                                              inputfiletype   =  cms.string("TTbarMC") if isTTBARMC else cms.string("MC") ,
                                           jetPU = cms.string( "CHS" )
                                           )
 
@@ -290,13 +304,13 @@ else :
     if isPUPPI :
         process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
                                               genjet =  genjetInputTag,
-                                          isMC    =  cms.string("data"),
+                                          inputfiletype    =  cms.string("data"),
                                           jetPU = cms.string( "PUPPI" )
                                           )
     else:
         process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
                                               genjet =  genjetInputTag,
-                                          isMC    =  cms.string("data"),
+                                          inputfiletype    =  cms.string("data"),
                                           jetPU = cms.string( "CHS" )
                                           )
         
