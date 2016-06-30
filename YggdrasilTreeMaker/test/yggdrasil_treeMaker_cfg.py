@@ -73,9 +73,14 @@ if enableJECFromLocalDB :
             label  = cms.untracked.string('AK4PFchs')
             ),
       ), 
-#      connect = cms.string( 'sqlite:' + os.environ['CMSSW_BASE'] + '/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Fall15_25nsV2_DATA.db' )
-      connect = cms.string( 'sqlite:Fall15_25nsV2_DATA.db' )
+
+      connect = ( 
+            cms.string( 'sqlite:' + os.environ['CMSSW_BASE'] + '/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_MC.db' ) 
+            if isMC else
+            cms.string( 'sqlite:' + os.environ['CMSSW_BASE'] + '/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_DATA.db' ) 
+            )
                             )
+
       ## add an es_prefer statement to resolve a possible conflict from simultaneous connection to a global tag
     process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 
