@@ -8,9 +8,17 @@ ttH-LeptonPlusJets
 source /cvmfs/cms.cern.ch/cmsset_default.csh
 setenv SCRAM_ARCH slc6_amd64_gcc530
 
-cmsrel CMSSW_8_0_8_patch1
-cd CMSSW_8_0_8_patch1/src/
+cmsrel CMSSW_8_0_10
+cd CMSSW_8_0_10/src/
 cmsenv
+
+# Apply bug fix of met correction. 
+#  - See https://twiki.cern.ch/twiki/bin/view/CMS/MissingETUncertaintyPrescription?rev=48#Instructions_for_8_0_X_X_10
+#  - Combination with CMSSW_8_0_13 did not work (June 30).
+git cms-init
+echo /PhysicsTools/PatUtils/ >> .git/info/sparse-checkout
+git cms-merge-topic cms-met:metTool80X   # ---[*1]
+
 
 #git clone git@github.com:hsatoshi/MiniAOD.git  -b satoshi_80x
 #git clone git@github.com:hsatoshi/ttH-LeptonPlusJets.git -b satoshi_cleanup_80x
@@ -20,9 +28,10 @@ git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi_80x
 git clone https://github.com/hsatoshi/ttH-LeptonPlusJets.git -b satoshi_cleanup_80x
 git clone https://github.com/hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
 
-scram b 
-scram b 
-# yes,.. compile twice for the moment. First compile claims errors while the second works. Need to be solved.
+scram b -j XX ; scram b -j XX
+# Due to [*1], compile takes time. Brew a cup of coffee. while waiting.
+# Yes,.. compile twice for the moment. First compile claims errors while the second works. Need to be solved.
+
 
 
 
