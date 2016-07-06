@@ -40,8 +40,8 @@ void ttHYggdrasilScaleFactors::init_btagSF(){
   std::string inputFileHF = SFfileDir +"/" + "csv_rwt_fit_hf_76x_2016_02_08.root";
   std::string inputFileLF = SFfileDir +"/" + "csv_rwt_fit_lf_76x_2016_02_08.root";
 
-  TFile* fileHF = new TFile ((std::string(getenv("CMSSW_BASE")) + "/src/" + inputFileHF).c_str());
-  TFile* fileLF = new TFile ((std::string(getenv("CMSSW_BASE")) + "/src/" + inputFileLF).c_str());
+  TFile* fileHF = new TFile ( inputFileHF .c_str());
+  TFile* fileLF = new TFile ( inputFileLF .c_str());
 
   for( int iSys=0; iSys<9; iSys++ ){
     for( int iPt=0; iPt<5; iPt++ ) h_csv_wgt_hf[iSys][iPt] = NULL;
