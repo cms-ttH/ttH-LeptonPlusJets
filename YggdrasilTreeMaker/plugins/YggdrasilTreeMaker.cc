@@ -1581,7 +1581,7 @@ n_fatjets++;
 
     std::cout << eve->additionalJetEventId_ <<",";
 
-    std::cout <<"1"  << "," ;    // PUWeight,
+    std::cout << scalefactors.get_pu_wgt( eve -> numTruePV_ ) << "," ;    // PUWeight,
 
     double bWeight = -1 ;
     if( isMC ){

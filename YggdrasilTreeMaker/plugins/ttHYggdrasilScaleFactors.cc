@@ -31,7 +31,7 @@ ttHYggdrasilScaleFactors::ttHYggdrasilScaleFactors( char * sf_file_directory ){
 void ttHYggdrasilScaleFactors::init_all(){
 
   init_btagSF();
-
+  init_Pileup();
 }
 
 
@@ -237,4 +237,112 @@ double ttHYggdrasilScaleFactors::get_csv_wgt( ttHYggdrasilEventSelection * event
 		     csvWgtCF 
 		     );
 
+}
+
+
+void ttHYggdrasilScaleFactors::init_Pileup(){
+
+  // Setting numbers here is just a temporal workaround.
+  double PU_MC[50] = {  0.000829312873542,
+		      0.00124276120498,
+		      0.00339329181587,
+		      0.00408224735376,
+		      0.00383036590008,
+		      0.00659159288946,
+		      0.00816022734493,
+		      0.00943640833116,
+		      0.0137777376066,
+		      0.017059392038,
+		      0.0213193035468,
+		      0.0247343174676,
+		      0.0280848773878,
+		      0.0323308476564,
+		      0.0370394341409,
+		      0.0456917721191,
+		      0.0558762890594,
+		      0.0576956187107,
+		      0.0625325287017,
+		      0.0591603758776,
+		      0.0656650815128,
+		      0.0678329011676,
+		      0.0625142146389,
+		      0.0548068448797,
+		      0.0503893295063,
+		      0.040209818868,
+		      0.0374446988111,
+		      0.0299661572042,
+		      0.0272024759921,
+		      0.0219328403791,
+		      0.0179586571619,
+		      0.0142926728247,
+		      0.00839941654725,
+		      0.00522366397213,
+		      0.00224457976761,
+		      0.000779274977993,
+		      0.000197066585944,
+		      7.16031761328e-05,
+		      0.0,
+		      0.0,
+		      0.0,
+		      0.0,
+		      0.0,
+		      0.0,
+		      0.0,
+		      0.0,
+		      0.0,
+		      0.0,
+		      0.0,
+		      0.0 };
+
+
+    { 
+      double total = 0 ;
+      for( int i = 0 ; i < 50 ; i ++ ){
+	total += PU_MC[ i ];
+      }
+      for( int i = 0 ; i < 50 ; i ++ ){
+	PU_MC[ i ] /= total;
+      }
+      std::cout <<"DEBUG PU total = " << total << std::endl ; 
+    }
+
+    double PU_DATA[50] ;
+    {
+      TH1D * h;
+      TFile * f = TFile::Open( (SFfileDir + "/" + "PileupHistogram_EventSync_Spring16.root").c_str() );
+      std::cout << "DEBUG : DATA_PU file path = "  << (SFfileDir + "/" + "PileupHistogram_EventSync_Spring16.root") << std::endl ; 
+      // --> The file has been produced with following command : 
+      // pileupCalc.py -i /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Cert_271036-275125_13TeV_PromptReco_Collisions16_JSON.txt --inputLumiJSON /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/PileUp/pileup_latest.txt --calcMode true --minBiasXsec 71300 --maxPileupBin 50 --numPileupBins 50  MyDataPileupHistogram.root
+      
+      f -> GetObject( "pileup" , h ) ;
+      for( int i = 0 ; i < 50 ; i++ ){
+	PU_DATA[i] = h->GetBinContent( i + 1 );
+      } 
+    }
+
+
+
+    { 
+      double total = 0 ;
+      for( int i = 0 ; i < 50 ; i ++ ){
+	total += PU_DATA[ i ];
+      }
+      // normalization.
+      for( int i = 0 ; i < 50 ; i ++ ){
+	PU_DATA[ i ] /= total;
+      }
+    }
+
+    
+    for(int i = 0 ; i < 50 ; i ++){
+      PU_weight[ i ] = PU_DATA[i] / PU_MC[i];
+    }
+    
+}
+
+
+double ttHYggdrasilScaleFactors::get_pu_wgt( int mc_pu ){
+
+  return PU_weight[ mc_pu ];
+  
 }

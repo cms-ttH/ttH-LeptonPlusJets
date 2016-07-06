@@ -30,19 +30,24 @@ class ttHYggdrasilScaleFactors{
   double get_csv_wgt( std::vector<double> jetPts, std::vector<double> jetEtas, std::vector<double> jetCSVs, std::vector<int> jetFlavors, 
 		      int iSys, double &csvWgtHF, double &csvWgtLF, double &csvWgtCF );
 
-    
+
+  double get_pu_wgt( int mc_pu );
+
  private :
 
   std::string SFfileDir ;
 
   void init_all();
   void init_btagSF();
+  void init_Pileup();
 
   // CSV reweighting
   TH1D* h_csv_wgt_hf[9][5];
   TH1D* c_csv_wgt_hf[9][5];
   TH1D* h_csv_wgt_lf[9][4][3];
 
+  // PU weighting
+  double PU_weight[50];
 
 };
 
