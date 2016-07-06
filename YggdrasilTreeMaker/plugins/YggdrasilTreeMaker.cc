@@ -75,6 +75,7 @@
 #include "MiniAOD/MiniAODHelper/interface/BDTvars.h"
 
 #include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilEventSelection.h"
+#include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilScaleFactors.h"
 
 #include "LHAPDF/LHAPDF.h"
 
@@ -1438,6 +1439,7 @@ n_fatjets++;
   {
 
     ttHYggdrasilEventSelection selection;
+    ttHYggdrasilScaleFactors   scalefactors;
 
     // -----------------------
     // start setting variables --> 
@@ -1477,7 +1479,8 @@ n_fatjets++;
 			 & eve->jet_eta_ [0] , 
 			 & eve->jet_phi_ [0] , 
 			 & eve->jet_m_   [0] , 
-			 & eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[0]  );
+			 & eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[0]  ,
+			 & eve->jet_flavour_[0]  );
 
     selection . SetMet( & ( eve->MET_[ 0 ] ) , &( eve->MET_phi_[ 0 ] ) );
 
@@ -1581,7 +1584,12 @@ n_fatjets++;
     std::cout <<"1"  << "," ;    // MCWeight,
     std::cout <<"1"  << "," ;    // PUWeight,
 
-    double bWeight =-1 ; //for the moment.
+    double bWeight = -1 ;
+    if( isMC ){
+      int iSYS = 0 ; 
+      double dummy = - 1 ;
+      bWeight = scalefactors.get_csv_wgt( & selection , iSYS,  dummy , dummy , dummy );
+    }
     std::cout << bWeight <<",";
 
     //  top PT weight 

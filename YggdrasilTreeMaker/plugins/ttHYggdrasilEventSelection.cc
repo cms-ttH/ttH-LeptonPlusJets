@@ -99,14 +99,15 @@ void ttHYggdrasilEventSelection::SetJets( const std::vector<double> * pt,
 					  const std::vector<double> * eta, 
 					  const std::vector<double> * phi, 
 					  const std::vector<double> * m,
-					  const std::vector<double> * bDiscriminant ){
+					  const std::vector<double> * bDiscriminant ,
+					  const std::vector<int> * flav ){
 
   jet_pt = pt ; 
   jet_eta = eta ; 
   jet_phi = phi ;  
   jet_m = m ;
   jet_bDiscriminant = bDiscriminant ;
-  
+  jet_flav = flav;
 }
 
 void ttHYggdrasilEventSelection::SetMet( const float * _met_pt, const float * _met_phi ){
@@ -240,9 +241,11 @@ void ttHYggdrasilEventSelection::_InitInternalVariables(){
   
   selected_jets.clear();
   selected_jetsBdiscriminant.clear();
+  selected_jetsFlav.clear();
   
   selected_bjets.clear();
   selected_bjetsBdiscriminant.clear();
+  selected_bjetsFlav.clear();
 
   // ** For DiLepton channel study **
   DLselected_tightLeptons.clear();
@@ -253,10 +256,12 @@ void ttHYggdrasilEventSelection::_InitInternalVariables(){
   // ** For DiLepton channel study **  
   DLsofterselected_jets.clear();
   DLsofterselected_jetsBdiscriminant.clear();
+  DLsofterselected_jetsFlav.clear();
 
   // ** For DiLepton channel study **  
   DLsofterselected_bjets.clear();
   DLsofterselected_bjetsBdiscriminant.clear();
+  DLsofterselected_bjetsFlav.clear();
 
 }
 
@@ -398,12 +403,13 @@ void ttHYggdrasilEventSelection::_JetSelection(){
 
     selected_jets.push_back( vec );
     selected_jetsBdiscriminant.push_back( jet_bDiscriminant ->at(idx) );
+    selected_jetsFlav         .push_back( jet_flav ->at(idx) );
 
     if( jet_bDiscriminant ->at(idx) < Thre_Jet_Btag ) continue ;
 
     selected_bjets.push_back( vec );
     selected_bjetsBdiscriminant.push_back( jet_bDiscriminant ->at(idx) );
-
+    selected_bjetsFlav.push_back( jet_flav ->at(idx) );
   }
 
 
@@ -425,11 +431,13 @@ void ttHYggdrasilEventSelection::_JetSelection(){
 
     DLsofterselected_jets.push_back( vec );
     DLsofterselected_jetsBdiscriminant.push_back( jet_bDiscriminant ->at(idx) );
+    DLsofterselected_jetsFlav.push_back( jet_flav ->at(idx) );
 
     if( jet_bDiscriminant ->at(idx) < Thre_Jet_Btag ) continue ;
 
     DLsofterselected_bjets.push_back( vec );
     DLsofterselected_bjetsBdiscriminant.push_back( jet_bDiscriminant ->at(idx) );
+    DLsofterselected_bjetsFlav.push_back( jet_flav ->at(idx) );
 
   }
 
@@ -639,9 +647,11 @@ std::vector<int>                   ttHYggdrasilEventSelection::looseLeptonsCharg
 
 std::vector<const TLorentzVector*> ttHYggdrasilEventSelection::jets()             { return selected_jets;}
 std::vector<double> ttHYggdrasilEventSelection::jetsBdiscriminant(){ return selected_jetsBdiscriminant;}
+std::vector<int> ttHYggdrasilEventSelection::jetsFlav(){ return selected_jetsFlav;}
 
 std::vector<const TLorentzVector*> ttHYggdrasilEventSelection::bjets()             { return selected_bjets;}
 std::vector<double> ttHYggdrasilEventSelection::bjetsBdiscriminant(){ return selected_bjetsBdiscriminant;}
+std::vector<int> ttHYggdrasilEventSelection::bjetsFlav(){ return selected_bjetsFlav;}
 
 
 // ** for DL channel study ***

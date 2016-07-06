@@ -35,7 +35,8 @@ class ttHYggdrasilEventSelection{
 		const std::vector<double> * eta, 
 		const std::vector<double> * phi, 
 		const std::vector<double> * m,
-		const std::vector<double> * bDiscriminant );
+		const std::vector<double> * bDiscriminant ,
+		const std::vector<int> * flav );
 
   void SetMet( const float * _met_pt, const float * _met_phi );
 
@@ -56,10 +57,12 @@ class ttHYggdrasilEventSelection{
   // ttH Jet 
   std::vector<const TLorentzVector*> jets();
   std::vector<double> jetsBdiscriminant();
+  std::vector<int> jetsFlav();
 
   // passed bTagging
   std::vector<const TLorentzVector*> bjets();
   std::vector<double> bjetsBdiscriminant();
+  std::vector<int> bjetsFlav();
 
   bool PassSingleMuCh();
   bool PassSingleElCh();
@@ -145,6 +148,7 @@ class ttHYggdrasilEventSelection{
   const std::vector<double> * jet_phi; 
   const std::vector<double> * jet_m;
   const std::vector<double> * jet_bDiscriminant ;
+  const std::vector<int>    * jet_flav; 
 
   const float * met_pt , *met_phi ;
   const bool * goodvtx;
@@ -161,9 +165,11 @@ class ttHYggdrasilEventSelection{
 
   std::vector<const TLorentzVector*> selected_jets;
   std::vector<double>                selected_jetsBdiscriminant;
+  std::vector<int>                selected_jetsFlav;
 
   std::vector<const TLorentzVector*> selected_bjets;
   std::vector<double>                selected_bjetsBdiscriminant;
+  std::vector<int>                selected_bjetsFlav;
 
 
   // ** for DiLepton channel Study **
@@ -175,10 +181,12 @@ class ttHYggdrasilEventSelection{
   // ** for DiLepton channel Study **
   std::vector<const TLorentzVector*> DLsofterselected_jets;
   std::vector<double>                DLsofterselected_jetsBdiscriminant;
+  std::vector<int>                DLsofterselected_jetsFlav;
 
   // ** for DiLepton channel Study **
   std::vector<const TLorentzVector*> DLsofterselected_bjets;
   std::vector<double>                DLsofterselected_bjetsBdiscriminant;
+  std::vector<int>                DLsofterselected_bjetsFlav;
 
 
 };
