@@ -213,6 +213,10 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   LHAPDF::PDFSet * CT14nlo_PDFSet;
   std::vector<LHAPDF::PDF*> _systPDFs ;         
 
+
+  ttHYggdrasilEventSelection selection;
+  ttHYggdrasilScaleFactors   scalefactors;
+
 };
 
 //
@@ -1435,9 +1439,6 @@ n_fatjets++;
   worldTree->Fill();
 
   {
-
-    ttHYggdrasilEventSelection selection;
-    ttHYggdrasilScaleFactors   scalefactors;
 
     // -----------------------
     // start setting variables --> 
