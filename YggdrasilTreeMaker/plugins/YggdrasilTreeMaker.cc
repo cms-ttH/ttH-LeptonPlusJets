@@ -1579,9 +1579,13 @@ n_fatjets++;
     std::cout<< std::setprecision(4) << eve->MET_[ 0 ] << "," ;
     std::cout<< std::setprecision(4) << eve->MET_phi_[ 0 ] << "," ;
 
+    if( isMC ){
     std::cout << eve->additionalJetEventId_ <<",";
-
     std::cout << scalefactors.get_pu_wgt( eve -> numTruePV_ ) << "," ;    // PUWeight,
+    }else{
+    std::cout << -1<<",";
+    std::cout << -1<< "," ;    // PUWeight,
+    }
 
     double bWeight = -1 ;
     if( isMC ){
@@ -1591,8 +1595,13 @@ n_fatjets++;
     }
     std::cout << bWeight <<",";
 
+
     //  top PT weight 
+    if( isMC ){
     std::cout << eve -> weight_topPt_ <<",";
+    }else{
+    std::cout << -1 <<",";
+    }
 
     double triggerSF =( ! isMC ?
 			1 :
@@ -1610,13 +1619,18 @@ n_fatjets++;
 			) ; 
     std::cout << leptonSF <<",";
 
+    if( isMC ){
     std::cout << eve->weight_q2_upup_ <<",";
     std::cout << eve->weight_q2_downdown_ <<",";
-
     std::cout << eve-> weight_PDF_CT14nlo_up_ <<",";
     std::cout << eve-> weight_PDF_CT14nlo_down_ ;
-
-
+    }else{
+    std::cout << -1 <<",";
+    std::cout << -1 <<",";
+    std::cout << -1 <<",";
+    std::cout << -1  ;
+    }
+    
     std::cout << std::endl ;
   }
 
