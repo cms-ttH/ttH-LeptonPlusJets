@@ -1160,6 +1160,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->lepton_phi_              = lepton_phi;
   eve->lepton_e_              = lepton_e;
   eve->lepton_relIso_           = lepton_relIso;
+  eve->lepton_scEta_           = lepton_scEta;
 
   eve->wgt_lumi_  = intLumi_;
   eve->wgt_xs_    = mySample_xSec_;//mySample.xSec;
