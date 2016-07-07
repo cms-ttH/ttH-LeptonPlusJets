@@ -108,6 +108,7 @@ lepton_relIso_  : Muon, delta_beta corrected relative isolation. cone 04. Calcul
                 : Ele , EffectiveArea-corrected isolation, cone 0.3 (Calculated with MiniAODHelper with effAreaType::spring15)
 lepton_isTight_ : POG Tight ID. 1=pass. [*1] 
 lepton_isLoose_ : POG Loose ID. 1=pass. [*1]
+lepton_scEta_   : Electron Super Cluster. For muon, -99 is filled.
 
 [*1] POG lepton ID : 
  Muon POG loose ID is not used at the moment. Always 1.
