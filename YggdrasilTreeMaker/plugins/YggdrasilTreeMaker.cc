@@ -1444,24 +1444,31 @@ n_fatjets++;
     // start setting variables --> 
 
     int MuTrig = ( eve->passHLT_IsoMu20_v_ == 1 || eve->passHLT_IsoTkMu20_v_ == 1 ) ? 1 : 0 ; 
-    selection . SetElTrigger( & eve->passHLT_Ele27_eta2p1_WPLoose_Gsf_v_ );
-    selection . SetMuTrigger( & MuTrig );
-
     // Dilep Trig
-    selection . SetElElTrigger( & ( eve->passHLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_  ) );
-
     int ElMuTrig = ( eve->passHLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v_ ==1 
 		     ||
 		     eve->passHLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v_ == 1 
 		     ) ? 1 : 0 ; 
-    selection . SetElMuTrigger( & ElMuTrig );
-    
     int MuMuTrig = ( eve->passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v_
 		     ||
 		     eve->passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v_ 
 		     ) ? 1 : 0 ;
-      
+
+    int DUMMYTRIGGER_ALWAYS_PASS = 1 ; 
+
+    if( isMC ){
+    selection . SetElTrigger  ( & DUMMYTRIGGER_ALWAYS_PASS );
+    selection . SetMuTrigger  ( & DUMMYTRIGGER_ALWAYS_PASS );
+    selection . SetElElTrigger( & DUMMYTRIGGER_ALWAYS_PASS );
+    selection . SetElMuTrigger( & DUMMYTRIGGER_ALWAYS_PASS );
+    selection . SetMuMuTrigger( & DUMMYTRIGGER_ALWAYS_PASS );
+    }else{
+    selection . SetElTrigger( & eve->passHLT_Ele27_eta2p1_WPLoose_Gsf_v_ );
+    selection . SetMuTrigger( & MuTrig );
+    selection . SetElElTrigger( & ( eve->passHLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_  ) );
+    selection . SetElMuTrigger( & ElMuTrig );
     selection . SetMuMuTrigger( & MuMuTrig );
+    }
 
     selection . SetGoodVtx( & ( eve->GoodFirstPV_ ) );
 
@@ -1583,11 +1590,11 @@ n_fatjets++;
     std::cout << eve->additionalJetEventId_ <<",";
     std::cout << scalefactors.get_pu_wgt( eve -> numTruePV_ ) << "," ;    // PUWeight,
     }else{
-    std::cout << -1<<",";
-    std::cout << -1<< "," ;    // PUWeight,
+    std::cout << 1<<",";
+    std::cout << 1<< "," ;    // PUWeight,
     }
 
-    double bWeight = -1 ;
+    double bWeight = 1 ;
     if( isMC ){
       int iSYS = 0 ; 
       double dummy = - 1 ;
@@ -1600,7 +1607,7 @@ n_fatjets++;
     if( isMC ){
     std::cout << eve -> weight_topPt_ <<",";
     }else{
-    std::cout << -1 <<",";
+    std::cout << 1 <<",";
     }
 
     double triggerSF =( ! isMC ?
@@ -1625,10 +1632,10 @@ n_fatjets++;
     std::cout << eve-> weight_PDF_CT14nlo_up_ <<",";
     std::cout << eve-> weight_PDF_CT14nlo_down_ ;
     }else{
-    std::cout << -1 <<",";
-    std::cout << -1 <<",";
-    std::cout << -1 <<",";
-    std::cout << -1  ;
+    std::cout << 1 <<",";
+    std::cout << 1 <<",";
+    std::cout << 1 <<",";
+    std::cout << 1  ;
     }
     
     std::cout << std::endl ;
