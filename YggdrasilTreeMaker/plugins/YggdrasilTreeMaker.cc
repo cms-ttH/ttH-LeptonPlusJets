@@ -727,9 +727,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   if( isTTbarMC ){
     edm::Handle<TtGenEvent> genEvt ;
     iEvent.getByToken( TtGenEventToken, genEvt );
-    std::cout << ( genEvt-> isTtBar ()        ?"good ttbar" : "non ttbar" ) << std::endl ; ;
-    std::cout << ( genEvt-> isFullHadronic () ?"full had" : "nonfullhad" )<< std::endl ; ;
-    std::cout << ( genEvt-> isSemiLeptonic () ?"LJch " : "non LJ" )<< std::endl ; ;
 
     // **** Ignore the genEvt since I can not pass the packed (in config.py).
 //    eve -> weight_topPt_ = sqrt( 

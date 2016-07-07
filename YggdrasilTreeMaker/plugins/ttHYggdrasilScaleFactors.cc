@@ -400,7 +400,6 @@ void ttHYggdrasilScaleFactors::init_Pileup(){
       for( int i = 0 ; i < 50 ; i ++ ){
 	PU_MC[ i ] /= total;
       }
-      std::cout <<"DEBUG PU total = " << total << std::endl ; 
     }
 
     double PU_DATA[50] ;
