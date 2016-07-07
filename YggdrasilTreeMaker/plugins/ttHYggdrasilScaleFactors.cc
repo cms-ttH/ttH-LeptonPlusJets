@@ -35,6 +35,26 @@ void ttHYggdrasilScaleFactors::init_all(){
   init_Pileup();
   init_ElectronSF();
   init_MuonSF();
+  init_TrigMuSF();
+  init_TrigElSF();
+}
+
+void ttHYggdrasilScaleFactors::init_TrigElSF(){
+
+  {
+    std::string input = SFfileDir +"/" + "eleTrig_SF.root";
+    h_EleSF_Trig = (TH2F*) getTH2HistogramFromFile( input , std::string ("h_eleTrig_SF") );
+  }
+
+}
+void ttHYggdrasilScaleFactors::init_TrigMuSF(){
+
+  {
+    std::string input = SFfileDir +"/" + "SingleMuonTrigger_Z_RunCD_Reco76X_Feb15.root";
+    h_MuSF_Trig_HLTv4p2 = (TH2D*) getTH2HistogramFromFile( input , std::string ("runD_IsoMu20_OR_IsoTkMu20_HLTv4p2_PtEtaBins/abseta_pt_ratio") );
+    h_MuSF_Trig_HLTv4p3 = (TH2D*) getTH2HistogramFromFile( input , std::string ("runD_IsoMu20_OR_IsoTkMu20_HLTv4p3_PtEtaBins/abseta_pt_ratio") );
+  }
+
 }
 
 void ttHYggdrasilScaleFactors::init_ElectronSF(){
@@ -440,5 +460,50 @@ void ttHYggdrasilScaleFactors::init_Pileup(){
 double ttHYggdrasilScaleFactors::get_pu_wgt( int mc_pu ){
 
   return PU_weight[ mc_pu ];
+  
+}
+
+
+double ttHYggdrasilScaleFactors::get_TrigMuSF( ttHYggdrasilEventSelection * event ){
+
+ double weight = 1 ; 
+
+  for( unsigned int i = 0 ; i < event->leptonsIsMuon().size() ; i++ ){
+    if( event->leptonsIsMuon().at( i ) != 1 ) continue ; 
+    
+    const double abs_eta = std::fabs( event->leptons().at( i )->Eta() ) ; 
+    const double pt      =  event->leptons().at( i )->Pt() ; 
+    
+    double w_p2 = GetBinValueFromXYValues( h_MuSF_Trig_HLTv4p2 , abs_eta , pt );
+    double w_p3 = GetBinValueFromXYValues( h_MuSF_Trig_HLTv4p3 , abs_eta , pt );
+
+    double ratio_p2 =  754.394 / ( 754.394 + 1908.010 ) ;
+    double ratio_p3 = 1908.010 / ( 754.394 + 1908.010 ) ;
+    
+    weight *= 
+      w_p2 * ratio_p2 
+      +
+      w_p3 * ratio_p3 ;
+
+  }
+  return weight ;
+}
+
+
+double ttHYggdrasilScaleFactors::get_TrigElSF( ttHYggdrasilEventSelection * event ){
+
+ double weight = 1 ; 
+
+  for( unsigned int i = 0 ; i < event->leptonsIsMuon().size() ; i++ ){
+    if( event->leptonsIsMuon().at( i ) != 0 ) continue ; 
+    
+    const double sc_eta =  event->leptonsSCEta().at(i); 
+    const double pt     =  event->leptons().at( i )->Pt() ; 
+    
+    weight *= GetBinValueFromXYValues( h_EleSF_Trig , pt ,  sc_eta ); // <- Unlike Reco/Iso SF, x=PT and y=SC_Eta.
+    
+  }
+  return weight ;
+
   
 }

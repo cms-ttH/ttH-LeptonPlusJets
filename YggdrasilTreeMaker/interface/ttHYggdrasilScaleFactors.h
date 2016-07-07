@@ -37,6 +37,9 @@ class ttHYggdrasilScaleFactors{
   double getTightMuonSF( ttHYggdrasilEventSelection * event );
   double getTightElectronSF( ttHYggdrasilEventSelection * event );
 
+  double get_TrigMuSF( ttHYggdrasilEventSelection * event );
+  double get_TrigElSF( ttHYggdrasilEventSelection * event );
+
  private :
 
   std::string SFfileDir ;
@@ -46,6 +49,8 @@ class ttHYggdrasilScaleFactors{
   void init_Pileup();
   void init_ElectronSF();
   void init_MuonSF();
+  void init_TrigMuSF();
+  void init_TrigElSF();
   TH2 * getTH2HistogramFromFile( std::string input , std::string histoname );
   double GetBinValueFromXYValues( TH2 * h , double xVal , double yVal );
 
@@ -63,6 +68,11 @@ class ttHYggdrasilScaleFactors{
   TH2F * h_EleSF_Iso;
   TH2D * h_MuSF_Reco;
   TH2D * h_MuSF_Iso ;
+
+  // Trif SF
+  TH2D * h_MuSF_Trig_HLTv4p2;
+  TH2D * h_MuSF_Trig_HLTv4p3;
+  TH2F * h_EleSF_Trig;
 
 };
 

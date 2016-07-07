@@ -1593,7 +1593,12 @@ n_fatjets++;
     //  top PT weight 
     std::cout << eve -> weight_topPt_ <<",";
 
-    double triggerSF =-1 ; //for the moment.
+    double triggerSF =( ! isMC ?
+			1 :
+			scalefactors.get_TrigMuSF( & selection )
+			*
+			scalefactors.get_TrigElSF( & selection )
+			) ;
     std::cout << triggerSF <<",";
 
     double leptonSF = ( ! isMC ?
