@@ -23,6 +23,7 @@ class ttHYggdrasilEventSelection{
 
   void SetLeptons( const std::vector<double> * pt, 
 		   const std::vector<double> * eta, 
+		   const std::vector<double> * scEta,
 		   const std::vector<double> * phi,
 		   const std::vector<double> * e,
 		   const std::vector<int>    * charge,
@@ -45,12 +46,14 @@ class ttHYggdrasilEventSelection{
   // ttH Tight lepton for SingleLepton
   std::vector<const TLorentzVector*> leptons();
   std::vector<double>                leptonsRelIso();
+  std::vector<double>                leptonsSCEta();
   std::vector<int>                   leptonsIsMuon();
   std::vector<int>                   leptonsCharge();
 
   // ttH Loose leoton
   std::vector<const TLorentzVector*> looseLeptons();
   std::vector<double>                looseLeptonsRelIso();
+  std::vector<double>                looseLeptonsScEta();
   std::vector<int>                   looseLeptonsIsMuon();
   std::vector<int>                   looseLeptonsCharge();
 
@@ -100,6 +103,7 @@ class ttHYggdrasilEventSelection{
   void _SortChargedLepton();
   void _SortChargedLepton( std::vector<const TLorentzVector*> * v_TLV ,
 			   std::vector<double>                * v_iso ,
+			   std::vector<double>                * v_scEta ,
 			   std::vector<int>                   * v_isMuon ,
 			   std::vector<int>                   * v_charge );
   bool _OverlapWithLooseLeptons( double eta, double phi);
@@ -137,6 +141,7 @@ class ttHYggdrasilEventSelection{
   const std::vector<double> * lep_eta; 
   const std::vector<double> * lep_phi;
   const std::vector<double> * lep_e;
+  const std::vector<double> * lep_scEta;
   const std::vector<int>    * lep_charge;
   const std::vector<int>    * lep_isMuon; 
   const std::vector<double> * lep_relIso;
@@ -157,9 +162,11 @@ class ttHYggdrasilEventSelection{
   std::vector<double>                selected_tightLeptonsRelIso;
   std::vector<int>                   selected_tightLeptonsIsMuon;
   std::vector<int>                   selected_tightLeptonsCharge;
+  std::vector<double>                selected_tightLeptonsScEta;
 
   std::vector<const TLorentzVector*> selected_looseLeptons;
   std::vector<double>                selected_looseLeptonsRelIso;
+  std::vector<double>                selected_looseLeptonsScEta;
   std::vector<int>                   selected_looseLeptonsIsMuon;
   std::vector<int>                   selected_looseLeptonsCharge;
 
@@ -175,6 +182,7 @@ class ttHYggdrasilEventSelection{
   // ** for DiLepton channel Study **
   std::vector<const TLorentzVector*> DLselected_tightLeptons;
   std::vector<double>                DLselected_tightLeptonsRelIso;
+  std::vector<double>                DLselected_tightLeptonsScEta;
   std::vector<int>                   DLselected_tightLeptonsIsMuon;
   std::vector<int>                   DLselected_tightLeptonsCharge;
 

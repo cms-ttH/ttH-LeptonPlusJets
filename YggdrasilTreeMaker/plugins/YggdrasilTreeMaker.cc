@@ -1469,6 +1469,7 @@ n_fatjets++;
 
     selection . SetLeptons( & eve->lepton_pt_, 
 			    & eve->lepton_eta_, 
+			    & eve->lepton_scEta_, 
 			    & eve->lepton_phi_,
 			    & eve->lepton_e_,
 			    & eve->lepton_charge_, 
