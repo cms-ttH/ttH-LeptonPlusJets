@@ -1599,7 +1599,12 @@ n_fatjets++;
     double triggerSF =-1 ; //for the moment.
     std::cout << triggerSF <<",";
 
-    double leptonSF =-1 ; //for the moment.
+    double leptonSF = ( ! isMC ?
+			1 : 
+			scalefactors.getTightElectronSF( & selection )
+			*
+			scalefactors.getTightMuonSF( & selection ) 
+			) ; 
     std::cout << leptonSF <<",";
 
     std::cout << eve->weight_q2_upup_ <<",";

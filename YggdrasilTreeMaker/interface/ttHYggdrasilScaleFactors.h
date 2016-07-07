@@ -6,7 +6,8 @@
 #include <TLorentzVector.h>
 
 #include <TH1D.h>
-
+#include <TH2D.h>
+#include <TH2F.h>
 
 #ifdef STANDALONECOMPILE
 #include "ttHYggdrasilEventSelection.h"
@@ -33,6 +34,9 @@ class ttHYggdrasilScaleFactors{
 
   double get_pu_wgt( int mc_pu );
 
+  double getTightMuonSF( ttHYggdrasilEventSelection * event );
+  double getTightElectronSF( ttHYggdrasilEventSelection * event );
+
  private :
 
   std::string SFfileDir ;
@@ -40,6 +44,10 @@ class ttHYggdrasilScaleFactors{
   void init_all();
   void init_btagSF();
   void init_Pileup();
+  void init_ElectronSF();
+  void init_MuonSF();
+  TH2 * getTH2HistogramFromFile( std::string input , std::string histoname );
+  double GetBinValueFromXYValues( TH2 * h , double xVal , double yVal );
 
   // CSV reweighting
   TH1D* h_csv_wgt_hf[9][5];
@@ -48,6 +56,13 @@ class ttHYggdrasilScaleFactors{
 
   // PU weighting
   double PU_weight[50];
+
+
+  // Lepton SF
+  TH2F * h_EleSF_Reco;
+  TH2F * h_EleSF_Iso;
+  TH2D * h_MuSF_Reco;
+  TH2D * h_MuSF_Iso ;
 
 };
 

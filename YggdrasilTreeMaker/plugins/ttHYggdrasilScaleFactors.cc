@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <stdlib.h>
+#include <cassert>
 
 #include <TFile.h>
 
@@ -32,6 +33,102 @@ void ttHYggdrasilScaleFactors::init_all(){
 
   init_btagSF();
   init_Pileup();
+  init_ElectronSF();
+  init_MuonSF();
+}
+
+void ttHYggdrasilScaleFactors::init_ElectronSF(){
+  
+  {
+    std::string input = SFfileDir +"/" + "eleRECO.txt.egamma_SF2D.root";
+    h_EleSF_Reco = (TH2F*) getTH2HistogramFromFile( input , std::string ("EGamma_SF2D") );
+  }
+  { 
+    std::string input = SFfileDir +"/" + "ScaleFactor_GsfElectronToRECO_passingTrigWP80.txt.egamma_SF2D.root";
+    h_EleSF_Iso = (TH2F*) getTH2HistogramFromFile( input , std::string ("EGamma_SF2D") );
+  }
+
+}
+
+void ttHYggdrasilScaleFactors::init_MuonSF(){
+
+  {
+    std::string input = SFfileDir +"/" + "MuonID_Z_RunCD_Reco76X_Feb15.root";
+    h_MuSF_Reco = (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio"));
+  }
+  { 
+    std::string input = SFfileDir +"/" + "MuonIso_Z_RunCD_Reco76X_Feb15.root";
+    h_MuSF_Iso = (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio") );
+  }
+
+}
+
+TH2* ttHYggdrasilScaleFactors::getTH2HistogramFromFile( std::string input , std::string histoname ){
+
+  TFile * f = TFile::Open( input.c_str() );
+  TH2F * h_2f = 0 ;
+  TH2D * h_2d = 0 ;
+  f-> GetObject ( histoname.c_str(), h_2d );
+  f-> GetObject ( histoname.c_str(), h_2f );
+  if( h_2d != 0 ){
+    return h_2d ; 
+  }
+  if( h_2f != 0 ){
+    return h_2f ; 
+  }
+  std::cout <<"Failed to obtain histogarm named " << histoname<< " from file " << input << std::endl ; 
+  assert( false );
+  return 0 ; 
+}
+
+
+double ttHYggdrasilScaleFactors::GetBinValueFromXYValues( TH2 * h , double xVal , double yVal ){
+
+  int bin_x = h->GetXaxis()->FindBin( xVal );
+  if( bin_x < 0 ){ bin_x = 1 ;}
+  if( bin_x > h->GetXaxis()->GetNbins() ){ bin_x = h->GetXaxis()->GetNbins() ;}
+
+  int bin_y = h->GetYaxis()->FindBin( yVal );
+  if( bin_y < 0 ){ bin_x = 1 ;}
+  if( bin_y > h->GetYaxis()->GetNbins() ){ bin_y = h->GetYaxis()->GetNbins() ;}
+
+  return h->GetBinContent( bin_x , bin_y );
+
+}
+
+double ttHYggdrasilScaleFactors::getTightMuonSF( ttHYggdrasilEventSelection * event ){
+
+  double weight = 1 ; 
+
+  for( unsigned int i = 0 ; i < event->leptonsIsMuon().size() ; i++ ){
+    if( event->leptonsIsMuon().at( i ) != 1 ) continue ; 
+
+    const double abs_eta = std::fabs( event->leptons().at( i )->Eta() ) ; 
+    const double pt      =            event->leptons().at( i )->Pt()  ; 
+
+    weight *= GetBinValueFromXYValues( h_MuSF_Reco , abs_eta , pt );
+    weight *= GetBinValueFromXYValues( h_MuSF_Iso  , abs_eta , pt );
+    
+  }
+  return weight ;
+}
+
+
+double ttHYggdrasilScaleFactors::getTightElectronSF( ttHYggdrasilEventSelection * event ){
+
+  double weight = 1 ; 
+
+  for( unsigned int i = 0 ; i < event->leptonsIsMuon().size() ; i++ ){
+    if( event->leptonsIsMuon().at( i ) != 0 ) continue ; 
+    
+    const double sc_eta =  event->leptonsSCEta().at(i); 
+    const double pt     =  event->leptons().at( i )->Pt() ; 
+    
+    weight *= GetBinValueFromXYValues( h_EleSF_Reco , sc_eta , pt );
+    weight *= GetBinValueFromXYValues( h_EleSF_Iso  , sc_eta , pt );
+    
+  }
+  return weight ;
 }
 
 
