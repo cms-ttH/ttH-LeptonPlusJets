@@ -37,6 +37,14 @@ class ttHYggdrasilScaleFactors{
   double getTightMuonSF( ttHYggdrasilEventSelection * event );
   double getTightElectronSF( ttHYggdrasilEventSelection * event );
 
+  double getTightMuon_IDSF( ttHYggdrasilEventSelection * event );
+  double getTightElectron_IDSF( ttHYggdrasilEventSelection * event );
+
+  double getTightMuon_IsoSF( ttHYggdrasilEventSelection * event );
+  double getTightElectron_RecoSF( ttHYggdrasilEventSelection * event );
+
+  // - - -
+
   double get_TrigMuSF( ttHYggdrasilEventSelection * event );
   double get_TrigElSF( ttHYggdrasilEventSelection * event );
 
@@ -64,9 +72,9 @@ class ttHYggdrasilScaleFactors{
 
 
   // Lepton SF
+  TH2F * h_EleSF_ID ;
   TH2F * h_EleSF_Reco;
-  TH2F * h_EleSF_Iso;
-  TH2D * h_MuSF_Reco;
+  TH2D * h_MuSF_ID;
   TH2D * h_MuSF_Iso ;
 
   // Trif SF
