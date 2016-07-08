@@ -69,17 +69,20 @@ if enableJECFromLocalDB :
       toGet = cms.VPSet(
       cms.PSet(
             record = cms.string('JetCorrectionsRecord'),
-            tag    = cms.string('JetCorrectorParametersCollection_Fall15_25nsV2_DATA_AK4PFchs'),
+            tag    = 
+            cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_MC_AK4PFchs')
+            if isMC else
+            cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_DATA_AK4PFchs'),
             label  = cms.untracked.string('AK4PFchs')
             ),
       ), 
-
       connect = ( 
-            cms.string( 'sqlite:' + os.environ['CMSSW_BASE'] + '/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_MC.db' ) 
+            cms.string( 'sqlite:../data/Spring16_25nsV3_MC.db' ) 
             if isMC else
-            cms.string( 'sqlite:' + os.environ['CMSSW_BASE'] + '/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_DATA.db' ) 
+            cms.string( 'sqlite:../data/Spring16_25nsV3_DATA.db' )
             )
-                            )
+#(Doesn't full-path work with sqlite: ?)   cms.string( 'sqlite:' + os.environ['CMSSW_BASE'] + '/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_DATA.db' ) 
+                               )
 
       ## add an es_prefer statement to resolve a possible conflict from simultaneous connection to a global tag
     process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
