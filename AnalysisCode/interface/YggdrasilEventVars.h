@@ -79,7 +79,7 @@ struct yggdrasilEventVars{
 
 
 
-  int     numTruePV_;
+  float   numTruePV_;
   int     numGenPV_;
   
   bool    GoodFirstPV_;
