@@ -59,7 +59,7 @@ if enableJECFromLocalDB :
     if not isMC :
         process.GlobalTag.toGet.append(
             cms.PSet(
-                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/BoostedTTH/BoostedAnalyzer/data/jecs/Spring16_25nsV3_DATA.db'),
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_DATA.db'),
                 record = cms.string('JetCorrectionsRecord'),
                 tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_DATA_AK4PFchs'),
                 label  = cms.untracked.string('AK4PFchs')
@@ -67,7 +67,7 @@ if enableJECFromLocalDB :
             )
         process.GlobalTag.toGet.append(
             cms.PSet(
-                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/BoostedTTH/BoostedAnalyzer/data/jecs/Spring16_25nsV3_DATA.db'),
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_DATA.db'),
                 record = cms.string('JetCorrectionsRecord'),
                 tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_DATA_AK8PFchs'),
                 label  = cms.untracked.string('AK8PFchs')
@@ -76,7 +76,7 @@ if enableJECFromLocalDB :
     else:
         process.GlobalTag.toGet.append(
             cms.PSet(
-                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/BoostedTTH/BoostedAnalyzer/data/jecs/Spring16_25nsV3_MC.db'),
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_MC.db'),
                 record = cms.string('JetCorrectionsRecord'),
                 tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_MC_AK4PFchs'),
                 label  = cms.untracked.string('AK4PFchs')
@@ -84,7 +84,7 @@ if enableJECFromLocalDB :
             )
         process.GlobalTag.toGet.append(
             cms.PSet(
-                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/BoostedTTH/BoostedAnalyzer/data/jecs/Spring16_25nsV3_MC.db'),
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_MC.db'),
                 record = cms.string('JetCorrectionsRecord'),
                 tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_MC_AK8PFchs'),
                 label  = cms.untracked.string('AK8PFchs')
