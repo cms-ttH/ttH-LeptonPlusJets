@@ -1560,8 +1560,12 @@ n_fatjets++;
       double JECup = -1 ;       
       double JECdown = -1 ; 
 
-      std::vector<pat::Jet> jet_JESUP   =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::JESup   );
-      std::vector<pat::Jet> jet_JESDOWN =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::JESdown );
+      const bool  doJES = true;
+      const bool  doJER = false;
+
+      std::vector<pat::Jet> jet_JESNOMI =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::NA     , doJES, doJER );
+      std::vector<pat::Jet> jet_JESUP   =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::JESup  , doJES, doJER );
+      std::vector<pat::Jet> jet_JESDOWN =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::JESdown, doJES, doJER );
       if( nJet_ge_one ){
 
 	const double eta1 = selection.jets().at(0)->Eta();
@@ -1576,9 +1580,9 @@ n_fatjets++;
 	  d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
 
 	  if(  d_eta*d_eta + d_phi*d_phi < 0.01 * 0.01 ){ // matching btw Raw and Corrected (physics) jet.
-	    JEC     =  selection.jets().at(0)->Pt() / iRawJet->pt();
-	    JECup   = jet_JESUP  .at( idxJet ).pt() / iRawJet->pt();
-	    JECdown = jet_JESDOWN.at( idxJet ).pt() / iRawJet->pt();
+	    JEC     = jet_JESNOMI.at( idxJet ).pt() / iRawJet->pt();
+	    JECup   = jet_JESUP  .at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+	    JECdown = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
 	  }
 	}
 
