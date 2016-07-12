@@ -20,11 +20,11 @@ echo /PhysicsTools/PatUtils/ >> .git/info/sparse-checkout
 git cms-merge-topic cms-met:metTool80X   # ---[*1]
 
 
-#git clone git@github.com:hsatoshi/MiniAOD.git  -b satoshi_80x
+#git clone git@github.com:hsatoshi/MiniAOD.git  -b satoshi__CMSSW_8_0_8
 #git clone git@github.com:hsatoshi/ttH-LeptonPlusJets.git -b satoshi_cleanup_80x
 #git clone git@github.com:hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
 
-git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi_80x
+git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi__CMSSW_8_0_8
 git clone https://github.com/hsatoshi/ttH-LeptonPlusJets.git -b satoshi_cleanup_80x
 git clone https://github.com/hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
 

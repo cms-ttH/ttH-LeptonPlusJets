@@ -64,7 +64,6 @@
 
 #include "MiniAOD/MiniAODHelper/interface/MiniAODHelper.h"
 #include "MiniAOD/MiniAODHelper/interface/TopTagger.h"
-#include "MiniAOD/BoostedObjects/interface/BoostedUtils.hpp"
 #include "MiniAOD/MiniAODHelper/interface/HiggsTagger.h"
 #include "ttH-LeptonPlusJets/AnalysisCode/interface/YggdrasilEventVars.h"
 
@@ -322,7 +321,7 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   miniAODhelper.SetUp(era, insample_, iAnalysisType, isData);
 
   if( usePUPPI ){
-    miniAODhelper.SetJetCorrectorUncertainty("PUPPI");
+    miniAODhelper.SetJetCorrectorUncertainty();
   }else{
     miniAODhelper.SetJetCorrectorUncertainty();
   }
@@ -1227,7 +1226,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   boosted::BoostedJetCollection selectedBoostedJets;
   if(h_boostedjet.isValid()){
   boosted::BoostedJetCollection const &boostedjets_unsorted = *h_boostedjet;
-    boosted::BoostedJetCollection boostedjets = BoostedUtils::GetSortedByPt(boostedjets_unsorted);
+
+  //    boosted::BoostedJetCollection boostedjets = BoostedUtils::GetSortedByPt(boostedjets_unsorted);
+  boosted::BoostedJetCollection boostedjets = boostedjets_unsorted;
+
     selectedBoostedJets = miniAODhelper.GetSelectedBoostedJets(boostedjets, 200., 2.0, 20., 2.4, jetID::jetLoose);
     
   
@@ -1267,10 +1269,12 @@ n_fatjets++;
       //remove overlap with topjets
        bool overlapping=false;
        for(auto tj=syncTopJets.begin(); tj!=syncTopJets.end(); tj++){
-       	if(BoostedUtils::DeltaR(tj->fatjet,higgsJet->fatjet)<1.5){
-       	  overlapping=true;
-       	  break;
-       	}
+
+//       	if(BoostedUtils::DeltaR(tj->fatjet,higgsJet->fatjet)<1.5){
+//       	  overlapping=true;
+//       	  break;
+//       	}
+
        }
        if(overlapping) continue;
        if(overlapping) continue;

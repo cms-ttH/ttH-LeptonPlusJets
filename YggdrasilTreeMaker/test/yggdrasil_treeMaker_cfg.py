@@ -11,9 +11,9 @@ isMC=True
 
 isTTBARMC=True
 
-#genjetInputTag = cms.InputTag("slimmedGenJets","","")
+genjetInputTag = cms.InputTag("slimmedGenJets","","")
 #genjetInputTag = cms.InputTag("ak4GenJetsReproduced","","")
-genjetInputTag = cms.InputTag("ak4GenJetsWithChargedLepFromTop","","")
+#genjetInputTag = cms.InputTag("ak4GenJetsWithChargedLepFromTop","","")
 
 
 
@@ -56,68 +56,87 @@ if enableJECFromLocalDB :
     import os.path
    
 
-    #
-    # taken from https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#JecSqliteFile
-    #
-    process.load("CondCore.DBCommon.CondDBCommon_cfi")
-    from CondCore.DBCommon.CondDBSetup_cfi import *
-    process.jec = cms.ESSource("PoolDBESSource",
-      DBParameters = cms.PSet(
-        messageLevel = cms.untracked.int32(0)
-        ),
-      timetype = cms.string('runnumber'),
-      toGet = cms.VPSet(
-      cms.PSet(
-            record = cms.string('JetCorrectionsRecord'),
-            tag    = 
-            cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_MC_AK4PFchs')
-            if isMC else
-            cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_DATA_AK4PFchs'),
-            label  = cms.untracked.string('AK4PFchs')
-            ),
-      ), 
-      connect = ( 
-            cms.string( 'sqlite:../data/Spring16_25nsV3_MC.db' ) 
-            if isMC else
-            cms.string( 'sqlite:../data/Spring16_25nsV3_DATA.db' )
+    if not isMC :
+        process.GlobalTag.toGet.append(
+            cms.PSet(
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/BoostedTTH/BoostedAnalyzer/data/jecs/Spring16_25nsV3_DATA.db'),
+                record = cms.string('JetCorrectionsRecord'),
+                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_DATA_AK4PFchs'),
+                label  = cms.untracked.string('AK4PFchs')
+                )
             )
-#(Doesn't full-path work with sqlite: ?)   cms.string( 'sqlite:' + os.environ['CMSSW_BASE'] + '/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_DATA.db' ) 
-                               )
+        process.GlobalTag.toGet.append(
+            cms.PSet(
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/BoostedTTH/BoostedAnalyzer/data/jecs/Spring16_25nsV3_DATA.db'),
+                record = cms.string('JetCorrectionsRecord'),
+                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_DATA_AK8PFchs'),
+                label  = cms.untracked.string('AK8PFchs')
+                )
+            )
+    else:
+        process.GlobalTag.toGet.append(
+            cms.PSet(
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/BoostedTTH/BoostedAnalyzer/data/jecs/Spring16_25nsV3_MC.db'),
+                record = cms.string('JetCorrectionsRecord'),
+                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_MC_AK4PFchs'),
+                label  = cms.untracked.string('AK4PFchs')
+                )
+            )
+        process.GlobalTag.toGet.append(
+            cms.PSet(
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/BoostedTTH/BoostedAnalyzer/data/jecs/Spring16_25nsV3_MC.db'),
+                record = cms.string('JetCorrectionsRecord'),
+                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_MC_AK8PFchs'),
+                label  = cms.untracked.string('AK8PFchs')
+                )
+            )
+        
 
-      ## add an es_prefer statement to resolve a possible conflict from simultaneous connection to a global tag
-    process.es_prefer_jec = cms.ESPrefer('PoolDBESSource','jec')
 
 
-
+# Set up JetCorrections chain to be used in MiniAODHelper
+# Note: name is hard-coded to ak4PFchsL1L2L3 and does not
+# necessarily reflect actual corrections level
 from JetMETCorrections.Configuration.JetCorrectionServices_cff import *
-
-if isPUPPI :
-    process.ak4PFCHSL1Fastjet = cms.ESProducer(
-        'L1FastjetCorrectionESProducer',
-        level       = cms.string('L1FastJet'),
-        algorithm   = cms.string('AK4PFPuppi'),
-        srcRho      = cms.InputTag( 'fixedGridRhoFastjetAll' )
-    )
-    process.ak4PFchsL2Relative = ak4CaloL2Relative.clone( algorithm = 'AK4PFPuppi' )
-    process.ak4PFchsL3Absolute = ak4CaloL3Absolute.clone( algorithm = 'AK4PFPuppi' )
-
-else :
-    process.ak4PFCHSL1Fastjet = cms.ESProducer(
-        'L1FastjetCorrectionESProducer',
-        level       = cms.string('L1FastJet'),
-        algorithm   = cms.string('AK4PFchs'),
-        srcRho      = cms.InputTag( 'fixedGridRhoFastjetAll' )
-    )
-    process.ak4PFchsL2Relative = ak4CaloL2Relative.clone( algorithm = 'AK4PFchs' )
-    process.ak4PFchsL3Absolute = ak4CaloL3Absolute.clone( algorithm = 'AK4PFchs' )
-
-
+process.ak4PFCHSL1Fastjet = cms.ESProducer(
+ 'L1FastjetCorrectionESProducer',
+ level = cms.string('L1FastJet'),
+ algorithm = cms.string('AK4PFchs'),
+ srcRho = cms.InputTag( 'fixedGridRhoFastjetAll' )
+ )
+process.ak4PFchsL2Relative = ak4CaloL2Relative.clone( algorithm = 'AK4PFchs' )
+process.ak4PFchsL3Absolute = ak4CaloL3Absolute.clone( algorithm = 'AK4PFchs' )
+process.ak4PFchsResidual = ak4CaloResidual.clone( algorithm = 'AK4PFchs' )
 process.ak4PFchsL1L2L3 = cms.ESProducer("JetCorrectionESChain",
-    correctors = cms.vstring(
-	'ak4PFCHSL1Fastjet', 
-        'ak4PFchsL2Relative', 
-        'ak4PFchsL3Absolute')
+ correctors = cms.vstring(
+   'ak4PFCHSL1Fastjet',
+   'ak4PFchsL2Relative',
+   'ak4PFchsL3Absolute')
 )
+if not isMC :
+    process.ak4PFchsL1L2L3.correctors.append('ak4PFchsResidual') # add residual JEC for data
+
+
+process.ak8PFCHSL1Fastjet = cms.ESProducer(
+ 'L1FastjetCorrectionESProducer',
+ level = cms.string('L1FastJet'),
+ algorithm = cms.string('AK8PFchs'),
+ srcRho = cms.InputTag( 'fixedGridRhoFastjetAll' )
+ )
+process.ak8PFchsL2Relative = ak4CaloL2Relative.clone( algorithm = 'AK8PFchs' )
+process.ak8PFchsL3Absolute = ak4CaloL3Absolute.clone( algorithm = 'AK8PFchs' )
+process.ak8PFchsResidual = ak4CaloResidual.clone( algorithm = 'AK8PFchs' )
+process.ak8PFchsL1L2L3 = cms.ESProducer("JetCorrectionESChain",
+ correctors = cms.vstring(
+   'ak8PFCHSL1Fastjet',
+   'ak8PFchsL2Relative',
+   'ak8PFchsL3Absolute')
+)
+
+if not isMC :
+ process.ak8PFchsL1L2L3.correctors.append('ak8PFchsResidual') # add residual JEC for data
+
+
 
 process.source = cms.Source("PoolSource",
         fileNames = cms.untracked.vstring(
