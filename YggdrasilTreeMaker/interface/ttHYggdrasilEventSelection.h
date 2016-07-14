@@ -23,6 +23,7 @@ class ttHYggdrasilEventSelection{
 
   void SetLeptons( const std::vector<double> * pt, 
 		   const std::vector<double> * eta, 
+		   const std::vector<double> * scEta,
 		   const std::vector<double> * phi,
 		   const std::vector<double> * e,
 		   const std::vector<int>    * charge,
@@ -35,7 +36,8 @@ class ttHYggdrasilEventSelection{
 		const std::vector<double> * eta, 
 		const std::vector<double> * phi, 
 		const std::vector<double> * m,
-		const std::vector<double> * bDiscriminant );
+		const std::vector<double> * bDiscriminant ,
+		const std::vector<int> * flav );
 
   void SetMet( const float * _met_pt, const float * _met_phi );
 
@@ -44,22 +46,26 @@ class ttHYggdrasilEventSelection{
   // ttH Tight lepton for SingleLepton
   std::vector<const TLorentzVector*> leptons();
   std::vector<double>                leptonsRelIso();
+  std::vector<double>                leptonsSCEta();
   std::vector<int>                   leptonsIsMuon();
   std::vector<int>                   leptonsCharge();
 
   // ttH Loose leoton
   std::vector<const TLorentzVector*> looseLeptons();
   std::vector<double>                looseLeptonsRelIso();
+  std::vector<double>                looseLeptonsScEta();
   std::vector<int>                   looseLeptonsIsMuon();
   std::vector<int>                   looseLeptonsCharge();
 
   // ttH Jet 
   std::vector<const TLorentzVector*> jets();
   std::vector<double> jetsBdiscriminant();
+  std::vector<int> jetsFlav();
 
   // passed bTagging
   std::vector<const TLorentzVector*> bjets();
   std::vector<double> bjetsBdiscriminant();
+  std::vector<int> bjetsFlav();
 
   bool PassSingleMuCh();
   bool PassSingleElCh();
@@ -97,6 +103,7 @@ class ttHYggdrasilEventSelection{
   void _SortChargedLepton();
   void _SortChargedLepton( std::vector<const TLorentzVector*> * v_TLV ,
 			   std::vector<double>                * v_iso ,
+			   std::vector<double>                * v_scEta ,
 			   std::vector<int>                   * v_isMuon ,
 			   std::vector<int>                   * v_charge );
   bool _OverlapWithLooseLeptons( double eta, double phi);
@@ -134,6 +141,7 @@ class ttHYggdrasilEventSelection{
   const std::vector<double> * lep_eta; 
   const std::vector<double> * lep_phi;
   const std::vector<double> * lep_e;
+  const std::vector<double> * lep_scEta;
   const std::vector<int>    * lep_charge;
   const std::vector<int>    * lep_isMuon; 
   const std::vector<double> * lep_relIso;
@@ -145,6 +153,7 @@ class ttHYggdrasilEventSelection{
   const std::vector<double> * jet_phi; 
   const std::vector<double> * jet_m;
   const std::vector<double> * jet_bDiscriminant ;
+  const std::vector<int>    * jet_flav; 
 
   const float * met_pt , *met_phi ;
   const bool * goodvtx;
@@ -153,32 +162,39 @@ class ttHYggdrasilEventSelection{
   std::vector<double>                selected_tightLeptonsRelIso;
   std::vector<int>                   selected_tightLeptonsIsMuon;
   std::vector<int>                   selected_tightLeptonsCharge;
+  std::vector<double>                selected_tightLeptonsScEta;
 
   std::vector<const TLorentzVector*> selected_looseLeptons;
   std::vector<double>                selected_looseLeptonsRelIso;
+  std::vector<double>                selected_looseLeptonsScEta;
   std::vector<int>                   selected_looseLeptonsIsMuon;
   std::vector<int>                   selected_looseLeptonsCharge;
 
   std::vector<const TLorentzVector*> selected_jets;
   std::vector<double>                selected_jetsBdiscriminant;
+  std::vector<int>                selected_jetsFlav;
 
   std::vector<const TLorentzVector*> selected_bjets;
   std::vector<double>                selected_bjetsBdiscriminant;
+  std::vector<int>                selected_bjetsFlav;
 
 
   // ** for DiLepton channel Study **
   std::vector<const TLorentzVector*> DLselected_tightLeptons;
   std::vector<double>                DLselected_tightLeptonsRelIso;
+  std::vector<double>                DLselected_tightLeptonsScEta;
   std::vector<int>                   DLselected_tightLeptonsIsMuon;
   std::vector<int>                   DLselected_tightLeptonsCharge;
 
   // ** for DiLepton channel Study **
   std::vector<const TLorentzVector*> DLsofterselected_jets;
   std::vector<double>                DLsofterselected_jetsBdiscriminant;
+  std::vector<int>                DLsofterselected_jetsFlav;
 
   // ** for DiLepton channel Study **
   std::vector<const TLorentzVector*> DLsofterselected_bjets;
   std::vector<double>                DLsofterselected_bjetsBdiscriminant;
+  std::vector<int>                DLsofterselected_bjetsFlav;
 
 
 };

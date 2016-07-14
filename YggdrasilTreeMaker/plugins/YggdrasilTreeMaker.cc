@@ -64,7 +64,6 @@
 
 #include "MiniAOD/MiniAODHelper/interface/MiniAODHelper.h"
 #include "MiniAOD/MiniAODHelper/interface/TopTagger.h"
-#include "MiniAOD/BoostedObjects/interface/BoostedUtils.hpp"
 #include "MiniAOD/MiniAODHelper/interface/HiggsTagger.h"
 #include "ttH-LeptonPlusJets/AnalysisCode/interface/YggdrasilEventVars.h"
 
@@ -75,6 +74,7 @@
 #include "MiniAOD/MiniAODHelper/interface/BDTvars.h"
 
 #include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilEventSelection.h"
+#include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilScaleFactors.h"
 
 #include "LHAPDF/LHAPDF.h"
 
@@ -212,6 +212,10 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   LHAPDF::PDFSet * CT14nlo_PDFSet;
   std::vector<LHAPDF::PDF*> _systPDFs ;         
 
+
+  ttHYggdrasilEventSelection selection;
+  ttHYggdrasilScaleFactors   scalefactors;
+
 };
 
 //
@@ -317,7 +321,7 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   miniAODhelper.SetUp(era, insample_, iAnalysisType, isData);
 
   if( usePUPPI ){
-    miniAODhelper.SetJetCorrectorUncertainty("PUPPI");
+    miniAODhelper.SetJetCorrectorUncertainty();
   }else{
     miniAODhelper.SetJetCorrectorUncertainty();
   }
@@ -726,9 +730,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   if( isTTbarMC ){
     edm::Handle<TtGenEvent> genEvt ;
     iEvent.getByToken( TtGenEventToken, genEvt );
-    std::cout << ( genEvt-> isTtBar ()        ?"good ttbar" : "non ttbar" ) << std::endl ; ;
-    std::cout << ( genEvt-> isFullHadronic () ?"full had" : "nonfullhad" )<< std::endl ; ;
-    std::cout << ( genEvt-> isSemiLeptonic () ?"LJch " : "non LJ" )<< std::endl ; ;
 
     // **** Ignore the genEvt since I can not pass the packed (in config.py).
 //    eve -> weight_topPt_ = sqrt( 
@@ -1159,6 +1160,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->lepton_phi_              = lepton_phi;
   eve->lepton_e_              = lepton_e;
   eve->lepton_relIso_           = lepton_relIso;
+  eve->lepton_scEta_           = lepton_scEta;
 
   eve->wgt_lumi_  = intLumi_;
   eve->wgt_xs_    = mySample_xSec_;//mySample.xSec;
@@ -1224,7 +1226,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   boosted::BoostedJetCollection selectedBoostedJets;
   if(h_boostedjet.isValid()){
   boosted::BoostedJetCollection const &boostedjets_unsorted = *h_boostedjet;
-    boosted::BoostedJetCollection boostedjets = BoostedUtils::GetSortedByPt(boostedjets_unsorted);
+
+  //    boosted::BoostedJetCollection boostedjets = BoostedUtils::GetSortedByPt(boostedjets_unsorted);
+  boosted::BoostedJetCollection boostedjets = boostedjets_unsorted;
+
     selectedBoostedJets = miniAODhelper.GetSelectedBoostedJets(boostedjets, 200., 2.0, 20., 2.4, jetID::jetLoose);
     
   
@@ -1264,10 +1269,12 @@ n_fatjets++;
       //remove overlap with topjets
        bool overlapping=false;
        for(auto tj=syncTopJets.begin(); tj!=syncTopJets.end(); tj++){
-       	if(BoostedUtils::DeltaR(tj->fatjet,higgsJet->fatjet)<1.5){
-       	  overlapping=true;
-       	  break;
-       	}
+
+//       	if(BoostedUtils::DeltaR(tj->fatjet,higgsJet->fatjet)<1.5){
+//       	  overlapping=true;
+//       	  break;
+//       	}
+
        }
        if(overlapping) continue;
        if(overlapping) continue;
@@ -1437,35 +1444,41 @@ n_fatjets++;
 
   {
 
-    ttHYggdrasilEventSelection selection;
-
     // -----------------------
     // start setting variables --> 
 
     int MuTrig = ( eve->passHLT_IsoMu20_v_ == 1 || eve->passHLT_IsoTkMu20_v_ == 1 ) ? 1 : 0 ; 
-    selection . SetElTrigger( & eve->passHLT_Ele27_eta2p1_WPLoose_Gsf_v_ );
-    selection . SetMuTrigger( & MuTrig );
-
     // Dilep Trig
-    selection . SetElElTrigger( & ( eve->passHLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_  ) );
-
     int ElMuTrig = ( eve->passHLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v_ ==1 
 		     ||
 		     eve->passHLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v_ == 1 
 		     ) ? 1 : 0 ; 
-    selection . SetElMuTrigger( & ElMuTrig );
-    
     int MuMuTrig = ( eve->passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v_
 		     ||
 		     eve->passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v_ 
 		     ) ? 1 : 0 ;
-      
+
+    int DUMMYTRIGGER_ALWAYS_PASS = 1 ; 
+
+    if( isMC ){
+    selection . SetElTrigger  ( & DUMMYTRIGGER_ALWAYS_PASS );
+    selection . SetMuTrigger  ( & DUMMYTRIGGER_ALWAYS_PASS );
+    selection . SetElElTrigger( & DUMMYTRIGGER_ALWAYS_PASS );
+    selection . SetElMuTrigger( & DUMMYTRIGGER_ALWAYS_PASS );
+    selection . SetMuMuTrigger( & DUMMYTRIGGER_ALWAYS_PASS );
+    }else{
+    selection . SetElTrigger( & eve->passHLT_Ele27_eta2p1_WPLoose_Gsf_v_ );
+    selection . SetMuTrigger( & MuTrig );
+    selection . SetElElTrigger( & ( eve->passHLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_  ) );
+    selection . SetElMuTrigger( & ElMuTrig );
     selection . SetMuMuTrigger( & MuMuTrig );
+    }
 
     selection . SetGoodVtx( & ( eve->GoodFirstPV_ ) );
 
     selection . SetLeptons( & eve->lepton_pt_, 
 			    & eve->lepton_eta_, 
+			    & eve->lepton_scEta_, 
 			    & eve->lepton_phi_,
 			    & eve->lepton_e_,
 			    & eve->lepton_charge_, 
@@ -1477,7 +1490,8 @@ n_fatjets++;
 			 & eve->jet_eta_ [0] , 
 			 & eve->jet_phi_ [0] , 
 			 & eve->jet_m_   [0] , 
-			 & eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[0]  );
+			 & eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[0]  ,
+			 & eve->jet_flavour_[0]  );
 
     selection . SetMet( & ( eve->MET_[ 0 ] ) , &( eve->MET_phi_[ 0 ] ) );
 
@@ -1487,8 +1501,10 @@ n_fatjets++;
     
     selection . doEventSelection();
 
+    std::cout.setf(std::ios::fixed);
+
    // "cout" for event sync.
-   std::cout << "run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,lep1_pt,lep1_iso,lep1_pdgId,lep2_pt,lep2_iso,lep2_pdgId,jet1_pt,jet2_pt,jet1_CSVv2,jet2_CSVv2,jet1_JecSF,jet1_JecSF_up,jet1_JecSF_down,MET_pt,MET_phi,mll,ttHFCategory,MCWeight,PUWeight,bWeight,topWeight,triggerSF,lepSF,Q2_upup,Q2_downdown,pdf_up,pdf_down" << std::endl;
+   std::cout << "run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,lep1_pt,lep1_iso,lep1_pdgId,lep2_pt,lep2_iso,lep2_pdgId,jet1_pt,jet2_pt,jet1_CSVv2,jet2_CSVv2,jet1_JecSF,jet1_JecSF_up,jet1_JecSF_down,MET_pt,MET_phi,mll,ttHFCategory,PUWeight,bWeight,topWeight,triggerSF,lepIDSF,lepISOSF,Q2_upup,Q2_downdown,pdf_up,pdf_down" << std::endl;
 
     std::cout << eve->run_ << "," ;
     std::cout <<eve->lumi_ << "," ;
@@ -1544,8 +1560,12 @@ n_fatjets++;
       double JECup = -1 ;       
       double JECdown = -1 ; 
 
-      std::vector<pat::Jet> jet_JESUP   =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::JESup   );
-      std::vector<pat::Jet> jet_JESDOWN =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::JESdown );
+      const bool  doJES = true;
+      const bool  doJER = false;
+
+      std::vector<pat::Jet> jet_JESNOMI =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::NA     , doJES, doJER );
+      std::vector<pat::Jet> jet_JESUP   =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::JESup  , doJES, doJER );
+      std::vector<pat::Jet> jet_JESDOWN =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, sysType::JESdown, doJES, doJER );
       if( nJet_ge_one ){
 
 	const double eta1 = selection.jets().at(0)->Eta();
@@ -1560,9 +1580,9 @@ n_fatjets++;
 	  d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
 
 	  if(  d_eta*d_eta + d_phi*d_phi < 0.01 * 0.01 ){ // matching btw Raw and Corrected (physics) jet.
-	    JEC     =  selection.jets().at(0)->Pt() / iRawJet->pt();
-	    JECup   = jet_JESUP  .at( idxJet ).pt() / iRawJet->pt();
-	    JECdown = jet_JESDOWN.at( idxJet ).pt() / iRawJet->pt();
+	    JEC     = jet_JESNOMI.at( idxJet ).pt() / iRawJet->pt();
+	    JECup   = jet_JESUP  .at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+	    JECdown = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
 	  }
 	}
 
@@ -1576,30 +1596,62 @@ n_fatjets++;
     std::cout<< std::setprecision(4) << eve->MET_[ 0 ] << "," ;
     std::cout<< std::setprecision(4) << eve->MET_phi_[ 0 ] << "," ;
 
+    if( isMC ){
     std::cout << eve->additionalJetEventId_ <<",";
+    std::cout << scalefactors.get_pu_wgt( eve -> numTruePV_ ) << "," ;    // PUWeight,
+    }else{
+    std::cout << 1<<",";
+    std::cout << 1<< "," ;    // PUWeight,
+    }
 
-    std::cout <<"1"  << "," ;    // MCWeight,
-    std::cout <<"1"  << "," ;    // PUWeight,
-
-    double bWeight =-1 ; //for the moment.
+    double bWeight = 1 ;
+    if( isMC ){
+      int iSYS = 0 ; 
+      double dummy = - 1 ;
+      bWeight = scalefactors.get_csv_wgt( & selection , iSYS,  dummy , dummy , dummy );
+    }
     std::cout << bWeight <<",";
 
-    //  top PT weight 
-    std::cout << eve -> weight_topPt_ <<",";
 
-    double triggerSF =-1 ; //for the moment.
+    //  top PT weight 
+    if( isMC ){
+    std::cout << eve -> weight_topPt_ <<",";
+    }else{
+    std::cout << 1 <<",";
+    }
+
+    double triggerSF =( ! isMC ?
+			1 :
+			scalefactors.get_TrigMuSF( & selection )
+			*
+			scalefactors.get_TrigElSF( & selection )
+			) ;
     std::cout << triggerSF <<",";
 
-    double leptonSF =-1 ; //for the moment.
-    std::cout << leptonSF <<",";
+    double lepIDSF =  ( ! isMC ? 1 : 
+			scalefactors.getTightMuon_IDSF( & selection )
+			* 
+			scalefactors.getTightElectron_IDSF( & selection )
+			);
+    double lepISOSF =  ( ! isMC ? 1 : 
+			 scalefactors.getTightElectron_RecoSF( & selection ) 
+			*
+			 scalefactors.getTightMuon_IsoSF( & selection ) 
+			) ; 
+    std::cout << lepIDSF <<","<< lepISOSF <<",";
 
+    if( isMC ){
     std::cout << eve->weight_q2_upup_ <<",";
     std::cout << eve->weight_q2_downdown_ <<",";
-
     std::cout << eve-> weight_PDF_CT14nlo_up_ <<",";
     std::cout << eve-> weight_PDF_CT14nlo_down_ ;
-
-
+    }else{
+    std::cout << 1 <<",";
+    std::cout << 1 <<",";
+    std::cout << 1 <<",";
+    std::cout << 1  ;
+    }
+    
     std::cout << std::endl ;
   }
 

@@ -79,7 +79,7 @@ struct yggdrasilEventVars{
 
 
 
-  int     numTruePV_;
+  float   numTruePV_;
   int     numGenPV_;
   
   bool    GoodFirstPV_;
@@ -96,6 +96,7 @@ struct yggdrasilEventVars{
   vdouble lepton_phi_;
   vdouble lepton_e_;
   vdouble lepton_relIso_;
+  vdouble lepton_scEta_;
 
   Float_t wgt_lumi_;
   Float_t wgt_xs_;
@@ -226,6 +227,7 @@ void yggdrasilEventVars::initialize(){
   lepton_phi_.clear();
   lepton_e_.clear();
   lepton_relIso_.clear();
+  lepton_scEta_.clear();
 
   wgt_generator_        = -99.9;
   wgt_lumi_             = -99.9;
