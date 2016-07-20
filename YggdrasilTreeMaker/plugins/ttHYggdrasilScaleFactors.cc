@@ -73,11 +73,11 @@ void ttHYggdrasilScaleFactors::init_ElectronSF(){
 void ttHYggdrasilScaleFactors::init_MuonSF(){
 
   {
-    std::string input = SFfileDir +"/" + "MuonID_Z_RunCD_Reco76X_Feb15.root";
+    std::string input = SFfileDir +"/" + "MuonID_Z_2016runB_2p6fb.root";
     h_MuSF_ID = (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio"));
   }
   { 
-    std::string input = SFfileDir +"/" + "MuonIso_Z_RunCD_Reco76X_Feb15.root";
+    std::string input = SFfileDir +"/" + "MuonISO_Z_2016runB_2p6fb.root";
     h_MuSF_Iso = (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1/abseta_pt_ratio") );
   }
 
