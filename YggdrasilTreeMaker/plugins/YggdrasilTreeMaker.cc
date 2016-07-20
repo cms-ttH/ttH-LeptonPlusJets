@@ -210,8 +210,10 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
 
   // - - - - - - PDF uncertainty - - - - - - - - -
   LHAPDF::PDFSet * CT14nlo_PDFSet;
-  std::vector<LHAPDF::PDF*> _systPDFs ;         
+  std::vector<LHAPDF::PDF*> CT14nlo_systPDFs ;         
 
+  LHAPDF::PDFSet * NNPDF30_nlo_as_0118_PDFSet;
+  std::vector<LHAPDF::PDF*> NNPDF30_nlo_as_0118_systPDFs ;         
 
   ttHYggdrasilEventSelection selection;
   ttHYggdrasilScaleFactors   scalefactors;
@@ -333,7 +335,11 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
 
   // - - - - - - PDF uncertainty - - - - - - - - -
   CT14nlo_PDFSet = new   LHAPDF::PDFSet("CT14nlo");
-  _systPDFs = CT14nlo_PDFSet->mkPDFs();
+  CT14nlo_systPDFs = CT14nlo_PDFSet->mkPDFs();
+
+
+  NNPDF30_nlo_as_0118_PDFSet = new   LHAPDF::PDFSet("NNPDF30_nlo_as_0118");
+  NNPDF30_nlo_as_0118_systPDFs = NNPDF30_nlo_as_0118_PDFSet->mkPDFs();
 
 
   //std::vector<std::string> myManualCatWeigths;
@@ -612,11 +618,13 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
     auto pdfInfos = GenEventInfoHandle -> pdf();
     double pdfNominal = pdfInfos->xPDF.first * pdfInfos->xPDF.second;
-    
+
+
+    { /// PDF uncertainty for CT14
     std::vector<double> pdfs;
-    for (size_t j = 0; j < _systPDFs.size(); ++j) {
-      double xpdf1 = _systPDFs[j]->xfxQ(pdfInfos->id.first,  pdfInfos->x.first,  pdfInfos->scalePDF);
-      double xpdf2 = _systPDFs[j]->xfxQ(pdfInfos->id.second, pdfInfos->x.second, pdfInfos->scalePDF);
+    for (size_t j = 0; j < CT14nlo_systPDFs.size(); ++j) {
+      double xpdf1 = CT14nlo_systPDFs[j]->xfxQ(pdfInfos->id.first,  pdfInfos->x.first,  pdfInfos->scalePDF);
+      double xpdf2 = CT14nlo_systPDFs[j]->xfxQ(pdfInfos->id.second, pdfInfos->x.second, pdfInfos->scalePDF);
       pdfs.push_back(xpdf1 * xpdf2);
     }
     //  Combine the products and compute the 1 sigma shift 
@@ -630,6 +638,28 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       eve-> weight_PDF_CT14nlo_up_   = 1.0;
       eve-> weight_PDF_CT14nlo_down_ = 1.0;
     }
+    }
+
+    { // Syst for NNPDF 
+    std::vector<double> pdfs;
+    for (size_t j = 0; j < NNPDF30_nlo_as_0118_systPDFs.size(); ++j) {
+      double xpdf1 = NNPDF30_nlo_as_0118_systPDFs[j]->xfxQ(pdfInfos->id.first,  pdfInfos->x.first,  pdfInfos->scalePDF);
+      double xpdf2 = NNPDF30_nlo_as_0118_systPDFs[j]->xfxQ(pdfInfos->id.second, pdfInfos->x.second, pdfInfos->scalePDF);
+      pdfs.push_back(xpdf1 * xpdf2);
+    }
+
+    //  Combine the products and compute the 1 sigma shift 
+    const LHAPDF::PDFUncertainty pdfUnc = NNPDF30_nlo_as_0118_PDFSet -> uncertainty(pdfs, 68.);
+
+    //  Calculate the up/down weights
+    if (std::isfinite(1./pdfNominal)) {
+      eve-> weight_PDF_NNPDF30NLO_up_   = (pdfUnc.central + pdfUnc.errplus)  / pdfNominal;
+      eve-> weight_PDF_NNPDF30NLO_down_ = (pdfUnc.central - pdfUnc.errminus) / pdfNominal;
+    }else{
+      eve-> weight_PDF_NNPDF30NLO_up_   = 1.0;
+      eve-> weight_PDF_NNPDF30NLO_down_ = 1.0;
+    }
+    }
 
   }else{
     eve->additionalJetEventId_ = -10 ; 
@@ -638,6 +668,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
     eve-> weight_PDF_CT14nlo_up_   = 1.0;
     eve-> weight_PDF_CT14nlo_down_ = 1.0;
+    
+    eve-> weight_PDF_NNPDF30NLO_up_   = 1.0;
+    eve-> weight_PDF_NNPDF30NLO_down_ = 1.0;
   }
 
   math::XYZPoint beamSpotPosition;
@@ -1643,8 +1676,8 @@ n_fatjets++;
     if( isMC ){
     std::cout << eve->weight_q2_upup_ <<",";
     std::cout << eve->weight_q2_downdown_ <<",";
-    std::cout << eve-> weight_PDF_CT14nlo_up_ <<",";
-    std::cout << eve-> weight_PDF_CT14nlo_down_ ;
+    std::cout << eve-> weight_PDF_NNPDF30NLO_up_ <<",";
+    std::cout << eve-> weight_PDF_NNPDF30NLO_down_ ;
     }else{
     std::cout << 1 <<",";
     std::cout << 1 <<",";
