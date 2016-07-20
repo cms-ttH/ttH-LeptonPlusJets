@@ -30,9 +30,9 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condD
 
 # Update global tag based on : https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?rev=568
 if isMC:
-    process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_2016_miniAODv2'
+    process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_2016_miniAODv2_v1'
 else :
-    process.GlobalTag.globaltag = '80X_dataRun2_Prompt_v8'
+    process.GlobalTag.globaltag = '80X_dataRun2_Prompt_ICHEP16JEC_v0'
 
 
 
@@ -59,34 +59,34 @@ if enableJECFromLocalDB :
     if not isMC :
         process.GlobalTag.toGet.append(
             cms.PSet(
-                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_DATA.db'),
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV6_DATA.db'),
                 record = cms.string('JetCorrectionsRecord'),
-                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_DATA_AK4PFchs'),
+                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV6_DATA_AK4PFchs'),
                 label  = cms.untracked.string('AK4PFchs')
                 )
             )
         process.GlobalTag.toGet.append(
             cms.PSet(
-                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_DATA.db'),
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV6_DATA.db'),
                 record = cms.string('JetCorrectionsRecord'),
-                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_DATA_AK8PFchs'),
+                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV6_DATA_AK8PFchs'),
                 label  = cms.untracked.string('AK8PFchs')
                 )
             )
     else:
         process.GlobalTag.toGet.append(
             cms.PSet(
-                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_MC.db'),
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV6_MC.db'),
                 record = cms.string('JetCorrectionsRecord'),
-                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_MC_AK4PFchs'),
+                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV6_MC_AK4PFchs'),
                 label  = cms.untracked.string('AK4PFchs')
                 )
             )
         process.GlobalTag.toGet.append(
             cms.PSet(
-                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV3_MC.db'),
+                connect = cms.string('sqlite:///'+os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Spring16_25nsV6_MC.db'),
                 record = cms.string('JetCorrectionsRecord'),
-                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV3_MC_AK8PFchs'),
+                tag    = cms.string('JetCorrectorParametersCollection_Spring16_25nsV6_MC_AK8PFchs'),
                 label  = cms.untracked.string('AK8PFchs')
                 )
             )
