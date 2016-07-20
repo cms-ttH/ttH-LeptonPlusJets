@@ -470,8 +470,12 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   iEvent.getByToken(triggerResultsToken, triggerResults);
   
   bool passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1 = false;
+  bool passHLT_Ele27_eta2p1_WPTight_Gsf_v = false;
   
+
   bool passHLT_IsoMu20_v = false;
+  bool passHLT_IsoMu22_v = false;
+  bool passHLT_IsoTkMu22_v = false;
   bool passHLT_IsoTkMu20_v = false;
   bool passHLT_IsoMu20_eta2p1_v = false;
   bool passHLT_IsoMu24_eta2p1_v = false;
@@ -484,6 +488,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   bool passHLT_Ele27_eta2p1_WPLoose_Gsf_HT200_v = false;
 
   bool passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_v = false;
+  bool passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v = false;
 
   bool passHLT_Mu30_TkMu11_v = false;
   bool passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v = false;
@@ -545,6 +550,13 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	if( pathName.find( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"            ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v	        = true ; }
 	if( pathName.find( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"          ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v            = true ; }
 	
+
+	if( pathName.find( "HLT_Ele27_eta2p1_WPTight_Gsf_v"        ,0) == MatchedAtTheBegining ){ passHLT_Ele27_eta2p1_WPTight_Gsf_v = true;}
+	if( pathName.find( "HLT_IsoMu22_v"        ,0) == MatchedAtTheBegining ){ passHLT_IsoMu22_v = true;}
+	if( pathName.find( "HLT_IsoTkMu22_v"        ,0) == MatchedAtTheBegining ){ passHLT_IsoTkMu22_v = true;}
+	if( pathName.find( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v"        ,0) == MatchedAtTheBegining ){ passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v = true;}
+
+
       }
     }
   }
@@ -861,6 +873,12 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->passHLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v_  = ( passHLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v  ) ? 1 : 0 ;
   eve->passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v_		    = ( passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v	      ) ? 1 : 0 ;
   eve->passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v_           = ( passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v           ) ? 1 : 0 ;
+
+  eve->passHLT_Ele27_eta2p1_WPTight_Gsf_v_ =  ( passHLT_Ele27_eta2p1_WPTight_Gsf_v) ? 1 : 0;
+  eve->passHLT_IsoMu22_v_ =  ( passHLT_IsoMu22_v) ? 1 : 0;
+  eve->passHLT_IsoTkMu22_v_ =  ( passHLT_IsoTkMu22_v) ? 1 : 0;
+  eve->passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_ =  ( passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v ) ? 1 : 0;
+
 
 
   eve->run_ = run;
@@ -1480,7 +1498,7 @@ n_fatjets++;
     // -----------------------
     // start setting variables --> 
 
-    int MuTrig = ( eve->passHLT_IsoMu20_v_ == 1 || eve->passHLT_IsoTkMu20_v_ == 1 ) ? 1 : 0 ; 
+    int MuTrig = ( eve->passHLT_IsoMu22_v_ == 1 || eve->passHLT_IsoTkMu22_v_ == 1 ) ? 1 : 0 ; 
     // Dilep Trig
     int ElMuTrig = ( eve->passHLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v_ ==1 
 		     ||
@@ -1491,21 +1509,11 @@ n_fatjets++;
 		     eve->passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v_ 
 		     ) ? 1 : 0 ;
 
-    int DUMMYTRIGGER_ALWAYS_PASS = 1 ; 
-
-    if( isMC ){
-    selection . SetElTrigger  ( & DUMMYTRIGGER_ALWAYS_PASS );
-    selection . SetMuTrigger  ( & DUMMYTRIGGER_ALWAYS_PASS );
-    selection . SetElElTrigger( & DUMMYTRIGGER_ALWAYS_PASS );
-    selection . SetElMuTrigger( & DUMMYTRIGGER_ALWAYS_PASS );
-    selection . SetMuMuTrigger( & DUMMYTRIGGER_ALWAYS_PASS );
-    }else{
-    selection . SetElTrigger( & eve->passHLT_Ele27_eta2p1_WPLoose_Gsf_v_ );
+    selection . SetElTrigger( & eve->passHLT_Ele27_eta2p1_WPTight_Gsf_v_ );
     selection . SetMuTrigger( & MuTrig );
-    selection . SetElElTrigger( & ( eve->passHLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_  ) );
+    selection . SetElElTrigger( & ( eve->passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_  ) );
     selection . SetElMuTrigger( & ElMuTrig );
     selection . SetMuMuTrigger( & MuMuTrig );
-    }
 
     selection . SetGoodVtx( & ( eve->GoodFirstPV_ ) );
 

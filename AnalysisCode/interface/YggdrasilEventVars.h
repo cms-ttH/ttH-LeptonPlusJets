@@ -49,6 +49,11 @@ struct yggdrasilEventVars{
   int passHLT_IsoMu20_eta2p1_v_;
   int passHLT_IsoMu24_eta2p1_v_;
 
+  int passHLT_Ele27_eta2p1_WPTight_Gsf_v_;
+  int passHLT_IsoMu22_v_;
+  int passHLT_IsoTkMu22_v_;
+  int passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_;
+
   int passHLT_Ele27_WP85_Gsf_v_;
   int passHLT_Ele27_eta2p1_WPLoose_Gsf_v_;
   int passHLT_Ele27_eta2p1_WP75_Gsf_v_;
@@ -184,6 +189,11 @@ void yggdrasilEventVars::initialize(){
   passHLT_IsoMu20_eta2p1_v_ = -99;
   passHLT_IsoMu24_eta2p1_v_ = -99;
 
+  passHLT_Ele27_eta2p1_WPTight_Gsf_v_ = -99 ;
+  passHLT_IsoMu22_v_ = -99 ;
+  passHLT_IsoTkMu22_v_ = -99 ;
+  passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_ = -99 ;
+  
   passHLT_Ele27_WP85_Gsf_v_ = -99;
   passHLT_Ele27_eta2p1_WPLoose_Gsf_v_ = -99;
   passHLT_Ele27_eta2p1_WP75_Gsf_v_ = -99;
