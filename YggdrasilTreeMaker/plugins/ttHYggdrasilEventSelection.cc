@@ -320,7 +320,7 @@ void ttHYggdrasilEventSelection::_ElectronSelection(){
     if( lep_isMuon -> at(idx) != 0 ) continue ;
     
     if(     lep_POGTight -> at(idx)  != 1     ) continue ;
-    if(        lep_pt    -> at(idx)   < 20.0  ) continue ;
+    if(        lep_pt    -> at(idx)   < 25.0  ) continue ;
     if( fabs( lep_eta    -> at(idx) ) >  2.4  ) continue ;
     if(       lep_relIso -> at(idx)   >  0.15 ) continue ;
 
@@ -383,7 +383,7 @@ void ttHYggdrasilEventSelection::_MuonSelection(){
     if( lep_isMuon -> at(idx) != 1 ) continue ;
     
     if(     lep_POGTight -> at(idx)  != 1     ) continue ;
-    if(        lep_pt    -> at(idx)   < 20.0  ) continue ;
+    if(        lep_pt    -> at(idx)   < 25.0  ) continue ;
     if( fabs( lep_eta    -> at(idx) ) >  2.4  ) continue ;
     if(       lep_relIso -> at(idx)   >  0.25 ) continue ;
 
