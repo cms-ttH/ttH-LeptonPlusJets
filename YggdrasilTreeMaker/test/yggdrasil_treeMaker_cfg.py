@@ -193,7 +193,7 @@ process.source = cms.Source("PoolSource",
 ###############
 ### GenJet production from ChargedLeptonVetoedGenParticles
 
-if ! isMC :
+if not isMC :
     if ForDebugAndEventSync_EnableLumiMaskByHand :
         import sys
         import os.path
