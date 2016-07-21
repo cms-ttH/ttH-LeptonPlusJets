@@ -476,7 +476,7 @@ void ttHYggdrasilScaleFactors::init_Pileup(){
       TFile * f = TFile::Open( (SFfileDir + "/" + "PileupHistogram_EventSync_Spring16.root").c_str() );
       std::cout << "DEBUG : DATA_PU file path = "  << (SFfileDir + "/" + "PileupHistogram_EventSync_Spring16.root") << std::endl ; 
       // --> The file has been produced with following command : 
-      // pileupCalc.py -i /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/Cert_271036-275125_13TeV_PromptReco_Collisions16_JSON.txt --inputLumiJSON /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/PileUp/pileup_latest.txt --calcMode true --minBiasXsec 71300 --maxPileupBin 50 --numPileupBins 50  MyDataPileupHistogram.root
+      //  pileupCalc.py -i ./../data/Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON.txt  --inputLumiJSON /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/PileUp/pileup_latest.txt --calcMode true --minBiasXsec 71300 --maxPileupBin 1000 --numPileupBins 1000    MyDataPileupHistogram.root
       
       f -> GetObject( "pileup" , h ) ;
       for( int i = 0 ; i < 50 ; i++ ){
