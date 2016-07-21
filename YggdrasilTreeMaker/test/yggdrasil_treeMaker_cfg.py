@@ -19,6 +19,13 @@ genjetInputTag = cms.InputTag("slimmedGenJets","","")
 
 enableJECFromLocalDB=False
 
+
+# Switch to perform lumi-mask inside this python script.
+# It is preferable to set this option False as default,
+#   because, when we submit job to grid, we also set the file too.
+ForDebugAndEventSync_EnableLumiMaskByHand=False
+
+
 process = cms.Process("MAOD")
 
 # initialize MessageLogger and output report
@@ -185,6 +192,16 @@ process.source = cms.Source("PoolSource",
 
 ###############
 ### GenJet production from ChargedLeptonVetoedGenParticles
+
+if ! isMC :
+    if ForDebugAndEventSync_EnableLumiMaskByHand :
+        import sys
+        import os.path
+        import FWCore.PythonUtilities.LumiList as Lumilist
+        process.source.lumisToProcess = LumiList.LumiList(filename =
+                                                          os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON.txt'
+                                                          ).getVLuminosityBlockRange()
+
 
 
 if isMC :
