@@ -552,7 +552,7 @@ bool ttHYggdrasilEventSelection::PassElEl(){
   if( DLsofterselected_jets . size() < 3 ){ return false ;} 
 
   // MET>=40 GeV for ee and mumu (study removal or adjustment of cut, perhaps also 2D: MET vs. mll).
-  if( (*met_pt) < 40 ) 
+  if( (*met_pt) < 40 ) { return false ;} 
 
   // >=1 b-tags.
   if( DLsofterselected_bjets . size() < 1 ){ return false ;} 
