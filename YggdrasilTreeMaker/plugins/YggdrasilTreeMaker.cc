@@ -1496,6 +1496,8 @@ n_fatjets++;
 
   {
 
+    selection . EnableInfoDumpForDebug();
+
     // -----------------------
     // start setting variables --> 
 
