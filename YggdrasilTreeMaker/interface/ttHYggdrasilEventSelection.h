@@ -41,6 +41,8 @@ class ttHYggdrasilEventSelection{
 
   void SetMet( const float * _met_pt, const float * _met_phi );
 
+  void EnableInfoDumpForDebug();
+
   void doEventSelection();
 
   // ttH Tight lepton for SingleLepton
@@ -94,6 +96,8 @@ class ttHYggdrasilEventSelection{
 
 
  private :
+
+  bool b_InfoDumpForDebug;
    
   void _InitInternalVariables();
 
@@ -195,6 +199,13 @@ class ttHYggdrasilEventSelection{
   std::vector<const TLorentzVector*> DLsofterselected_bjets;
   std::vector<double>                DLsofterselected_bjetsBdiscriminant;
   std::vector<int>                DLsofterselected_bjetsFlav;
+
+
+  std::vector<long> nEvent_passSingleMuCh;
+  std::vector<long> nEvent_passSingleElCh;
+  std::vector<long> nEvent_passElElCh;
+  std::vector<long> nEvent_passMuMuCh;
+  std::vector<long> nEvent_passElMuCh;
 
 
 };

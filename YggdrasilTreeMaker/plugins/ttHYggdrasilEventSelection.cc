@@ -32,10 +32,46 @@ ttHYggdrasilEventSelection::ttHYggdrasilEventSelection(){
 
  Thre_Jet_Btag    =  0.800;
 
+ b_InfoDumpForDebug = false ;
+
+ for( int i = 0 ; i < 20 ; i ++ ){
+   nEvent_passSingleMuCh .push_back(0);
+   nEvent_passSingleElCh .push_back(0);
+   nEvent_passElElCh .push_back(0);
+   nEvent_passMuMuCh .push_back(0);
+   nEvent_passElMuCh .push_back(0);
+ }
+
 }
 
 
 ttHYggdrasilEventSelection::~ttHYggdrasilEventSelection(){
+
+
+  if( b_InfoDumpForDebug ){
+
+    std::cout <<" * * * Cut flow : Mu ch * * *"  << std::endl ; 
+    for( int i = 0 ; i < 20 && nEvent_passSingleMuCh[i] !=0 ; i ++ ){
+      std::cout << "Cut_" << i << " " << nEvent_passSingleMuCh [i]<< std::endl;
+    }
+    std::cout <<" * * * Cut flow : El ch * * *"  << std::endl ; 
+    for( int i = 0 ; i < 20 && nEvent_passSingleElCh[i]!=0 ; i ++ ){
+      std::cout << "Cut_" << i << " " << nEvent_passSingleElCh[i]<< std::endl ;
+    }
+    std::cout <<" * * * Cut flow : ElEl ch * * *"  << std::endl ; 
+    for( int i = 0 ; i < 20 && nEvent_passElElCh[i]!=0 ; i ++ ){
+      std::cout << "Cut_" << i << " " << nEvent_passElElCh[i] << std::endl ;
+    }
+    std::cout <<" * * * Cut flow : MuMu ch * * *"  << std::endl ; 
+    for( int i = 0 ; i < 20 && nEvent_passMuMuCh[i]!=0 ; i ++ ){
+      std::cout << "Cut_" << i << " " << nEvent_passMuMuCh[i] << std::endl ;
+    }
+    std::cout <<" * * * Cut flow : ElMu ch * * *"  << std::endl ; 
+    for( int i = 0 ; i < 20 && nEvent_passElMuCh[i]!=0 ; i ++ ){
+      std::cout << "Cut_" << i << " " << nEvent_passElMuCh[i]  << std::endl ;
+    }
+    
+  }
 
   _InitInternalVariables();
 
@@ -474,48 +510,66 @@ bool ttHYggdrasilEventSelection::_OverlapWithLooseLeptons( double eta, double ph
 
 bool ttHYggdrasilEventSelection::PassSingleMuCh(){
 
+  int i_step = 0 ;
+  nEvent_passSingleMuCh[ i_step++ ]++ ; 
+
   // Trig Requirement.
   if( (*MuTrig) != 1 ){ return false ;}
+  nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // (no vertex requirement inside the tool.)
   if( ! (*goodvtx) ){return false;}
+  nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // One tight muon.
   if( selected_tightLeptons.size() != 1 || selected_tightLeptonsIsMuon[0] != 1 ){ return false ; }
+  nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // No additional loose leptons.
   if( selected_looseLeptons.size() != 1 ){ return false ; } ;
+  nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // jet
   if( selected_jets . size() < 4 ){ return false ;}
+  nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // btagjet
   // jet
   if( selected_bjets . size() < 2 ){ return false ;}
+  nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   return true; 
 }
 
 bool ttHYggdrasilEventSelection::PassSingleElCh(){
 
+  int i_step = 0 ;
+  nEvent_passSingleElCh[ i_step++ ]++ ; 
+
   // Trig Requirement.
   if( (*ElTrig) != 1 ){ return false ;}
+  nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // (no vertex requirement inside the tool.)
   if( ! (*goodvtx) ){ return false;}
+  nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // One tight muon.
   if( selected_tightLeptons.size() != 1 || selected_tightLeptonsIsMuon[0] == 1 ){ return false ; }
+  nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // No additional loose leptons.
   if( selected_looseLeptons.size() != 1 ){ return false ; } ;
+  nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // jet
   if( selected_jets . size() < 4 ){ return false ;}
+  nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // btagjet
   // jet
   if( selected_bjets . size() < 2 ){ return false ;}
+  nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   return true; 
 
@@ -523,121 +577,167 @@ bool ttHYggdrasilEventSelection::PassSingleElCh(){
 
 bool ttHYggdrasilEventSelection::PassElEl(){
 
+  int i_step = 0 ;
+  nEvent_passElElCh[ i_step++ ]++ ; 
+
   // Trigger 
   if( (*ElElTrig) != 1 ){ return false ;}
+  nEvent_passElElCh[ i_step++ ]++ ; 
 
   // GoodVtx
   if( ! (*goodvtx) ) { return false ;}
-
+  nEvent_passElElCh[ i_step++ ]++ ; 
 
   // 2 OS-leptons (in DL definition) && FlavMatching with triggers.
   if( DLselected_tightLeptons.size() < 1 ){ return false ;}
+  nEvent_passElElCh[ i_step++ ]++ ; 
   if(   selected_looseLeptons.size() < 2 ){ return false ;}
+  nEvent_passElElCh[ i_step++ ]++ ; 
   if(   selected_looseLeptonsIsMuon.at(0) != 0 ){ return false ;}
+  nEvent_passElElCh[ i_step++ ]++ ; 
   if(   selected_looseLeptonsIsMuon.at(1) != 0 ){ return false ;}
+  nEvent_passElElCh[ i_step++ ]++ ; 
 
   // Veto additional leptons
   if(   selected_looseLeptons.size() != 2 ){ return false ;}
+  nEvent_passElElCh[ i_step++ ]++ ; 
 
   const double invMass = ( (*selected_looseLeptons.at(0)) + (*selected_looseLeptons.at(1)) ).M() ;
 
   // mll>20 GeV.
   if( invMass < 20 ){ return false ;}
+  nEvent_passElElCh[ i_step++ ]++ ; 
 
   // Exclude Z window (mll >76 GeV and <106 GeV) for ee and mumu.
   if( 76 < invMass &&  invMass < 106 ){ return false ;}
+  nEvent_passElElCh[ i_step++ ]++ ; 
 
   // >=2 jets with pT>30 GeV, other jets with pT>20 GeV.
   if(         selected_jets . size() < 2 ){ return false ;} 
+  nEvent_passElElCh[ i_step++ ]++ ; 
   if( DLsofterselected_jets . size() < 3 ){ return false ;} 
+  nEvent_passElElCh[ i_step++ ]++ ; 
 
   // MET>=40 GeV for ee and mumu (study removal or adjustment of cut, perhaps also 2D: MET vs. mll).
   if( (*met_pt) < 40 ) { return false ;} 
+  nEvent_passElElCh[ i_step++ ]++ ; 
 
   // >=1 b-tags.
   if( DLsofterselected_bjets . size() < 1 ){ return false ;} 
+  nEvent_passElElCh[ i_step++ ]++ ; 
+
   return true;
 
 }
 
 bool ttHYggdrasilEventSelection::PassMuMu(){
 
+  int i_step = 0 ;
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
+
   // Trigger 
   if( (*MuMuTrig) != 1 ){ return false ;}
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   // GoodVtx
   if( ! (*goodvtx) ){ return false ;}
-
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   // 2 OS-leptons (in DL definition) && FlavMatching with triggers.
   if( DLselected_tightLeptons.size() < 1 ){ return false ;}
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
   if(   selected_looseLeptons.size() < 2 ){ return false ;}
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
   if(   selected_looseLeptonsIsMuon.at(0) != 1 ){ return false ;}
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
   if(   selected_looseLeptonsIsMuon.at(1) != 1 ){ return false ;}
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   // Veto additional leptons
   if(   selected_looseLeptons.size() != 2 ){ return false ;}
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   const double invMass = ( (*selected_looseLeptons.at(0)) + (*selected_looseLeptons.at(1)) ).M() ;
 
   // mll>20 GeV.
   if( invMass < 20 ) { return false ;}
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   // Exclude Z window (mll >76 GeV and <106 GeV) for ee and mumu.
   if( 76 < invMass &&  invMass < 106 ){ return false ;}
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   // >=2 jets with pT>30 GeV, other jets with pT>20 GeV.
   if(         selected_jets . size() < 2 ){ return false ;} 
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
   if( DLsofterselected_jets . size() < 3 ){ return false ;} 
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   // MET>=40 GeV for ee and mumu (study removal or adjustment of cut, perhaps also 2D: MET vs. mll).
   if( (*met_pt) < 40 ){ return false ;}
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   // >=1 b-tags.
   if( DLsofterselected_bjets . size() < 1 ){ return false ;} 
+  nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   return true;
 }
 
 bool ttHYggdrasilEventSelection::PassElMu(){
 
+  int i_step = 0 ;
+  nEvent_passElMuCh[ i_step++ ]++ ; 
+
   // Trigger 
   if( (*ElMuTrig) != 1 ){ return false ;}
+  nEvent_passElMuCh[ i_step++ ]++ ; 
 
   // GoodVtx
   if( ! (*goodvtx) ){ return false ;}
+  nEvent_passElMuCh[ i_step++ ]++ ; 
 
 
   // 2 OS-leptons (in DL definition) && FlavMatching with triggers.
   if( DLselected_tightLeptons.size() < 1 ){ return false ;}
+  nEvent_passElMuCh[ i_step++ ]++ ; 
+
   if(   selected_looseLeptons.size() < 2 ){ return false ;}
+  nEvent_passElMuCh[ i_step++ ]++ ; 
+
   if(  !
        ( ( selected_looseLeptonsIsMuon.at(0) == 1 && selected_looseLeptonsIsMuon.at(1) == 0 )
 	 ||
 	 ( selected_looseLeptonsIsMuon.at(0) == 0 && selected_looseLeptonsIsMuon.at(1) == 1 )
 	 )
        ){ return false ;}
+  nEvent_passElMuCh[ i_step++ ]++ ; 
 
   // Veto additional leptons
   if(   selected_looseLeptons.size() != 2 ){ return false ;}
+  nEvent_passElMuCh[ i_step++ ]++ ; 
 
   const double invMass = ( (*selected_looseLeptons.at(0)) + (*selected_looseLeptons.at(1)) ).M() ;
 
   // mll>20 GeV.
   if( invMass < 20 ){ return false ;}
+  nEvent_passElMuCh[ i_step++ ]++ ; 
 
   // Exclude Z window (mll >76 GeV and <106 GeV) for ee and mumu.
   // --> Not required in El_Mu ch
 
   // >=2 jets with pT>30 GeV, other jets with pT>20 GeV.
   if(         selected_jets . size() < 2 ){ return false ;} 
+  nEvent_passElMuCh[ i_step++ ]++ ; 
   if( DLsofterselected_jets . size() < 3 ){ return false ;} 
+  nEvent_passElMuCh[ i_step++ ]++ ; 
 
   // MET>=40 GeV for ee and mumu (study removal or adjustment of cut, perhaps also 2D: MET vs. mll).
   // --> Not required in El_Mu ch
 
   // >=1 b-tags.
   if( DLsofterselected_bjets . size() < 1 ){ return false ;} 
+  nEvent_passElMuCh[ i_step++ ]++ ; 
 
   return true;
 }
@@ -685,3 +785,4 @@ std::vector<const TLorentzVector*> ttHYggdrasilEventSelection::DLSofterbjets(){ 
 std::vector<double> ttHYggdrasilEventSelection::DLSofterbjetsBdiscriminant()  { return DLsofterselected_bjetsBdiscriminant;}
 
 
+void ttHYggdrasilEventSelection::EnableInfoDumpForDebug(){ b_InfoDumpForDebug = true;}
