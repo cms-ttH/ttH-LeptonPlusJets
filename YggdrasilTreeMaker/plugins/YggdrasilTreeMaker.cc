@@ -248,11 +248,12 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   verbose_ = false;
   isLJ_ = true;
 
-  hltTag = "HLT";
   if( isMC ){
     filterTag = "PAT";
+    hltTag = "HLT2";
   }else{
     filterTag = "HLT";
+    hltTag = "HLT";
   }
   triggerResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), hltTag));
   filterResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), filterTag));
