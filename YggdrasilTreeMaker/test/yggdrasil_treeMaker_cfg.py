@@ -363,10 +363,17 @@ process.TFileService = cms.Service("TFileService",
 	fileName = cms.string('yggdrasil_treeMaker.root')
 )
 
+process.PUPPIMuonRelIso = cms.EDProducer('PuppiLeptonIsolation'
+                                         , srcLepton =cms.string('slimmedMuons')
+                                         , dR = cms.double( 0.4 ) 
+                                         , mixFraction = cms.double( 0.5 ) 
+                                         , configuration = cms.string( "##" )
+                                         )
+
 if isMC : 
     process.p = cms.Path(
         process.GenParticleWithoutChargedLeptonFropTop * process.myGenParticlesWithChargedLeptonFromTopForJet * process.ak4GenJetsWithChargedLepFromTop *  
-        process.electronMVAValueMapProducer * process.ttHTreeMaker)
+        process.PUPPIMuonRelIso * process.electronMVAValueMapProducer * process.ttHTreeMaker)
 else :
     process.p = cms.Path(
-        process.electronMVAValueMapProducer * process.ttHTreeMaker)
+        process.PUPPIMuonRelIso * process.electronMVAValueMapProducer * process.ttHTreeMaker)
