@@ -12,8 +12,8 @@ setenv SCRAM_ARCH slc6_amd64_gcc530
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 export SCRAM_ARCH=slc6_amd64_gcc530
 
-cmsrel CMSSW_8_0_11
-cd CMSSW_8_0_11/src/
+cmsrel CMSSW_8_0_12
+cd CMSSW_8_0_12/src/
 cmsenv
 
 #[skip this for the moment]  # Apply bug fix of met correction. 
@@ -26,9 +26,9 @@ cmsenv
 git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi__CMSSW_8_0_8
 git clone https://github.com/hsatoshi/ttH-LeptonPlusJets.git -b satoshi_cleanup_80x_Sync2nd
 git clone https://github.com/hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
+git clone https://github.com/hsatoshi/PuppiLeptonIsolationhelper.git
 
 scram b -j 10 ; scram b -j 10
-# Due to [*1], compile takes time. Brew a cup of coffee. while waiting.
 # Yes,.. compile twice for the moment. First compile claims errors while the second works. Need to be solved.
 
 
@@ -105,6 +105,8 @@ lepton_e_       : energy
 lepton_isMuon_  : If muon, 1. If electron, 0. 
 lepton_relIso_  : Muon, delta_beta corrected relative isolation. cone 04. Calculated with MiniAODHelper.
                 : Ele , EffectiveArea-corrected isolation, cone 0.3 (Calculated with MiniAODHelper with effAreaType::spring15)
+lepton_puppirelIso_  : Muon , PUPPI isolation
+                     : Ele  , (same as lepton_relIso_ for the moment.)
 lepton_isTight_ : POG Tight ID. 1=pass. [*1] 
 lepton_isLoose_ : POG Loose ID. 1=pass. [*1]
 lepton_scEta_   : Electron Super Cluster. For muon, -99 is filled.
