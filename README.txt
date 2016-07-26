@@ -12,8 +12,8 @@ setenv SCRAM_ARCH slc6_amd64_gcc530
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 export SCRAM_ARCH=slc6_amd64_gcc530
 
-cmsrel CMSSW_8_0_11
-cd CMSSW_8_0_11/src/
+cmsrel CMSSW_8_0_12
+cd CMSSW_8_0_12/src/
 cmsenv
 
 #[skip this for the moment]  # Apply bug fix of met correction. 
