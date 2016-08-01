@@ -9,7 +9,8 @@ isPUPPI=False
 #isMC=True
 isMC=True
 
-isTTBARMC=True
+# 
+isTTBARMC=False
 
 genjetInputTag = cms.InputTag("slimmedGenJets","","")
 #genjetInputTag = cms.InputTag("ak4GenJetsReproduced","","")
