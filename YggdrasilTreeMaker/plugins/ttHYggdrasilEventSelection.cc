@@ -6,6 +6,7 @@
 #endif
 
 #include <iostream>
+#include <stdarg.h>
 
 ttHYggdrasilEventSelection::ttHYggdrasilEventSelection(){
 
@@ -79,31 +80,105 @@ ttHYggdrasilEventSelection::~ttHYggdrasilEventSelection(){
 
 void ttHYggdrasilEventSelection::SetElTrigger( const int* trigFlag){
 
-  ElTrig = trigFlag ;
+  ElTrig .clear();
+  ElTrig .push_back( trigFlag ) ;
 
 }
 
 void ttHYggdrasilEventSelection::SetMuTrigger( const int * trigFlag){
 
-  MuTrig = trigFlag ;
+  MuTrig . clear();
+  MuTrig . push_back( trigFlag );
 
 }
 
 void ttHYggdrasilEventSelection::SetElElTrigger( const int * trigFlag){
 
-  ElElTrig = trigFlag ;
+  ElElTrig .clear();
+  ElElTrig .push_back( trigFlag );
 
 }
 void ttHYggdrasilEventSelection::SetMuMuTrigger( const int * trigFlag){
 
-  MuMuTrig = trigFlag ;
+  MuMuTrig . clear() ;
+  MuMuTrig .push_back( trigFlag );
 
 }
 void ttHYggdrasilEventSelection::SetElMuTrigger( const int * trigFlag){
 
-  ElMuTrig = trigFlag ;
+  ElMuTrig . clear();
+  ElMuTrig .push_back( trigFlag );
 
 }
+
+
+void ttHYggdrasilEventSelection::SetEl_ORTrigger( int n , ... ){
+
+  ElTrig .clear();
+  va_list args;
+  va_start(args , n );
+  for(int i = 0 ; i < n ; i ++){
+    ElTrig .push_back(  va_arg(args , const int *) ) ;
+  }
+  va_end(args);
+  return ; 
+}
+
+void ttHYggdrasilEventSelection::SetMu_ORTrigger( int n , ... ){
+
+
+  MuTrig .clear();
+  va_list args;
+  va_start(args , n);
+  for(int i = 0 ; i < n ; i ++){
+    MuTrig .push_back(  va_arg(args , const int *) ) ;
+  }
+  va_end(args);
+  return ; 
+
+}
+
+void ttHYggdrasilEventSelection::SetElEl_ORTrigger( int n , ... ){
+
+
+  ElElTrig .clear();
+  va_list args;
+  va_start(args , n);
+  for(int i = 0 ; i < n ; i ++){
+    ElElTrig .push_back(  va_arg(args , const int *) ) ;
+  }
+  va_end(args);
+  return ; 
+
+
+}
+void ttHYggdrasilEventSelection::SetMuMu_ORTrigger( int n , ... ){
+
+  
+  MuMuTrig .clear();
+  va_list args;
+  va_start(args , n);
+  for(int i = 0 ; i < n ; i ++){
+    MuMuTrig .push_back(  va_arg(args , const int *) ) ;
+  }
+  va_end(args);
+  return ; 
+
+
+}
+void ttHYggdrasilEventSelection::SetElMu_ORTrigger( int n , ... ){
+
+  ElMuTrig .clear();
+  va_list args;
+  va_start(args , n);
+  for(int i = 0 ; i < n ; i ++){
+    ElMuTrig .push_back(  va_arg(args , const int *) ) ;
+  }
+  va_end(args);
+  return ; 
+
+}
+
 
 void ttHYggdrasilEventSelection::SetGoodVtx( const bool * _goodvtx ){
   goodvtx = _goodvtx ;
@@ -514,7 +589,7 @@ bool ttHYggdrasilEventSelection::PassSingleMuCh(){
   nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // Trig Requirement.
-  if( (*MuTrig) != 1 ){ return false ;}
+  if( ! _passMuTrig() ){ return false ;}
   nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // (no vertex requirement inside the tool.)
@@ -547,7 +622,7 @@ bool ttHYggdrasilEventSelection::PassSingleElCh(){
   nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // Trig Requirement.
-  if( (*ElTrig) != 1 ){ return false ;}
+  if( ! _passElTrig() ){ return false ;}
   nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // (no vertex requirement inside the tool.)
@@ -581,7 +656,7 @@ bool ttHYggdrasilEventSelection::PassElEl(){
   nEvent_passElElCh[ i_step++ ]++ ; 
 
   // Trigger 
-  if( (*ElElTrig) != 1 ){ return false ;}
+  if( ! _passElElTrig()  ){ return false ;}
   nEvent_passElElCh[ i_step++ ]++ ; 
 
   // GoodVtx
@@ -636,7 +711,7 @@ bool ttHYggdrasilEventSelection::PassMuMu(){
   nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   // Trigger 
-  if( (*MuMuTrig) != 1 ){ return false ;}
+  if( ! _passMuMuTrig() ){ return false ;}
   nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   // GoodVtx
@@ -690,7 +765,7 @@ bool ttHYggdrasilEventSelection::PassElMu(){
   nEvent_passElMuCh[ i_step++ ]++ ; 
 
   // Trigger 
-  if( (*ElMuTrig) != 1 ){ return false ;}
+  if( ! _passElMuTrig() ){ return false ;}
   nEvent_passElMuCh[ i_step++ ]++ ; 
 
   // GoodVtx
@@ -786,3 +861,32 @@ std::vector<double> ttHYggdrasilEventSelection::DLSofterbjetsBdiscriminant()  { 
 
 
 void ttHYggdrasilEventSelection::EnableInfoDumpForDebug(){ b_InfoDumpForDebug = true;}
+
+
+bool ttHYggdrasilEventSelection::_passTrig( const std::vector< const int * > & triggerSets ){
+
+  for( unsigned int i = 0 ; i < triggerSets . size() ; i++) {
+    if( *(triggerSets[i]) == 1 ) return true;
+  }
+  return false ; 
+}
+
+bool ttHYggdrasilEventSelection::_passElTrig(){
+  return _passTrig( ElTrig );
+}
+
+bool ttHYggdrasilEventSelection::_passMuTrig(){
+  return _passTrig( MuTrig );
+}
+
+bool ttHYggdrasilEventSelection::_passElElTrig(){
+  return _passTrig( ElElTrig );
+}
+
+bool ttHYggdrasilEventSelection::_passMuMuTrig(){
+  return _passTrig( MuMuTrig );
+}
+
+bool ttHYggdrasilEventSelection::_passElMuTrig(){
+  return _passTrig( ElMuTrig );
+}
