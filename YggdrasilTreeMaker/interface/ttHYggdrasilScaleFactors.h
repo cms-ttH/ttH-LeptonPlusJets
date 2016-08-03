@@ -48,13 +48,18 @@ class ttHYggdrasilScaleFactors{
   double get_TrigMuSF( ttHYggdrasilEventSelection * event );
   double get_TrigElSF( ttHYggdrasilEventSelection * event );
 
+  // Can replace PU file if you want.
+  void SetupDataPileupFile( std::string filename ); // just filename. the file should be in the common data directory.
+
+  void init_Pileup();
+
  private :
 
   std::string SFfileDir ;
+  std::string PileupHistogram;
 
   void init_all();
   void init_btagSF();
-  void init_Pileup();
   void init_ElectronSF();
   void init_MuonSF();
   void init_TrigMuSF();

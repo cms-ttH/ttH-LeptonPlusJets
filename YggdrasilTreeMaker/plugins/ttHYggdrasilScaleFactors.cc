@@ -28,6 +28,7 @@ ttHYggdrasilScaleFactors::ttHYggdrasilScaleFactors(){
 ttHYggdrasilScaleFactors::ttHYggdrasilScaleFactors( char * sf_file_directory ){
 
   SFfileDir .assign( sf_file_directory );
+  PileupHistogram . assign( "PileupHistogram_EventSync_Spring16.root" );
 
   init_all();
 
@@ -478,8 +479,8 @@ void ttHYggdrasilScaleFactors::init_Pileup(){
     double PU_DATA[50] ;
     {
       TH1D * h;
-      TFile * f = TFile::Open( (SFfileDir + "/" + "PileupHistogram_EventSync_Spring16.root").c_str() );
-      std::cout << "DEBUG : DATA_PU file path = "  << (SFfileDir + "/" + "PileupHistogram_EventSync_Spring16.root") << std::endl ; 
+      TFile * f = TFile::Open( (SFfileDir + "/" + PileupHistogram ).c_str() );
+      std::cout << "DEBUG : DATA_PU file path = "  << (SFfileDir + "/" + PileupHistogram) << std::endl ; 
       // --> The file has been produced with following command : 
       //  pileupCalc.py -i ./../data/Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON.txt  --inputLumiJSON /afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/PileUp/pileup_latest.txt --calcMode true --minBiasXsec 71300 --maxPileupBin 1000 --numPileupBins 1000    MyDataPileupHistogram.root
       
@@ -504,7 +505,11 @@ void ttHYggdrasilScaleFactors::init_Pileup(){
 
     
     for(int i = 0 ; i < 50 ; i ++){
-      PU_weight[ i ] = PU_DATA[i] / PU_MC[i];
+      if( PU_MC[i] == 0 ){
+	PU_weight[ i ] = 0 ; 
+      }else{
+	PU_weight[ i ] = PU_DATA[i] / PU_MC[i];
+      }
     }
     
 }
@@ -559,4 +564,8 @@ double ttHYggdrasilScaleFactors::get_TrigElSF( ttHYggdrasilEventSelection * even
   return weight ;
 
   
+}
+
+void ttHYggdrasilScaleFactors::SetupDataPileupFile( std::string filename ){
+  PileupHistogram = filename ; 
 }
