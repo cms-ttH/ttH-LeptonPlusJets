@@ -100,6 +100,11 @@ class ttHYggdrasilEventSelection{
   std::vector<const TLorentzVector*> DLSofterbjets();
   std::vector<double> DLSofterbjetsBdiscriminant();
 
+  bool passElTrig() ; 	
+  bool passMuTrig() ; 	
+  bool passElElTrig() ; 
+  bool passMuMuTrig() ; 
+  bool passElMuTrig() ; 
 
  private :
 
@@ -127,11 +132,6 @@ class ttHYggdrasilEventSelection{
   std::vector< const int * > ElMuTrig ; 
 
   bool _passTrig( const std::vector< const int * > & triggerSets );
-  bool _passElTrig() ; 
-  bool _passMuTrig() ; 
-  bool _passElElTrig() ; 
-  bool _passMuMuTrig() ; 
-  bool _passElMuTrig() ; 
 
   double Thre_TightMu_PT ;
   double Thre_TightMu_Eta ;

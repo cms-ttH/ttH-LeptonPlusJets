@@ -589,7 +589,7 @@ bool ttHYggdrasilEventSelection::PassSingleMuCh(){
   nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // Trig Requirement.
-  if( ! _passMuTrig() ){ return false ;}
+  if( ! passMuTrig() ){ return false ;}
   nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // (no vertex requirement inside the tool.)
@@ -622,7 +622,7 @@ bool ttHYggdrasilEventSelection::PassSingleElCh(){
   nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // Trig Requirement.
-  if( ! _passElTrig() ){ return false ;}
+  if( ! passElTrig() ){ return false ;}
   nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // (no vertex requirement inside the tool.)
@@ -656,7 +656,7 @@ bool ttHYggdrasilEventSelection::PassElEl(){
   nEvent_passElElCh[ i_step++ ]++ ; 
 
   // Trigger 
-  if( ! _passElElTrig()  ){ return false ;}
+  if( ! passElElTrig()  ){ return false ;}
   nEvent_passElElCh[ i_step++ ]++ ; 
 
   // GoodVtx
@@ -711,7 +711,7 @@ bool ttHYggdrasilEventSelection::PassMuMu(){
   nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   // Trigger 
-  if( ! _passMuMuTrig() ){ return false ;}
+  if( ! passMuMuTrig() ){ return false ;}
   nEvent_passMuMuCh[ i_step++ ]++ ; 
 
   // GoodVtx
@@ -765,7 +765,7 @@ bool ttHYggdrasilEventSelection::PassElMu(){
   nEvent_passElMuCh[ i_step++ ]++ ; 
 
   // Trigger 
-  if( ! _passElMuTrig() ){ return false ;}
+  if( ! passElMuTrig() ){ return false ;}
   nEvent_passElMuCh[ i_step++ ]++ ; 
 
   // GoodVtx
@@ -871,22 +871,22 @@ bool ttHYggdrasilEventSelection::_passTrig( const std::vector< const int * > & t
   return false ; 
 }
 
-bool ttHYggdrasilEventSelection::_passElTrig(){
+bool ttHYggdrasilEventSelection::passElTrig(){
   return _passTrig( ElTrig );
 }
 
-bool ttHYggdrasilEventSelection::_passMuTrig(){
+bool ttHYggdrasilEventSelection::passMuTrig(){
   return _passTrig( MuTrig );
 }
 
-bool ttHYggdrasilEventSelection::_passElElTrig(){
+bool ttHYggdrasilEventSelection::passElElTrig(){
   return _passTrig( ElElTrig );
 }
 
-bool ttHYggdrasilEventSelection::_passMuMuTrig(){
+bool ttHYggdrasilEventSelection::passMuMuTrig(){
   return _passTrig( MuMuTrig );
 }
 
-bool ttHYggdrasilEventSelection::_passElMuTrig(){
+bool ttHYggdrasilEventSelection::passElMuTrig(){
   return _passTrig( ElMuTrig );
 }
