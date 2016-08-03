@@ -20,6 +20,7 @@ ttHYggdrasilScaleFactors::ttHYggdrasilScaleFactors(){
   SFfileDir =
     (std::string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/" );
 #endif
+  PileupHistogram . assign( "PileupHistogram_EventSync_Spring16.root" );
 
   init_all();
 
