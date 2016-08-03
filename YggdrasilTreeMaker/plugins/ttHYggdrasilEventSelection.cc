@@ -525,7 +525,7 @@ void ttHYggdrasilEventSelection::_JetSelection(){
     if( _OverlapWithLooseLeptons( jet_eta -> at(idx), jet_phi -> at(idx) ) ) continue ; 
 
     TLorentzVector * vec = new TLorentzVector;
-    vec->SetPtEtaPhiE( jet_pt  -> at(idx),
+    vec->SetPtEtaPhiM( jet_pt  -> at(idx),
 		       jet_eta -> at(idx),
 		       jet_phi -> at(idx),
 		       jet_m   -> at(idx) );
@@ -553,7 +553,7 @@ void ttHYggdrasilEventSelection::_JetSelection(){
     if( _OverlapWithLooseLeptons( jet_eta -> at(idx), jet_phi -> at(idx) ) ) continue ; 
 
     TLorentzVector * vec = new TLorentzVector;
-    vec->SetPtEtaPhiE( jet_pt  -> at(idx),
+    vec->SetPtEtaPhiM( jet_pt  -> at(idx),
 		       jet_eta -> at(idx),
 		       jet_phi -> at(idx),
 		       jet_m   -> at(idx) );
