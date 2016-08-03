@@ -13,8 +13,13 @@
 
 ttHYggdrasilScaleFactors::ttHYggdrasilScaleFactors(){
 
+#ifdef STANDALONECOMPILE
+  SFfileDir =
+    std::string("ttHYggdrasilScaleFactors_data/" );
+#else
   SFfileDir =
     (std::string(getenv("CMSSW_BASE")) + "/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/" );
+#endif
 
   init_all();
 
