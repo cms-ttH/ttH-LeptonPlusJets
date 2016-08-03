@@ -21,6 +21,12 @@ class ttHYggdrasilEventSelection{
   void SetMuMuTrigger( const int * trigFlag );
   void SetElMuTrigger( const int * trigFlag );
 
+  void SetEl_ORTrigger  ( const int n, ... );
+  void SetMu_ORTrigger  ( const int n, ... );
+  void SetElEl_ORTrigger( const int n, ... );
+  void SetMuMu_ORTrigger( const int n, ... );
+  void SetElMu_ORTrigger( const int n, ... );
+
   void SetLeptons( const std::vector<double> * pt, 
 		   const std::vector<double> * eta, 
 		   const std::vector<double> * scEta,
@@ -114,11 +120,18 @@ class ttHYggdrasilEventSelection{
   double _calcDR2( double eta1, double eta2, double phi1, double phi2 );
 
 
-  const int * ElTrig ; 
-  const int * MuTrig ; 
-  const int * ElElTrig ; 
-  const int * MuMuTrig ; 
-  const int * ElMuTrig ; 
+  std::vector< const int * > ElTrig ; 
+  std::vector< const int * > MuTrig ; 
+  std::vector< const int * > ElElTrig ; 
+  std::vector< const int * > MuMuTrig ; 
+  std::vector< const int * > ElMuTrig ; 
+
+  bool _passTrig( const std::vector< const int * > & triggerSets );
+  bool _passElTrig() ; 
+  bool _passMuTrig() ; 
+  bool _passElElTrig() ; 
+  bool _passMuMuTrig() ; 
+  bool _passElMuTrig() ; 
 
   double Thre_TightMu_PT ;
   double Thre_TightMu_Eta ;
