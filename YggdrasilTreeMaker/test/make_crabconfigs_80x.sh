@@ -18,7 +18,7 @@ diff yggdrasil_treeMaker_cfg.py __yggdrasil_treeMaker_MCTTBAR_cfg.py
 cat yggdrasil_treeMaker_cfg.py | sed "s|isMC=True|isMC=False|g" > __yggdrasil_treeMaker_DATA_cfg.py 
 diff yggdrasil_treeMaker_cfg.py __yggdrasil_treeMaker_DATA_cfg.py
 
-nickname="Satoshi_CHSJETS_2cb4bf82b_ElectronIdFlagUpdated"
+nickname="Satoshi_Yggdra_Aug01"
 
 
 JobIndexList=""
@@ -78,9 +78,11 @@ ismc[22]=MC
 # name[4]=DYhigh
 # ismc[4]=MC
 # 
-# ds[5]=/WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
-# name[5]=Wjet
-# ismc[5]=MC
+        
+
+ds[25]=/WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14_ext1-v1/MINIAODSIM
+name[25]=WjetIncl
+ismc[25]=MC
  
 ds[26]=/TT_TuneCUETP8M1_13TeV-powheg-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14_ext3-v1/MINIAODSIM
 name[26]=ttbar
@@ -88,7 +90,7 @@ ismc[26]=MC
  
 
 
-JobIndexList=${JobIndexList}" 21 22 26 "
+JobIndexList=${JobIndexList}" 21 22 26 25"
 
 
 # 

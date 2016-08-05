@@ -25,7 +25,7 @@ config.JobType.psetName = '__yggdrasil_treeMaker_QQQQQ_cfg.py'
 
 config.JobType.allowUndistributedCMSSW = True
 config.JobType.maxJobRuntimeMin = 600 # default 1315 = 21 hours.
-config.JobType.inputFiles = ['']
+# config.JobType.inputFiles = ['']
 
 ##########################################
 # Information of data to be analyzed, including the splitting parameters
