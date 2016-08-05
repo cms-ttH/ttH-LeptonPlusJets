@@ -62,6 +62,13 @@ void ttHYggdrasilScaleFactors::init_TrigMuSF(){
     h_MuSF_Trig_HLTv4p3 = (TH2D*) getTH2HistogramFromFile( input , std::string ("runD_IsoMu20_OR_IsoTkMu20_HLTv4p3_PtEtaBins/abseta_pt_ratio") );
   }
 
+  // Root file taken from https://twiki.cern.ch/twiki/bin/view/CMS/MuonWorkInProgressAndPagResults?rev=15
+  {
+    
+    std::string input = SFfileDir +"/" + "SingleMuonTrigger_Z_RunBCD_prompt80X_7p65.root";
+    h_MUEff_SingleMuonTrig = (TH2D*) getTH2HistogramFromFile( input , std::string ("IsoMu22_OR_IsoTkMu22_PtEtaBins_Run274094_to_276097/efficienciesDATA/abseta_pt_DATA") );
+  }
+
 }
 
 void ttHYggdrasilScaleFactors::init_ElectronSF(){
@@ -521,6 +528,33 @@ double ttHYggdrasilScaleFactors::get_pu_wgt( int mc_pu ){
   return PU_weight[ mc_pu ];
   
 }
+
+
+double ttHYggdrasilScaleFactors::get_TrigMuEfficiency( ttHYggdrasilEventSelection * event ){
+
+  double totalInefficiency = 1 ; 
+
+  for( unsigned int i = 0 ; i < event->leptonsIsMuon().size() ; i++ ){
+    if( event->leptonsIsMuon().at( i ) != 1 ) continue ; 
+    
+    const double abs_eta = std::fabs( event->leptons().at( i )->Eta() ) ; 
+    const double pt      =  event->leptons().at( i )->Pt() ; 
+
+    double in_efficiency  = 1.0 - GetBinValueFromXYValues( h_MUEff_SingleMuonTrig , abs_eta , pt );
+
+    totalInefficiency *= in_efficiency ;
+  }
+
+  return 1.0 - totalInefficiency ;
+
+}
+
+
+double ttHYggdrasilScaleFactors::get_TrigElEfficiency( ttHYggdrasilEventSelection * event ){
+
+  return 1 ;
+}
+
 
 
 double ttHYggdrasilScaleFactors::get_TrigMuSF( ttHYggdrasilEventSelection * event ){

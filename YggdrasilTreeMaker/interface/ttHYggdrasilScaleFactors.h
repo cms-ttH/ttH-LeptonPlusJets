@@ -48,6 +48,10 @@ class ttHYggdrasilScaleFactors{
   double get_TrigMuSF( ttHYggdrasilEventSelection * event );
   double get_TrigElSF( ttHYggdrasilEventSelection * event );
 
+  double get_TrigElEfficiency( ttHYggdrasilEventSelection * event );
+  double get_TrigMuEfficiency( ttHYggdrasilEventSelection * event );
+
+
   // Can replace PU file if you want.
   void SetupDataPileupFile( std::string filename ); // just filename. the file should be in the common data directory.
 
@@ -86,6 +90,9 @@ class ttHYggdrasilScaleFactors{
   TH2D * h_MuSF_Trig_HLTv4p2;
   TH2D * h_MuSF_Trig_HLTv4p3;
   TH2F * h_EleSF_Trig;
+
+  // Trig Efficiency
+  TH2D * h_MUEff_SingleMuonTrig;
 
 };
 
