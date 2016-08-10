@@ -74,10 +74,11 @@ ismc[22]=MC
 # name[3]=DYlow
 # ismc[3]=MC
 # 
-# ds[4]=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM
-# name[4]=DYhigh
-# ismc[4]=MC
-# 
+
+ds[24]=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+name[24]=DYhigh
+ismc[24]=MC
+
         
 
 ds[25]=/WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14_ext1-v1/MINIAODSIM
@@ -90,7 +91,7 @@ ismc[26]=MC
  
 
 
-JobIndexList=${JobIndexList}" 21 22 26 25"
+JobIndexList=${JobIndexList}" 21 22   24 26 25"
 
 
 # 
