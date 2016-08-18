@@ -1,9 +1,5 @@
 import FWCore.ParameterSet.Config as cms
 
-<<<<<<< HEAD
-#isMC=True
-isMC=False
-=======
 
 
 isPUPPI=False
@@ -11,9 +7,8 @@ isPUPPI=False
 
 
 #isMC=True
-isMC=True
+isMC=False
 
-# 
 isTTBARMC=False
 
 genjetInputTag = cms.InputTag("slimmedGenJets","","")
@@ -22,14 +17,13 @@ genjetInputTag = cms.InputTag("slimmedGenJets","","")
 
 
 
-enableJECFromLocalDB=False
+enableJECFromLocalDB=True
 
 
 # Switch to perform lumi-mask inside this python script.
 # It is preferable to set this option False as default,
 #   because, when we submit job to grid, we also set the file too.
-ForDebugAndEventSync_EnableLumiMaskByHand=False
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
+ForDebugAndEventSync_EnableLumiMaskByHand=True
 
 
 process = cms.Process("MAOD")
@@ -41,18 +35,11 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 #### caution: use the correct global tag for MC or Data 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 
-<<<<<<< HEAD
-if isMC:
-    process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_RunIIFall15DR76_v0'
-else :
-    process.GlobalTag.globaltag = '76X_dataRun2_v15'
-=======
 # Update global tag based on : https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?rev=568
 if isMC:
     process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_2016_miniAODv2_v1'
 else :
     process.GlobalTag.globaltag = '80X_dataRun2_Prompt_ICHEP16JEC_v0'
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 
 
 
@@ -64,7 +51,7 @@ process.options   = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 process.options.allowUnscheduled = cms.untracked.bool(True)
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(10)
+    input = cms.untracked.int32(-1)
     )
 
 
@@ -160,45 +147,16 @@ if not isMC :
 
 process.source = cms.Source("PoolSource",
         fileNames = cms.untracked.vstring(
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/00DF0A73-17C2-E511-B086-E41D2D08DE30.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/020D0AF1-4BC2-E511-BDFC-0026B95ADB18.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/02837459-03C2-E511-8EA2-002590A887AC.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/0400D1B1-4CC2-E511-AD14-AC853DA06A1A.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/0634456A-08C2-E511-A0C1-001E6739722E.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/0A5A5364-03C2-E511-9352-00259048AE00.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/0A5C7429-0CC2-E511-BC6B-002590D9D8B8.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/0AE230FC-4BC2-E511-B35C-000F530E4644.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/0C5BB11A-E2C1-E511-8C02-002590A831B6.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/10D0AF2E-33C2-E511-BCE5-001E67398683.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/14C8A87C-DCC1-E511-BE67-0CC47A0AD704.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/14F4047E-0CC2-E511-B1CE-002590A3C970.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/16467C82-D8C1-E511-9546-001E67E71417.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/167A53AB-08C2-E511-A58B-001E67397F2B.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/18897870-17C2-E511-9DC5-E41D2D08DCA0.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/18CCDFE4-02C2-E511-B0FA-002590A37114.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/20A0646D-D8C1-E511-9587-001E67396A09.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/2235F83F-DBC1-E511-A83F-001E673986B5.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/22761DF1-E1C1-E511-8F86-003048CB8584.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/244D8186-D8C1-E511-B684-001E67E71BF5.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/26CAB9BA-CEC1-E511-8B0B-001E67398E49.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/2A18493A-04C2-E511-935C-002590D9D8C2.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/2C7F8762-0CC2-E511-9F77-001E673981C4.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/2CA9FB72-17C2-E511-A3E3-0025907DCA7E.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/2CCB8F4A-07C2-E511-A3C6-002590A3C970.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/2EF6150C-1AC2-E511-A67B-002590A83192.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/324D4BDC-DCC1-E511-925D-00259029E922.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/32D38D09-E2C1-E511-986A-001E67397BC5.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/32E942A0-4DC2-E511-AD4A-001E674FCBF7.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/343CDCDC-E1C1-E511-80C4-00259029E91C.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/36171880-02C2-E511-9B6E-0CC47A0AD630.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/363584E8-4BC2-E511-9DE3-008CFAF060D8.root',
-'/store/mc/RunIIFall15MiniAODv2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12_ext3-v1/00000/3660CB69-35C2-E511-86B8-002590A83354.root'
-
-#        '/store/user/puigh/TTHSync/ttjets_phys14_20bx25_withfatjets_v2.root'
-            #'/store/mc/Phys14DR/TTbarH_M-125_13TeV_amcatnlo-pythia8-tauola/MINIAODSIM/PU20bx25_tsg_PHYS14_25_V1-v2/00000/08B36E8F-5E7F-E411-9D5A-002590200AE4.root'
-            #'/store/mc/Phys14DR/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_PHYS14_25_V1-v1/00000/00C90EFC-3074-E411-A845-002590DB9262.root'
-            #'/store/mc/Spring14miniaod/TTbarH_M-125_13TeV_amcatnlo-pythia8-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v1/00000/1E4F9BDC-3E1E-E411-A56C-001E67396EAA.root'
-            #'/store/mc/Spring14miniaod/TTJets_MSDecaysCKM_central_Tune4C_13TeV-madgraph-tauola/MINIAODSIM/PU20bx25_POSTLS170_V5-v2/00000/004C6DA7-FB03-E411-96BD-0025905A497A.root'
+'file:///uscms/home/satoshi/temporal_strage/singlemuon/02D9C19F-571A-E611-AD8E-02163E013732.root',
+'file:///uscms/home/satoshi/temporal_strage/singlemuon/18383F36-2E1A-E611-8C57-02163E014186.root',
+'file:///uscms/home/satoshi/temporal_strage/singlemuon/1AF0711C-241A-E611-AC07-02163E0141E1.root',
+'file:///uscms/home/satoshi/temporal_strage/singlemuon/2096A6AC-261A-E611-99BD-02163E01355E.root',
+'file:///uscms/home/satoshi/temporal_strage/singlemuon/2226C1A1-571A-E611-B1E2-02163E013441.root',
+'file:///uscms/home/satoshi/temporal_strage/singlemuon/34A57FB8-D819-E611-B0A4-02163E0144EE.root',
+'file:///uscms/home/satoshi/temporal_strage/singlemuon/422892A9-571A-E611-9BB8-02163E011D78.root',
+'file:///uscms/home/satoshi/temporal_strage/singlemuon/66E2AFB2-571A-E611-BF2A-02163E013674.root',
+'file:///uscms/home/satoshi/temporal_strage/singlemuon/701EA1A3-571A-E611-95AC-02163E011D78.root',
+'file:///uscms/home/satoshi/temporal_strage/singlemuon/8A14EDAB-571A-E611-96F5-02163E0123DD.root',
             )
 )
 
@@ -210,7 +168,7 @@ if not isMC :
     if ForDebugAndEventSync_EnableLumiMaskByHand :
         import sys
         import os.path
-        import FWCore.PythonUtilities.LumiList as Lumilist
+        import FWCore.PythonUtilities.LumiList as LumiList
         process.source.lumisToProcess = LumiList.LumiList(filename =
                                                           os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON.txt'
                                                           ).getVLuminosityBlockRange()
@@ -342,16 +300,6 @@ if isMC :
         )
     
 
-<<<<<<< HEAD
-if isMC :
-    process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
-                                          isMC    =  cms.string("MC")
-                                          )
-else :
-    process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
-                                          isMC    =  cms.string("data")
-                                          )
-=======
 
 if isMC :
     if isPUPPI :
@@ -381,23 +329,15 @@ else :
                                           jetPU = cms.string( "CHS" )
                                           )
         
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
     
 process.TFileService = cms.Service("TFileService",
-	fileName = cms.string('yggdrasil_treeMaker.root')
+	fileName = cms.string('yggdrasil_treeMaker_singleMu.root')
 )
-
-process.PUPPIMuonRelIso = cms.EDProducer('PuppiLeptonIsolation'
-                                         , srcLepton =cms.string('slimmedMuons')
-                                         , dR = cms.double( 0.4 ) 
-                                         , mixFraction = cms.double( 0.5 ) 
-                                         , configuration = cms.string( "##" )
-                                         )
 
 if isMC : 
     process.p = cms.Path(
         process.GenParticleWithoutChargedLeptonFropTop * process.myGenParticlesWithChargedLeptonFromTopForJet * process.ak4GenJetsWithChargedLepFromTop *  
-        process.PUPPIMuonRelIso * process.electronMVAValueMapProducer * process.ttHTreeMaker)
+        process.electronMVAValueMapProducer * process.ttHTreeMaker)
 else :
     process.p = cms.Path(
-        process.PUPPIMuonRelIso * process.electronMVAValueMapProducer * process.ttHTreeMaker)
+        process.electronMVAValueMapProducer * process.ttHTreeMaker)
