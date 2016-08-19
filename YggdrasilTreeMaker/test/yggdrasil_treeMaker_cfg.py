@@ -1,10 +1,5 @@
 import FWCore.ParameterSet.Config as cms
 
-<<<<<<< HEAD
-#isMC=True
-isMC=False
-=======
-
 
 isPUPPI=False
 #--> if isPUPPI=true, change the code too.
@@ -41,18 +36,12 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 #### caution: use the correct global tag for MC or Data 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 
-<<<<<<< HEAD
-if isMC:
-    process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_RunIIFall15DR76_v0'
-else :
-    process.GlobalTag.globaltag = '76X_dataRun2_v15'
-=======
+
 # Update global tag based on : https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?rev=568
 if isMC:
     process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_2016_miniAODv2_v1'
 else :
     process.GlobalTag.globaltag = '80X_dataRun2_Prompt_ICHEP16JEC_v0'
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 
 
 
@@ -342,7 +331,6 @@ if isMC :
         )
     
 
-<<<<<<< HEAD
 if isMC :
     process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
                                           isMC    =  cms.string("MC")
@@ -351,7 +339,6 @@ else :
     process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
                                           isMC    =  cms.string("data")
                                           )
-=======
 
 if isMC :
     if isPUPPI :
