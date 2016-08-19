@@ -24,7 +24,6 @@ enableJECFromLocalDB=False
 # It is preferable to set this option False as default,
 #   because, when we submit job to grid, we also set the file too.
 ForDebugAndEventSync_EnableLumiMaskByHand=False
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 
 
 process = cms.Process("MAOD")
@@ -368,7 +367,6 @@ else :
                                           jetPU = cms.string( "CHS" )
                                           )
         
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
     
 process.TFileService = cms.Service("TFileService",
 	fileName = cms.string('yggdrasil_treeMaker.root')
