@@ -207,8 +207,6 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
   TopTagger toptagger;
 
   const bool isMC ;
-<<<<<<< HEAD
-=======
   const bool isTTbarMC ;
   const bool usePUPPI ;
 
@@ -222,7 +220,6 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
 
   ttHYggdrasilEventSelection selection;
   ttHYggdrasilScaleFactors   scalefactors;
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 
 };
 
@@ -245,33 +242,21 @@ typedef std::vector< TLorentzVector >          vecTLorentzVector;
 // constructors and destructor
 //
 YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
-<<<<<<< HEAD
-  isMC(iConfig.getParameter<std::string>("isMC") == "MC" )
-=======
   genJetsToken_ ( consumes <reco::GenJetCollection> ( iConfig.getParameter<edm::InputTag>("genjet") ) )
   ,  isMC(iConfig.getParameter<std::string>("inputfiletype") != "data" )
   ,  isTTbarMC(iConfig.getParameter<std::string>("inputfiletype") == "TTbarMC" )
   , usePUPPI(iConfig.getParameter<std::string>("jetPU") == "PUPPI" )
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 {
    //now do what ever initialization is needed
   verbose_ = false;
   isLJ_ = true;
 
-<<<<<<< HEAD
-  hltTag = "HLT";
-  if( isMC ){
-    filterTag = "PAT";
-  }else{
-    filterTag = "HLT";
-=======
   if( isMC ){
     filterTag = "PAT";
     hltTag = "HLT2";
   }else{
     filterTag = "HLT";
     hltTag = "HLT";
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
   }
   triggerResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), hltTag));
   filterResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), filterTag));
@@ -304,11 +289,6 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   puInfoToken = consumes <std::vector< PileupSummaryInfo > > (edm::InputTag(std::string("slimmedAddPileupInfo")));
 
   if( isMC ){
-<<<<<<< HEAD
-    genInfoProductToken = consumes <GenEventInfoProduct> (edm::InputTag(std::string("generator")));
-  }
-
-=======
     mcparicleToken = consumes <reco::GenParticleCollection> (edm::InputTag(std::string("prunedGenParticles")));
     genInfoProductToken = consumes <GenEventInfoProduct> (edm::InputTag(std::string("generator")));
     LHEEventProductToken = consumes<LHEEventProduct> ( edm::InputTag(std::string("externalLHEProducer") )  );
@@ -318,7 +298,6 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   if( usePUPPI ) {
   tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJetsPuppi")));
   }else{
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
   tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
   }
   // EDMConversionCollectionToken = consumes <reco::ConversionCollection > (edm::InputTag("reducedEgamma","reducedConversions",""));
@@ -461,15 +440,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   iEvent.getByToken(beamspotToken,bsHandle);
 
   edm::Handle<reco::GenParticleCollection> mcparticles;
-<<<<<<< HEAD
-  if( isMC ){
-    iEvent.getByToken(mcparicleToken,mcparticles);
-=======
   edm::Handle<reco::GenJetCollection> genjetCollection;
   if( isMC ){
     iEvent.getByToken(mcparicleToken,mcparticles);
     iEvent.getByToken( genJetsToken_ , genjetCollection );
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
   }
 
   edm::Handle<double> rhoHandle;
@@ -488,15 +462,10 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   // iEvent.getByToken( subFilterJetsToken,h_subfilterjet );
 
   edm::Handle<GenEventInfoProduct> GenEventInfoHandle;
-<<<<<<< HEAD
-  if( isMC ){
-  iEvent.getByToken(genInfoProductToken,GenEventInfoHandle);
-=======
   edm::Handle<LHEEventProduct> LHEEventProductHandle;
   if( isMC ){
   iEvent.getByToken(genInfoProductToken,GenEventInfoHandle);
   iEvent.getByToken(LHEEventProductToken,  LHEEventProductHandle) ;
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
   }
 
   edm::Handle<boosted::BoostedJetCollection> h_boostedjet;
@@ -511,18 +480,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   edm::Handle<edm::TriggerResults> triggerResults;
   iEvent.getByToken(triggerResultsToken, triggerResults);
   
-<<<<<<< HEAD
-//  bool passDiElectronTrigger = false;
-//  bool passEleMuonTrigger = false;
-//  bool passDiMuonTrigger =false;
-
-  bool passSingleElectronTrigger = false;
-  bool passSingleMuonTrigger = false;
-  bool passDoubleElectronTrigger = false;
-  bool passDoubleMuonTrigger = false;
-  bool passElectronMuonTrigger = false;
-=======
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
   bool passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1 = false;
   bool passHLT_Ele27_eta2p1_WPTight_Gsf_v = false;
   
@@ -575,20 +532,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
       
 	const unsigned long MatchedAtTheBegining = 0 ; 
 
-<<<<<<< HEAD
-	if( pathName.find( "HLT_Ele27_eta2p1_WPLoose_Gsf_v" ,0) == MatchedAtTheBegining ){    passSingleElectronTrigger = true;}
-	if( pathName.find( "HLT_IsoMu20_v" ,0) == MatchedAtTheBegining ){    passSingleMuonTrigger = true; }
-//	if( pathName.find( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v"       ,0) == MatchedAtTheBegining ){ passDiElectronTrigger = true;}
-//	if( pathName.find( "HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v" ,0) == MatchedAtTheBegining ){ passEleMuonTrigger = true;}
-//	if( pathName.find( "HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v"  ,0) == MatchedAtTheBegining ){ passEleMuonTrigger = true;}
-//	if( pathName.find( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"             ,0) == MatchedAtTheBegining ){ passDiMuonTrigger = true;}
-//	if( pathName.find( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"           ,0) == MatchedAtTheBegining ){ passDiMuonTrigger = true;}
-
-	if( pathName.find( "HLT_IsoMu20_v"        ,0) == MatchedAtTheBegining ){ passHLT_IsoMu20_v = true;}
-=======
 	if( pathName.find( "HLT_IsoMu20_v"        ,0) == MatchedAtTheBegining ){ passHLT_IsoMu20_v = true;}
 	if( pathName.find( "HLT_IsoTkMu20_v"      ,0) == MatchedAtTheBegining ){ passHLT_IsoTkMu20_v = true;}
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 	if( pathName.find( "HLT_IsoMu20_eta2p1_v" ,0) == MatchedAtTheBegining ){ passHLT_IsoMu20_eta2p1_v = true;}
 	if( pathName.find( "HLT_IsoMu24_eta2p1_v" ,0) == MatchedAtTheBegining ){ passHLT_IsoMu24_eta2p1_v = true;}
 
@@ -610,14 +555,11 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
 	if( pathName.find( "HLT_Ele25WP60_SC4_Mass55_v"                       ,0) == MatchedAtTheBegining ){ passHLT_Ele25WP60_SC4_Mass55_v = true;}
 
-<<<<<<< HEAD
-=======
 	if( pathName.find( "HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v"      ,0) == MatchedAtTheBegining ){ passHLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v        = true ; }
 	if( pathName.find( "HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v",0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v  = true ; }
 	if( pathName.find( "HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v" ,0) == MatchedAtTheBegining ){ passHLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v   = true ; }
 	if( pathName.find( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"            ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v	        = true ; }
 	if( pathName.find( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"          ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v            = true ; }
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 	
 
 	if( pathName.find( "HLT_Ele27_eta2p1_WPTight_Gsf_v"        ,0) == MatchedAtTheBegining ){ passHLT_Ele27_eta2p1_WPTight_Gsf_v = true;}
@@ -688,8 +630,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
    
   // Fill ID based only on additional b/c jets
   h_ttbarAdditionalJetId_->Fill(*genTtbarId%100);
-<<<<<<< HEAD
-=======
   
   eve->additionalJetEventId_ = *genTtbarId;
   
@@ -754,7 +694,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     
     eve-> weight_PDF_NNPDF30NLO_up_   = 1.0;
     eve-> weight_PDF_NNPDF30NLO_down_ = 1.0;
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
   }
 
   math::XYZPoint beamSpotPosition;
@@ -841,9 +780,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   mHdecay = isMC ? miniAODhelper.GetHiggsDecay(mcparticles) : -1 ;
   eve->higgsDecayType_=mHdecay;
 
-<<<<<<< HEAD
-  eve->ttbarDecayType_ = isMC ? miniAODhelper.GetTTbarDecay(mcparticles) : -10 ;
-=======
   TLorentzVector GenTopQuark, GenAntitopQuark;
   eve->ttbarDecayType_ = isMC ? miniAODhelper.GetTTbarDecay(mcparticles , & GenTopQuark , & GenAntitopQuark ) : -10 ;
 
@@ -866,8 +802,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 				 );
 
     // parameters taken from https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting?rev=19
-
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 
   }else{
     eve -> weight_topPt_ = 1.0;
@@ -1412,33 +1346,6 @@ n_fatjets++;
     std::vector<pat::Jet> filterjets = higgsJet->filterjets;
        
     }
-<<<<<<< HEAD
-    if(subjettags>=2) numHiggsTags++;
-
-      // int numBtagFiltJets=0;
-      // std::vector<pat::Jet> filterjets = higgsJet->filterjets;
-      // int numFiltJets = filterjets.size();
-      // for( int ijet=0; ijet<numFiltJets; ijet++ ){
-      // 	// if( verbose_ ){
-      // 	//   printf("\t\t filt jet %2d:\t pT = %.1f,\t eta = %.2f,\t phi = %.2f,\t CSVv2 = %+5.3f,\t CSVv1 = %+5.3f \n",
-      // 	// 	 ijet, filterjets[ijet].pt(), filterjets[ijet].eta(), filterjets[ijet].phi(), 
-      // 	// 	 filterjets[ijet].bDiscriminator("combinedInclusiveSecondaryVertexV2BJetTags"),
-      // 	// 	 filterjets[ijet].bDiscriminator("combinedSecondaryVertexBJetTags"));
-      // 	// }
-
-      // 	if( !(filterjets[ijet].pt()>20. && abs(filterjets[ijet].eta()) < 2.4) ) continue;
-      // 	if( !(filterjets[ijet].bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.800) ) continue;
-      // 	numBtagFiltJets++;
-      // }
-
-      // if( verbose_ ){
-      // 	printf("\t Higgs jet %2d:\t pT = %.1f,\t eta = %.2f,\t phi = %.2f,\t numFiltJets = %2d,\t numBtagFiltJets = %2d\n",
-      // 	       int(higgsJet - subfilterjets.begin()), higgsJet->fatjet.pt(), higgsJet->fatjet.eta(), higgsJet->fatjet.phi(), numFiltJets, numBtagFiltJets );
-      // }
-
-      // if( numBtagFiltJets>=2 ) numHiggsTags++;
-=======
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 
     }
          
@@ -1493,10 +1400,6 @@ n_fatjets++;
     vint jet_genGrandParentId_vect;
 
     // Loop over selected jets
-<<<<<<< HEAD
-    for( std::vector<pat::Jet>::const_iterator iJet = selectedJets.begin(); iJet != selectedJets.end(); iJet++ ){ 
-jcntn++;
-=======
     for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_uncleaned.begin(); iJet != selectedJets_uncleaned.end(); iJet++ ){ 
 
       jet_pt  .push_back( iJet -> pt()  );
@@ -1517,7 +1420,6 @@ jcntn++;
 	jet_AssociatedGenJet_m   .push_back( -999 );
       }
 
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
       jet_partonflavour_vect.push_back(iJet->partonFlavour());
       jet_flavour_vect.push_back(iJet->hadronFlavour());
 
@@ -1548,66 +1450,10 @@ jcntn++;
       // Get CSV discriminant, check if passes Med WP 
       double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
       csvV.push_back(myCSV);
-<<<<<<< HEAD
-    
-      int csvM0 = ( myCSV > 0.8000 ) ? 1 : 0;
-      if( myCSV>0.8000 ){
-	numtag += 1;
-	sum_btag_disc_btags += myCSV;
-      }
-      else{
-	numuntag += 1;
-	sum_btag_disc_non_btags += myCSV;
-      }
-      
-      
-=======
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 
       jet_combinedMVABJetTags.push_back( iJet->bDiscriminator("pfCombinedMVAV2BJetTags") );
       jet_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") );
 
-<<<<<<< HEAD
-      // Second Loop over selected jets
-      for( std::vector<pat::Jet>::const_iterator jJet = iJet; jJet != selectedJets.end(); jJet++ ){ 
-
-	// Continue if same jet as above loop
-	if( iJet==jJet ) continue;
-
-	// Get second jet 4Vector and check bTag discriminant
-	TLorentzVector jet1p4;
-	jet1p4.SetPxPyPzE(jJet->px(),jJet->py(),jJet->pz(),jJet->energy());
-	int csvM1 = ( jJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.8000 ) ? 1 : 0;
-
-	// Third loop over selected jets
-	for( std::vector<pat::Jet>::const_iterator kJet = jJet; kJet != selectedJets.end(); kJet++ ){ 
-     
-	  // Continue is third jet is same as the above two jets
-	  if( iJet==kJet || jJet==kJet ) continue;
-
-	  // Get third jet 4Vector and chekc bTag discriminant
-	  TLorentzVector jet2p4;
-	  jet2p4.SetPxPyPzE(kJet->px(),kJet->py(),kJet->pz(),kJet->energy());
-	  int csvM2 = ( kJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.8000 ) ? 1 : 0;
-
-	  // Get sum of three jet 4Vectors
-	  TLorentzVector sum_jet = jet0p4 + jet1p4 + jet2p4;
-	  double temp_pt = sum_jet.Pt();
-	  double temp_mass = sum_jet.M();
-             
-	  // Check if this combination has the highest pT, for M3
-	  if( temp_pt>max_m3_pt ){
-	    max_m3_pt = temp_pt;
-	    max_m3 = temp_mass;
-	  }
-
-	  // Check if this combination has highest pT with only 1 bTag
-	  if( (csvM0 + csvM1 + csvM2)==1 && temp_pt>max_m3_1tag_pt ){
-	    max_m3_1tag_pt = temp_pt;
-	    max_m3_1tag = temp_mass;
-	  }
-=======
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 
     }// end loop over iJet
 
@@ -1618,313 +1464,7 @@ jcntn++;
 
     std::vector<pat::Jet> selectedJets_loose_tag_unsorted = ( !(iSys>=5 && iSys<=8) ) ? selectedJets_loose_tag_noSys_unsorted : miniAODhelper.GetSelectedJets( correctedJets, 20., 3.0, jetID::none, 'M' );
 
-<<<<<<< HEAD
-    vvdouble vvjets_loose;
-    std::vector<double> csvV_loose;
-    std::vector<double> jet_loose_combinedMVABJetTags;
-    std::vector<double> jet_loose_combinedInclusiveSecondaryVertexV2BJetTags;
-    std::vector<double> jet_loose_vtxMass;
-    std::vector<double> jet_loose_vtxNtracks;
-    std::vector<double> jet_loose_vtx3DVal;
-    std::vector<double> jet_loose_vtx3DSig;
-    std::vector<double> jet_loose_pileupJetId_fullDiscriminant;
-    vint jet_partonflavour_vect_loose;
-    vint jet_flavour_vect_loose;
-    vecTLorentzVector jetV_loose;
-
-    int numJet_loose = 0;
-    int numTag_loose = 0;
-
-    vvdouble jet_all_vect_TLV;
-    vdouble  jet_all_CSV;
-    vint     jet_all_flavour;
-
-    // Loop over selected jets
-    for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_loose.begin(); iJet != selectedJets_loose.end(); iJet++ ){ 
-
-      vdouble vjets_loose;
-      vjets_loose.push_back(iJet->px());
-      vjets_loose.push_back(iJet->py());
-      vjets_loose.push_back(iJet->pz());
-      vjets_loose.push_back(iJet->energy());
-      jet_all_vect_TLV.push_back(vjets_loose);
-
-      double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
-      jet_all_CSV.push_back(myCSV);
-
-      jet_all_flavour.push_back(iJet->partonFlavour());
-
-      jet_loose_combinedMVABJetTags.push_back( iJet->bDiscriminator("combinedMVABJetTags") );
-      jet_loose_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") );
-
-      // MHT
-      mht_px += - iJet->px();
-      mht_py += - iJet->py();
-      eve->HT_[iSys] += iJet->pt();
-
-
-      // loose represents all jets with pT > 20
-      //if( iJet->pt()>=30. ) continue;
-
-      numJet_loose++;
-      jet_partonflavour_vect_loose.push_back(iJet->partonFlavour());
-      jet_flavour_vect_loose.push_back(iJet->hadronFlavour());
-
-      jet_loose_vtxMass.push_back(iJet->userFloat("vtxMass"));
-      jet_loose_vtxNtracks.push_back(iJet->userFloat("vtxNtracks"));
-      jet_loose_vtx3DVal.push_back(iJet->userFloat("vtx3DVal"));
-      jet_loose_vtx3DSig.push_back(iJet->userFloat("vtx3DSig"));
-
-      jet_loose_pileupJetId_fullDiscriminant.push_back(iJet->userFloat("pileupJetId:fullDiscriminant"));
-
-      TLorentzVector jet0p4;	  
-      jet0p4.SetPxPyPzE(iJet->px(),iJet->py(),iJet->pz(),iJet->energy());
-      jetV_loose.push_back(jet0p4);
-
-      // make vvdouble version of vecTLorentzVector
-      vvjets_loose.push_back(vjets_loose);
-
-      // Get CSV discriminant, check if passes Med WP 
-      csvV_loose.push_back(myCSV);
-      if( myCSV>0.8000 ) numTag_loose++;
-    }
-
-
-
-
- 
-
-
-  /// DIL specific, doesn't make sense in current scope
-    // Add lepton 4Vector quantities to MHT
-    mht_px += - sum_lepton_vect.Px();
-    mht_py += - sum_lepton_vect.Py();
-    double MHT = sqrt( mht_px*mht_px + mht_py*mht_py );
-
-    bool PassBigDiamondZmask = ( MuonElectron || 
-				 (mass_leplep < (65.5 + 3*MHT/8)) || 
-				 (mass_leplep > (108 - MHT/4)) || 
-				 (mass_leplep < (79 - 3*MHT/4)) || 
-				 (mass_leplep > (99 + MHT/2)) 
-				 );
-    eve->PassZmask_ = ( PassBigDiamondZmask ) ? 1 : 0;
-
-
-    double MET = correctedMET.pt();
-    bool PassBigDiamondZmaskMET = ( MuonElectron || 
-				    (mass_leplep < (65.5 + 3*MET/8)) || 
-				    (mass_leplep > (108 - MET/4)) || 
-				    (mass_leplep < (79 - 3*MET/4)) || 
-				    (mass_leplep > (99 + MET/2)) 
-				    );
-    eve->PassZmaskMET_ = ( PassBigDiamondZmaskMET ) ? 1 : 0;
-
-
-    // Get sorted vector of bTags
-    std::vector<double> csvV_temp;
-    for( int j=0; j<int(csvV.size()); j++ ) csvV_temp.push_back(csvV[j]);
-
-    std::sort(csvV_temp.begin(),csvV_temp.end());
-    std::reverse(csvV_temp.begin(),csvV_temp.end());
-
-
-
-    // Intialize Event Variables for Tagged Jets
-    double min_btag = 999;
-    double min_dR_tag_tag = 99.;
-    double sum_dR_tag_tag = 0.;
-    double sum_mass_tag_tag = 0.;
-    double num_tag_tag = 0;
-    double sum_dev_from_ave_disc_btags = 0;
-    std::vector<double> good_pfjet_tag_pt;
-    double tag_tag_dijet_mass_min_dR = 0;
-    double tag_tag_dijet_mass_closest_to_125 = 0;
-    double min_dR_tag_lep = 99.;
-    double min_tag_tag_dijet_mass_closest_to_125 = 99.;
-    double mlb_temp = -1;
-
-    // Loop over selected, tagged jets
-    for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_tag.begin(); iJet != selectedJets_tag.end(); iJet++ ){ 
-
-      // Get bTag Value
-      double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
-
-      // Compute Deviation from Avg bTag
-      double dev = myCSV - ave_btag_disc_btags;
-      sum_dev_from_ave_disc_btags += dev*dev;
-
-      // Get lowest bTag
-      min_btag = std::min( min_btag, myCSV );
-
-      // Get this jet's 4Vector
-      TLorentzVector jet0p4;
-      jet0p4.SetPxPyPzE(iJet->px(),iJet->py(),iJet->pz(),iJet->energy());
-
-      // Min dR(lep, tag), M(lep, tag)
-      double dR_lep_tag = jet0p4.DeltaR(leptonV);
-      if( dR_lep_tag<min_dR_tag_lep ){
-	min_dR_tag_lep = dR_lep_tag;
-	TLorentzVector sum_lep_b = leptonV + jet0p4;//leptonV + jet0p4;
-	mlb_temp = sum_lep_b.M();
-      }
-
-      // Second loop over selected, tagged jets
-      for( std::vector<pat::Jet>::const_iterator jJet = iJet; jJet != selectedJets_tag.end(); jJet++ ){ 
-
-	// Continue if jet is same as above
-	if( iJet==jJet ) continue;
-
-	// Get second jet's 4Vector
-	TLorentzVector jet1p4;
-	jet1p4.SetPxPyPzE(jJet->px(),jJet->py(),jJet->pz(),jJet->energy());
-
-	// Compute this combination's diJet mass
-	TLorentzVector diJet = jet0p4 + jet1p4;
-	double diJetMass = diJet.M();
-
-	// Compute min dR(tag, tag)
-	double dR_tag_tag = jet0p4.DeltaR(jet1p4);
-	if( dR_tag_tag<min_dR_tag_tag ){
-	  min_dR_tag_tag = dR_tag_tag;
-	  tag_tag_dijet_mass_min_dR = diJetMass;
-	}
-
-	// compute min Mass(tag,tag, closest to M=125)
-	if( fabs(diJetMass-125)<min_tag_tag_dijet_mass_closest_to_125 ){
-	  min_tag_tag_dijet_mass_closest_to_125 = fabs(diJetMass-125);
-	  tag_tag_dijet_mass_closest_to_125 = diJetMass;
-	}
-
-	// Sum tag, tag quantities
-	sum_dR_tag_tag += dR_tag_tag;
-	num_tag_tag++;
-
-	sum_mass_tag_tag += diJetMass;
-
-      }// end jJet loop
-    }// end iJet loop
-
-
-    // Compute deviation from avg discriminant bTags
-    double ave_dev_from_ave_disc_btags = ( numtag > 0. ) ? sum_dev_from_ave_disc_btags/numtag : 0.;
-
-    // Compute avg dR(tag,tag)
-    double ave_dR_tag_tag = ( num_tag_tag>0 ) ? sum_dR_tag_tag/num_tag_tag : -1;
-    // Compute avg M(tag,tag)
-    double ave_mass_tag_tag = ( num_tag_tag>0 ) ? sum_mass_tag_tag/num_tag_tag : -1;
-
-
-
-    // Intialize Event Variables for Untagged Jets
-    double min_dR_untag_untag = 99.;
-    double sum_dR_untag_untag = 0.;
-    double sum_mass_untag_untag = 0.;
-    double num_untag_untag = 0;
-    double sum_dev_from_ave_disc_non_btags = 0;
-
-    // Loop over selected, untagged jets
-    for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_untag.begin(); iJet != selectedJets_untag.end(); iJet++ ){ 
-
-      // Get CSV discriminant
-      double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
-
-      // Compute deviation form Avg bTag Disc
-      double dev = myCSV - ave_btag_disc_non_btags;
-      sum_dev_from_ave_disc_non_btags += dev*dev;
-
-      // Get this jet's 4Vect
-      TLorentzVector jet0p4;
-      jet0p4.SetPxPyPzE(iJet->px(),iJet->py(),iJet->pz(),iJet->energy());
-
-      // Second loop over selected, untagged jets
-      for( std::vector<pat::Jet>::const_iterator jJet = iJet; jJet != selectedJets_untag.end(); jJet++ ){ 
-
-	// Continue if this jet matches the jet above
-	if( iJet==jJet ) continue;
-
-	// Get this jet's 4Vector
-	TLorentzVector jet1p4;
-	jet1p4.SetPxPyPzE(jJet->px(),jJet->py(),jJet->pz(),jJet->energy());
-
-	// Compute min dR(untag, untag)
-	double dR_untag_untag = jet0p4.DeltaR(jet1p4);
-	if( dR_untag_untag<min_dR_untag_untag ) min_dR_untag_untag = dR_untag_untag;
-	// Compute summed untag variables
-	sum_dR_untag_untag += dR_untag_untag;
-	num_untag_untag++;
-
-	// Compute untagged diJet mass
-	TLorentzVector diJet = jet0p4 + jet1p4;
-	double diJetMass = diJet.M();
-
-	sum_mass_untag_untag += diJetMass;
-
-      }// end jJet loop
-    }// end iJet loop
-
-
-    // Compute avg M(untag, untag)
-    double ave_mass_untag_untag = ( num_untag_untag>0 ) ? sum_mass_untag_untag/num_untag_untag : -1;
-
-
-   
-    // Sum 4Vectors of all objects in event
-   // TLorentzVector all_objects = sum_lepton_vect + metV;//leptonV + metV;
-	TLorentzVector all_objects = leptonV + metV;
-	
-    for( int j=0; j<int(jetV.size()); j++ ) all_objects += jetV[j];
-	  
-
-    // Compute MHT_
-    eve->MHT_[iSys] = sqrt( mht_px*mht_px + mht_py*mht_py );
-    eve->MHT_phi_[iSys] = std::atan2(mht_py,mht_px);
-
-
-    // Comput Ht+Lepton
-    //double ht_lep = HT_[iSys] + leptonV.Pt();
-
-
-    // Compute angular quantities
-    // getSp(leptonV,metV,jetV,eve->aplanarity_[iSys],eve->sphericity_[iSys]);
-    // getFox(jetV,eve->h0_[iSys],eve->h1_[iSys],eve->h2_[iSys],eve->h3_[iSys],eve->h4_[iSys]);
-
-    // Intialize 4Vectors, to use in Best Higgs Mass function
-    TLorentzVector mydummyguy;
-    mydummyguy.SetPxPyPzE(0,0,0,0);
-    TLorentzVector bjet1_tmp = mydummyguy;
-    TLorentzVector bjet2_tmp = mydummyguy;
-
-    // Get Best Higgs Mass (X^2 method)
-    // eve->best_higgs_mass_[iSys] = getBestHiggsMass(leptonV, metV, jetV, csvV, eve->minChi2_[iSys], eve->dRbb_[iSys], bjet1_tmp, bjet2_tmp, jetV_loose, csvV_loose);
-
-    //double chiSq2=10000;
-
-    // eve->minChi2_bjet1_px_[iSys] = bjet1_tmp.Px();
-    // eve->minChi2_bjet1_py_[iSys] = bjet1_tmp.Py();
-    // eve->minChi2_bjet1_pz_[iSys] = bjet1_tmp.Pz();
-    // eve->minChi2_bjet1_E_[iSys]  = bjet1_tmp.E();
-
-    // eve->minChi2_bjet2_px_[iSys] = bjet2_tmp.Px();
-    // eve->minChi2_bjet2_py_[iSys] = bjet2_tmp.Py();
-    // eve->minChi2_bjet2_pz_[iSys] = bjet2_tmp.Pz();
-    // eve->minChi2_bjet2_E_[iSys]  = bjet2_tmp.E();
-
-
-    // nJets/Tags
-    eve->numJets_float_[iSys] = numJet;
-    eve->numTags_float_[iSys] = numTag;
-
-
-    // jet1-4 pT
-    if( selectedJets.size()>0 ) eve->first_jet_pt_[iSys]  = selectedJets.at(0).pt();
-    if( selectedJets.size()>1 ) eve->second_jet_pt_[iSys] = selectedJets.at(1).pt();
-    if( selectedJets.size()>2 ) eve->third_jet_pt_[iSys]  = selectedJets.at(2).pt();
-    if( selectedJets.size()>3 ) eve->fourth_jet_pt_[iSys] = selectedJets.at(3).pt();
-
-
-=======
     
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
     // MET
     eve->MET_[iSys]      = correctedMET.pt();
     eve->MET_phi_[iSys]  = correctedMET.phi();
@@ -1952,25 +1492,11 @@ jcntn++;
     eve->jet_AssociatedGenJet_phi_[iSys]= jet_AssociatedGenJet_phi;
     eve->jet_AssociatedGenJet_m_[iSys]  = jet_AssociatedGenJet_m;
 
-<<<<<<< HEAD
-    eve->jet_loose_vect_TLV_[iSys] = vvjets_loose;
-    eve->jet_loose_CSV_[iSys]      = csvV_loose;
-    eve->jet_loose_combinedMVABJetTags_[iSys] = jet_loose_combinedMVABJetTags;
-    eve->jet_loose_combinedInclusiveSecondaryVertexV2BJetTags_[iSys] = jet_loose_combinedInclusiveSecondaryVertexV2BJetTags;
-    eve->jet_loose_vtxMass_[iSys]    = jet_loose_vtxMass;
-    eve->jet_loose_vtxNtracks_[iSys] = jet_loose_vtxNtracks;
-    eve->jet_loose_vtx3DVal_[iSys]   = jet_loose_vtx3DVal;
-    eve->jet_loose_vtx3DSig_[iSys]   = jet_loose_vtx3DSig;
-    eve->jet_loose_pileupJetId_fullDiscriminant_[iSys] = jet_loose_pileupJetId_fullDiscriminant;
-    eve->jet_loose_partonflavour_[iSys]  = jet_partonflavour_vect_loose;
-    eve->jet_loose_flavour_[iSys]  = jet_flavour_vect_loose;
-=======
     eve ->  genjet_pt_ [iSys] = genjet_pt ;
     eve ->  genjet_eta_[iSys] = genjet_eta ; 
     eve ->  genjet_phi_[iSys] = genjet_phi ;  
     eve ->  genjet_m_  [iSys] = genjet_m ; 
     eve ->  genjet_BhadronMatch_[iSys] = genjet_BhadronMatch ; 
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 
 
   } // end loop over systematics
@@ -2124,57 +1650,6 @@ jcntn++;
       std::cout << JECdown << "," ;
     }
     
-<<<<<<< HEAD
-     bool passedSyncSelections = false;
-  
-   if(passSingleMuonTrigger && numTightMuons==1 && numLooseMuons==1 && numLooseElectrons==0 && numJet>=4 && numTag>=2)passedSyncSelections=true;
-   if(passSingleElectronTrigger && numTightElectrons==1 && numLooseElectrons==1 && numLooseMuons==0 && numJet>=4 && numTag>=2)passedSyncSelections=true;
- if(passedSyncSelections && false && iSys==0){
-         int met_passed=0;
-	//	if(m_ll>20)mll_pass=1;
-		if(MET_pt>40)met_passed=1; //printf("%d,%d,%d,1,0,%.3f,%+.3f,%+.3f,%.3f,%d,0,0,0,0,0,%.3f,%.3f,%.3f,%.3f,%+.3f,%+.3f,%+.3f,%+.3f,%.3f,%+.3f,%d,%d,%.3f,%d,0,0,%d,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\n",
-	     cout<<std::setprecision(6)<<run<<",";
-	     cout<<std::setprecision(6)<<lumi<<",";
-	     cout<<std::setprecision(6)<<evt<<",1,0,";
-	     cout<<std::setprecision(6)<<eve->tight_lepton_pt_<<",";
-	     cout<<std::setprecision(6)<<eve->tight_lepton_eta_<<",";
-	     cout<<std::setprecision(6)<<eve->tight_lepton_phi_<<",";
-	     cout<<std::setprecision(6)<<tight_lepton_relIso<<",";
-	     cout<<std::setprecision(6)<<lep_genId<<",0,0,0,0,0,0,0,";
-	     cout<<std::setprecision(6)<<jet1_pt<<",";
-	     cout<<std::setprecision(6)<<jet2_pt<<",";
-	     cout<<std::setprecision(6)<<jet3_pt<<",";
-	     cout<<std::setprecision(6)<<jet4_pt<<",";
-	     cout<<std::setprecision(6)<<jet1_CSVv2<<",";
-	     cout<<std::setprecision(6)<<jet2_CSVv2<<",";
-	     cout<<std::setprecision(6)<<jet3_CSVv2<<",";
-	     cout<<std::setprecision(6)<<jet4_CSVv2<<",";
-	     cout<<std::setprecision(6)<<MET_pt<<",";
-	     cout<<std::setprecision(6)<<MET_phi<<",";
-	     cout<<std::setprecision(6)<<met_passed<<",";
-	     cout<<std::setprecision(6)<<numJet<<",";
-	     cout<<std::setprecision(6)<<numTag<<",";
-	     cout<<std::setprecision(6)<<bWeight<<",";
-	     //	     cout<<std::setprecision(6)<<additionalJetEventId<<",0,0,";
-	     cout<<std::setprecision(6)<<n_fatjets<<",";
-	     cout<<std::setprecision(6)<<pt_fatjet_1<<",";
-	     cout<<std::setprecision(6)<<pt_fatjet_2<<",";
-	     cout<<std::setprecision(6)<<pt_nonW_1<<",";
-	     cout<<std::setprecision(6)<<pt_nonW_2<<",";
-	     cout<<std::setprecision(6)<<pt_W1_1<<",";
-	     cout<<std::setprecision(6)<<pt_W1_2<<",";
-	     cout<<std::setprecision(6)<<pt_W2_1<<",";
-	     cout<<std::setprecision(6)<<pt_W2_2<<",";
-	     cout<<std::setprecision(6)<<pt_top_1<<",";
-	     cout<<std::setprecision(6)<<pt_top_2<<",";
-	     cout<<std::setprecision(6)<<m_top_1<<",";
-	     cout<<std::setprecision(6)<<m_top_2<<",";
-	     cout<<std::setprecision(6)<<higgstag_fatjet_1<<",";
-	     cout<<std::setprecision(6)<<higgstag_fatjet_2<<",";
-	     cout<<std::setprecision(6)<<csv2_fatjet_1<<",";
-	     cout<<std::setprecision(6)<<csv2_fatjet_2<<endl;
-  }
-=======
     std::cout<< std::setprecision(4) << eve->MET_[ 0 ] << "," ;
     std::cout<< std::setprecision(4) << eve->MET_phi_[ 0 ] << "," ;
 
@@ -2185,7 +1660,6 @@ jcntn++;
     std::cout << 1<<",";
     std::cout << 1<< "," ;    // PUWeight,
     }
->>>>>>> ccb91dbd4af93d29db63e20c5da6ac712f3b2c68
 
     double bWeight = 1 ;
     if( isMC ){
