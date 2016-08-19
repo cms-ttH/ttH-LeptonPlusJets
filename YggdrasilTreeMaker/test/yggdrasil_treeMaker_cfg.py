@@ -330,14 +330,6 @@ if isMC :
         )
     
 
-if isMC :
-    process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
-                                          isMC    =  cms.string("MC")
-                                          )
-else :
-    process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker',
-                                          isMC    =  cms.string("data")
-                                          )
 
 if isMC :
     if isPUPPI :
