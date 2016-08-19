@@ -1,7 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
 
-
 isPUPPI=False
 #--> if isPUPPI=true, change the code too.
 
@@ -35,6 +34,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 #### caution: use the correct global tag for MC or Data 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
+
 
 # Update global tag based on : https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?rev=568
 if isMC:

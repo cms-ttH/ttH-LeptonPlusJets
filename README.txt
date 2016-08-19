@@ -23,8 +23,9 @@ cmsenv
 #[skip this for the moment]  echo /PhysicsTools/PatUtils/ >> .git/info/sparse-checkout
 #[skip this for the moment]  git cms-merge-topic cms-met:metTool80X   # ---[*1]
 
+git clone https://github.com/cms-ttH/ttH-LeptonPlusJets.git
+
 git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi__CMSSW_8_0_8
-git clone https://github.com/hsatoshi/ttH-LeptonPlusJets.git -b satoshi_cleanup_80x_Sync2nd
 git clone https://github.com/hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
 git clone https://github.com/hsatoshi/PuppiLeptonIsolationhelper.git
 
