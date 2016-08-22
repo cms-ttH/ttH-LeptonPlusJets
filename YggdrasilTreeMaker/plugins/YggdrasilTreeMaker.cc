@@ -803,7 +803,6 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
     // parameters taken from https://twiki.cern.ch/twiki/bin/viewauth/CMS/TopPtReweighting?rev=19
 
-
   }else{
     eve -> weight_topPt_ = 1.0;
   }
