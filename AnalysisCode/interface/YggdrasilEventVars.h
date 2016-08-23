@@ -52,6 +52,7 @@ struct yggdrasilEventVars{
   int passHLT_IsoMu22_v_;
   int passHLT_IsoTkMu22_v_;
   int passHLT_Ele27_eta2p1_WPTight_Gsf_v_;
+  int passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_; 
 
   int passHLT_Ele27_WP85_Gsf_v_;
   int passHLT_Ele27_eta2p1_WPLoose_Gsf_v_;
@@ -100,7 +101,9 @@ struct yggdrasilEventVars{
   vdouble lepton_phi_;
   vdouble lepton_e_;
   vdouble lepton_relIso_;
-  
+  vdouble lepton_puppirelIso_;
+  vdouble lepton_scEta_;
+
   Float_t wgt_lumi_;
   Float_t wgt_xs_;
   Float_t wgt_nGen_;
@@ -113,6 +116,9 @@ struct yggdrasilEventVars{
 
   double weight_PDF_CT14nlo_up_ ;
   double weight_PDF_CT14nlo_down_ ;
+
+  double weight_PDF_NNPDF30NLO_up_ ;
+  double weight_PDF_NNPDF30NLO_down_ ;
 
   double weight_topPt_ ; 
 
@@ -190,6 +196,11 @@ void yggdrasilEventVars::initialize(){
   passHLT_IsoMu20_eta2p1_v_ = -99;
   passHLT_IsoMu24_eta2p1_v_ = -99;
 
+  passHLT_Ele27_eta2p1_WPTight_Gsf_v_ = -99 ;
+  passHLT_IsoMu22_v_ = -99 ;
+  passHLT_IsoTkMu22_v_ = -99 ;
+  passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_ = -99 ;
+
   passHLT_Ele27_WP85_Gsf_v_ = -99;
   passHLT_Ele27_eta2p1_WPLoose_Gsf_v_ = -99;
   passHLT_Ele27_eta2p1_WP75_Gsf_v_ = -99;
@@ -236,6 +247,8 @@ void yggdrasilEventVars::initialize(){
   lepton_phi_.clear();
   lepton_e_.clear();
   lepton_relIso_.clear();
+  lepton_puppirelIso_.clear();
+  lepton_scEta_.clear();
 
   wgt_generator_        = -99.9;
   wgt_lumi_             = -99.9;
@@ -247,6 +260,8 @@ void yggdrasilEventVars::initialize(){
  
   weight_PDF_CT14nlo_up_    = -99.9 ;
   weight_PDF_CT14nlo_down_  = -99.9 ;
+  weight_PDF_NNPDF30NLO_up_    = -99.9 ;
+  weight_PDF_NNPDF30NLO_down_ = -99.9 ;
 
   weight_topPt_ = -99.9;
 
