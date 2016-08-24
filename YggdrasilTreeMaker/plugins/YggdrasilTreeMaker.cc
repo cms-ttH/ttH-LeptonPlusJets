@@ -265,7 +265,7 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   filterResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), filterTag));
 
   TriggerObjectStandAloneToken = consumes <pat::TriggerObjectStandAloneCollection>
-    ( edm::InputTag( std::string ( "selectedPatTrigger" ), std::string("") , std::string("PAT") )) ;
+    ( edm::InputTag( std::string ( "selectedPatTrigger" ), std::string("") , std::string(isMC ? "PAT" : "RECO") )) ;
 
 
   // new MVAelectron
