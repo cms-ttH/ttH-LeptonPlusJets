@@ -278,6 +278,8 @@ void yggdrasilEventVars::initialize(){
 
     jet_combinedMVABJetTags_[iSys].clear();
     jet_combinedInclusiveSecondaryVertexV2BJetTags_[iSys].clear();
+    jet_combinedMVABJetTags_HIP_[iSys].clear();
+    jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP_[iSys].clear();
     jet_vtxMass_[iSys].clear();
     jet_vtxNtracks_[iSys].clear();
     jet_vtx3DVal_[iSys].clear();
