@@ -275,7 +275,8 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   if( usePUPPI ){
   jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJetsPuppi")));
   }else{
-  jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
+    ///  jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
+    jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("selectedUpdatedPatJets"))); // for hip mitigation
   }
   metToken = consumes <pat::METCollection> (edm::InputTag(std::string("slimmedMETs")));
 
@@ -298,7 +299,8 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   if( usePUPPI ) {
   tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJetsPuppi")));
   }else{
-  tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
+    //tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
+  tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("selectedUpdatedPatJets"))); // For hip mitigation
   }
   // EDMConversionCollectionToken = consumes <reco::ConversionCollection > (edm::InputTag("reducedEgamma","reducedConversions",""));
   EDMBoostedJetsToken     = consumes< boosted::BoostedJetCollection >(edm::InputTag("BoostedJetMatcher","boostedjets","p"));
@@ -1364,6 +1366,8 @@ n_fatjets++;
     std::vector<double> csvV;
     std::vector<double> jet_combinedMVABJetTags;
     std::vector<double> jet_combinedInclusiveSecondaryVertexV2BJetTags;
+    std::vector<double> jet_combinedMVABJetTags_HIP;
+    std::vector<double> jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP;
     std::vector<double> jet_vtxMass;
     std::vector<double> jet_vtxNtracks;
     std::vector<double> jet_vtx3DVal;
@@ -1454,6 +1458,9 @@ n_fatjets++;
       jet_combinedMVABJetTags.push_back( iJet->bDiscriminator("pfCombinedMVAV2BJetTags") );
       jet_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") );
 
+      jet_combinedMVABJetTags_HIP.push_back( iJet->bDiscriminator("newpfCombinedMVAV2BJetTags") );
+      jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP.push_back( iJet->bDiscriminator("newpfCombinedInclusiveSecondaryVertexV2BJetTags") );
+
 
     }// end loop over iJet
 
@@ -1471,6 +1478,9 @@ n_fatjets++;
     
     eve->jet_combinedMVABJetTags_[iSys] = jet_combinedMVABJetTags;
     eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[iSys] = jet_combinedInclusiveSecondaryVertexV2BJetTags;
+
+    eve->jet_combinedMVABJetTags_HIP_[iSys] = jet_combinedMVABJetTags_HIP;
+    eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP_[iSys] = jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP;
 
     eve->jet_vtxMass_[iSys]    = jet_vtxMass;
     eve->jet_vtxNtracks_[iSys] = jet_vtxNtracks;

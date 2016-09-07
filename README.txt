@@ -129,6 +129,9 @@ jet_m_   : mass
 jet_combinedMVABJetTags_ : "pfCombinedMVAV2BJetTags"
 jet_combinedInclusiveSecondaryVertexV2BJetTags_ : "pfCombinedInclusiveSecondaryVertexV2BJetTags"
 
+jet_combinedMVABJetTags_HIP_ : "pfCombinedMVAV2BJetTags" HIP mitigation
+jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP_ : "pfCombinedInclusiveSecondaryVertexV2BJetTags" HIP mitigation
+
 jet_partonflavour_ : result of jet->partonFlavour()
 jet_flavour_       : result of jet->hadronFlavour()
 
