@@ -70,6 +70,8 @@ t = clock();
 
 //Setup Input and Output  
 
+int useCondor = 1;
+
 int insample = 0;
   
   std::cout << "===> Loading root files" << std::endl;
@@ -109,30 +111,32 @@ int insample = 0;
   stream << jobN;
   str_jobN = stream.str();
  
+  std::string condortag = "/eos/uscms";
+  if(useCondor)condortag = "root://cmseos.fnal.gov/";
  
   std::string treefilename = "";
   std::string treefilename2 = "";
   std::string treefilename3 = "";
   
   if(SampleType == 2 && usedSlimmedTrees==0){
-  	 treefilename = "/eos/uscms/store/user/lpctthrun2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/ttbar_Satoshi_Yggdra_Aug01/160801_165115/0000/*.root";
-	 treefilename2 = "/eos/uscms/store/user/lpctthrun2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/ttbar_Satoshi_Yggdra_Aug01/160801_165115/0001/*.root";
-	 treefilename3 = "/eos/uscms/store/user/lpctthrun2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/ttbar_Satoshi_Yggdra_Aug01/160801_165115/0002/*.root";
+  	 treefilename = condortag + "/store/user/lpctthrun2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/ttbar_Satoshi_Yggdra_Aug01/160801_165115/0000/*.root";
+	 treefilename2 = condortag + "/store/user/lpctthrun2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/ttbar_Satoshi_Yggdra_Aug01/160801_165115/0001/*.root";
+	 treefilename3 = condortag + "/store/user/lpctthrun2/TT_TuneCUETP8M1_13TeV-powheg-pythia8/ttbar_Satoshi_Yggdra_Aug01/160801_165115/0002/*.root";
   }
   
   if(usedSlimmedTrees == 1){
-  	if(SampleType == 1)treefilename = "/eos/uscms/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_ttHToNonbb_*.root";
-  	if(SampleType == 2)treefilename = "/eos/uscms/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_ttJets_*.root";
-	if(SampleType == 3)treefilename = "/eos/uscms/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_ttHTobb_*.root";
-	if(SampleType == 6)treefilename = "/eos/uscms/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronB_*.root";
-	if(SampleType == 7)treefilename = "/eos/uscms/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronC_*.root";
-	if(SampleType == 8)treefilename = "/eos/uscms/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronD_*.root";
-	if(SampleType == 9)treefilename = "/eos/uscms/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleMuonB_*.root";
-	if(SampleType == 10)treefilename = "/eos/uscms/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleMuonC_*.root";
-	if(SampleType == 11)treefilename = "/eos/uscms/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleMuonD_*.root";
+  	if(SampleType == 1)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_ttHToNonbb_*.root";
+  	if(SampleType == 2)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_ttJets_*.root";
+	if(SampleType == 3)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_ttHTobb_*.root";
+	if(SampleType == 6)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronB_*.root";
+	if(SampleType == 7)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronC_*.root";
+	if(SampleType == 8)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronD_*.root";
+	if(SampleType == 9)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleMuonB_*.root";
+	if(SampleType == 10)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleMuonC_*.root";
+	if(SampleType == 11)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleMuonD_*.root";
   }
   
-  std::string OutputDir ="/eos/uscms/store/user/sflowers/TreeReader/YT2016_Histos_Aug9/";
+  std::string OutputDir ="";
  
   std::string s_end = "_" + str_jobN + ".root";
   if( Njobs==1 ) s_end = ".root";
@@ -642,13 +646,14 @@ int insample = 0;
 	
 		if(SampleType == 2){
 		int additionalJetEventId			 = eve->additionalJetEventId_;
+		additionalJetEventId = additionalJetEventId%100;
+		h_additionalJetEventId->Fill(additionalJetEventId);
 		if(SplitType ==1 && !(additionalJetEventId == 51) )continue; //ttb
 		if(SplitType ==3 && !(additionalJetEventId == 52) )continue; //ttB
 		if(SplitType ==2 && !(additionalJetEventId == 53 || additionalJetEventId == 54 || additionalJetEventId == 55))continue; //ttbb
 		if(SplitType ==4 && !(additionalJetEventId == 41 || additionalJetEventId == 42 || additionalJetEventId == 43 || additionalJetEventId == 44 || additionalJetEventId == 45))continue; //ttc
 		//if(SplitType ==5 && !(additionalJetEventId == 43 || additionalJetEventId == 44 || additionalJetEventId == 45))continue; //ttcc
 		if(SplitType ==5 && !(additionalJetEventId == 0))continue; //ttlf
-		h_additionalJetEventId->Fill(additionalJetEventId);
 	    }
 		
 		
