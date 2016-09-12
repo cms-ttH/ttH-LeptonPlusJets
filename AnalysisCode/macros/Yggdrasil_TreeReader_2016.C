@@ -125,9 +125,9 @@ int insample = 0;
   }
   
   if(usedSlimmedTrees == 1){
-  	if(SampleType == 1)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_ttHToNonbb_*.root";
-  	if(SampleType == 2)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_ttJets_*.root";
-	if(SampleType == 3)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_ttHTobb_*.root";
+  	if(SampleType == 1)treefilename = condortag + "/store/user/sflowers/SlimTrees/Aug23/Aug12_SlimTrees_ttHToNonbb_*.root";
+  	if(SampleType == 2)treefilename = condortag + "/store/user/sflowers/SlimTrees/Aug23/ttJets/*.root";
+	if(SampleType == 3)treefilename = condortag + "/store/user/sflowers/SlimTrees/Aug23/Aug12_SlimTrees_ttHTobb*.root";
 	if(SampleType == 6)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronB_*.root";
 	if(SampleType == 7)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronC_*.root";
 	if(SampleType == 8)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronD_*.root";
