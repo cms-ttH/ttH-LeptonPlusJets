@@ -54,6 +54,8 @@
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "DataFormats/HLTReco/interface/TriggerEventWithRefs.h"
 #include "DataFormats/HLTReco/interface/TriggerTypeDefs.h"
+#include "FWCore/Common/interface/TriggerNames.h"
+
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
@@ -135,6 +137,7 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
 
   edm::EDGetTokenT <edm::TriggerResults> triggerResultsToken;
   edm::EDGetTokenT <edm::TriggerResults> filterResultsToken;
+  edm::EDGetTokenT <pat::TriggerObjectStandAloneCollection> TriggerObjectStandAloneToken ;
 
   // new MVAelectron
   edm::EDGetTokenT< edm::View<pat::Electron> > EDMElectronsToken;
@@ -260,6 +263,10 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   }
   triggerResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), hltTag));
   filterResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), filterTag));
+
+  TriggerObjectStandAloneToken = consumes <pat::TriggerObjectStandAloneCollection>
+    ( edm::InputTag( std::string ( "selectedPatTrigger" ), std::string("") , std::string(isMC ? "PAT" : "RECO") )) ;
+
 
   // new MVAelectron
   EDMElectronsToken = consumes< edm::View<pat::Electron> >(edm::InputTag("slimmedElectrons","",""));
@@ -481,7 +488,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   edm::Handle<edm::TriggerResults> triggerResults;
   iEvent.getByToken(triggerResultsToken, triggerResults);
-  
+  edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
+  iEvent.getByToken( TriggerObjectStandAloneToken , triggerObjects ) ; 
+
   bool passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1 = false;
   bool passHLT_Ele27_eta2p1_WPTight_Gsf_v = false;
   
@@ -892,6 +901,62 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_ =  ( passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v ) ? 1 : 0;
 
 
+  std::vector< std::pair<float , float> > SingleMuonTriggerDirection;
+  std::vector< std::pair<float , float> > SingleElTriggerDirection;
+
+  const edm::TriggerNames &names = iEvent.triggerNames(*triggerResults);
+  for (unsigned int i = 0; i < triggerResults->size(); ++i) {
+       
+    unsigned long location1  = names.triggerName(i).find( "HLT_IsoMu22_v" ,0);
+    unsigned long location2  = names.triggerName(i).find( "HLT_IsoTkMu22_v" ,0);
+    unsigned long location3  = names.triggerName(i).find( "HLT_Ele27_eta2p1_WPTight_Gsf_v" ,0);
+    
+    if( ( location1 == 0 || location2 == 0 || location3 == 0 ) && triggerResults->accept(i) ){
+
+      for (pat::TriggerObjectStandAlone obj : *triggerObjects) { // note: not "const &" since we want to call unpackPathNames
+	obj.unpackPathNames(names);
+
+	std::vector<std::string> pathNamesAll  = obj.pathNames(false);
+	std::vector<std::string> pathNamesLast = obj.pathNames(true);
+	for (unsigned int iPathName = 0; iPathName < pathNamesAll.size(); iPathName ++ ) {
+
+	  if( ( location1 == 0 && pathNamesAll[iPathName] . find( "HLT_IsoMu22_v" , 0 ) == 0 )
+	      ||
+	      ( location2 == 0 && pathNamesAll[iPathName] . find( "HLT_IsoTkMu22_v" , 0 ) == 0 )
+	      ||
+	      ( location3 == 0 && pathNamesAll[iPathName] . find( "HLT_Ele27_eta2p1_WPTight_Gsf_v" , 0 ) == 0 )
+	      ){
+
+	    bool isBoth = obj.hasPathName( pathNamesAll[iPathName], true, true ); 
+	    if (isBoth){
+
+	      std::cout << "[debug] Trigger Object Fired the trigger)" <<
+		"| pt " << obj.pt() << ", eta " << obj.eta() << ", phi " << obj.phi() << std::endl;
+	      if( location3 == 0 ) {
+		// electron trigger 
+		SingleElTriggerDirection   . push_back( std::pair<float, float>(  obj.eta(), obj.phi() ) );
+	      }else{
+		// = muon trigger
+		SingleMuonTriggerDirection . push_back( std::pair<float, float>(  obj.eta(), obj.phi() ) );
+	      }
+
+
+	    }// end if-"the trigger-path fired due to this object."
+
+
+	  } // end if the trigger object matches the trigger.
+	           
+	} // end loop all trigger path
+	       
+	       
+      } // end of trigger object loop
+    } // end of if the trigger fired.
+  } // end of trigger-bit loop (look into all HLT path)
+
+  std::cout << "size of trigger muon : " << SingleMuonTriggerDirection.size() << std::endl ; 
+  std::cout << "size of trigger el : " << SingleElTriggerDirection.size() << std::endl ; 
+
+
 
   eve->run_ = run;
   eve->lumi_ = lumi;
@@ -942,6 +1007,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   vdouble lepton_dPhiSCTrackAtVtx;
   vdouble lepton_d0;
   vdouble lepton_dZ;
+  vdouble lepton_dRSingleLepTrig ; 
   vint lepton_isGlobalMuon;
   vint lepton_isTrackerMuon;
   vint lepton_isPFMuon;
@@ -1067,6 +1133,19 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     vleptons.push_back(iMu->pz());
     vleptons.push_back(iMu->energy());
     vvleptons.push_back(vleptons);
+
+    float lep_trig_dr = 10 ; 
+    for( std::vector< std::pair<float,float>>::iterator trig = SingleMuonTriggerDirection.begin ();
+	 trig != SingleMuonTriggerDirection.end() ; 
+	 trig ++ ){
+      float d_eta = iMu->eta() - trig->first;
+      float d_phi = iMu->phi() - trig->second;
+      d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
+      double dr =  sqrt( d_eta*d_eta + d_phi*d_phi );
+      lep_trig_dr = ( lep_trig_dr < dr ) ? lep_trig_dr : dr ;
+    }
+    lepton_dRSingleLepTrig.push_back( lep_trig_dr );
+
   }
 
   // Loop over electrons
@@ -1214,6 +1293,20 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     vleptons.push_back(iEle->pz());
     vleptons.push_back(iEle->energy());
     vvleptons.push_back(vleptons);
+
+
+    float lep_trig_dr = 10 ; 
+    for( std::vector< std::pair<float,float>>::iterator trig = SingleElTriggerDirection.begin ();
+	 trig != SingleElTriggerDirection.end() ; 
+	 trig ++ ){
+      float d_eta = iEle->eta() - trig->first;
+      float d_phi = iEle->phi() - trig->second;
+      d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
+      double dr =  sqrt( d_eta*d_eta + d_phi*d_phi );
+      lep_trig_dr = ( lep_trig_dr < dr ) ? lep_trig_dr : dr ;
+    }
+    lepton_dRSingleLepTrig.push_back( lep_trig_dr );
+
   }
 
   eve->lepton_charge_           = lepton_trkCharge;
@@ -1227,6 +1320,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->lepton_relIso_           = lepton_relIso;
   eve->lepton_puppirelIso_           = lepton_puppirelIso;
   eve->lepton_scEta_           = lepton_scEta;
+
+  eve->lepton_dRSingleLepTrig_        = lepton_dRSingleLepTrig ;
 
   eve->wgt_lumi_  = intLumi_;
   eve->wgt_xs_    = mySample_xSec_;//mySample.xSec;
