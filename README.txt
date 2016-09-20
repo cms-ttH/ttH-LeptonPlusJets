@@ -113,8 +113,10 @@ lepton_isLoose_ : POG Loose ID. 1=pass. [*1]
 lepton_scEta_   : Electron Super Cluster. For muon, -99 is filled.
 
 [*1] POG lepton ID : 
- Muon POG loose ID is not used at the moment. Always 1.
- Electron POG tight=MVA80. Loose=MVA90.
+ Muon     POG Tight ID : = Tight ID.
+ Muon     POG loose ID is not used at the moment. Always 1.
+ Electron POG Tight = NonTrigMVAid80;
+ Electron POG Loose = TriggerMVAid80;
 
 lepnums_  : number of tight/loose leptons [*2]
 

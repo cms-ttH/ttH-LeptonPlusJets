@@ -1085,13 +1085,12 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
 
 
-    int isPOGTight = miniAODhelper.PassesMVAid80(*iEle ) ? 1 : 0  ;
-    int isPOGLoose = miniAODhelper.PassesMVAid90(*iEle ) ? 1 : 0  ;
+    int isPOGTight = miniAODhelper.PassesNonTrigMVAid80(*iEle ) ? 1 : 0  ;
+    int isPOGLoose = miniAODhelper.PassesMVAid80(*iEle ) ? 1 : 0  ;
 
     // our pre-selections 
     if( iEle->pt() < 15 ){ continue;}
     if( fabs( iEle->eta() ) > 2.4 ){ continue;}
-    if( isPOGLoose != 1 ){ continue;}
     //
 
 
