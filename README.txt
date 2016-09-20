@@ -117,7 +117,8 @@ lepton_scEta_   : Electron Super Cluster. For muon, -99 is filled.
  Muon     POG loose ID is not used at the moment. Always 1.
  Electron POG Tight = NonTrigMVAid80;
  Electron POG Loose = TriggerMVAid80;
-
+   (Cation : for electron, the variables in this tuple, 
+      lepton_isTight_(NonTrigMVAid80) is "looser" than lepton_isLoose_(TriggerMVAid80).)
 lepnums_  : number of tight/loose leptons [*2]
 
 [2*] not used in YggdrasilTupleMaker(and not filled) but needed by "AnalysisCode/macros/Yggdrasil_Slim.C"
