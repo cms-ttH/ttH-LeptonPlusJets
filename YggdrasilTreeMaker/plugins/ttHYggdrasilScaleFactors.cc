@@ -57,9 +57,9 @@ void ttHYggdrasilScaleFactors::init_TrigElSF(){
 void ttHYggdrasilScaleFactors::init_TrigMuSF(){
 
   {
-    std::string input = SFfileDir +"/" + "SingleMuonTrigger_Z_RunCD_Reco76X_Feb15.root";
-    h_MuSF_Trig_HLTv4p2 = (TH2D*) getTH2HistogramFromFile( input , std::string ("runD_IsoMu20_OR_IsoTkMu20_HLTv4p2_PtEtaBins/abseta_pt_ratio") );
-    h_MuSF_Trig_HLTv4p3 = (TH2D*) getTH2HistogramFromFile( input , std::string ("runD_IsoMu20_OR_IsoTkMu20_HLTv4p3_PtEtaBins/abseta_pt_ratio") );
+    std::string input = SFfileDir +"/" + "MuonTriggerPerformance_Sep06.root";
+    h_MuSF_Trig_HLTv4p2 = (TH2D*) getTH2HistogramFromFile( input , std::string ("muontrig_sf_abseta_pt") );
+    h_MuSF_Trig_HLTv4p3 = (TH2D*) getTH2HistogramFromFile( input , std::string ("muontrig_sf_abseta_pt") );
   }
 
   // Root file taken from https://twiki.cern.ch/twiki/bin/view/CMS/MuonWorkInProgressAndPagResults?rev=15
