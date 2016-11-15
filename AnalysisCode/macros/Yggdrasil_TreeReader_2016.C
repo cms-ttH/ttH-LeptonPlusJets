@@ -98,6 +98,12 @@ int insample = 0;
 	if(SplitType == 10) sampleName = "ttH_hmumu";
   } 
   if(SampleType == 3) sampleName = "ttHTobb";
+  if(SampleType == 5) {
+  	if(SplitType == 1 )sampleName = "ttW_lep";
+	if(SplitType == 2 )sampleName = "ttW_had";
+	if(SplitType == 3 )sampleName = "ttZ_lep";
+	if(SplitType == 4 )sampleName = "ttZ_had";
+  }
   if(SampleType == 6) sampleName = "SingleElectronB";
   if(SampleType == 7) sampleName = "SingleElectronC";
   if(SampleType == 8) sampleName = "SingleElectronD";
@@ -125,9 +131,15 @@ int insample = 0;
   }
   
   if(usedSlimmedTrees == 1){
-  	if(SampleType == 1)treefilename = condortag + "/store/user/sflowers/SlimTrees/Aug23/Aug12_SlimTrees_ttHToNonbb_*.root";
+  	if(SampleType == 1)treefilename = condortag + "/store/user/sflowers/SlimTrees/Aug23/Aug12_SlimTrees_ttHToNonbb*.root";
   	if(SampleType == 2)treefilename = condortag + "/store/user/sflowers/SlimTrees/Aug23/ttJets/*.root";
 	if(SampleType == 3)treefilename = condortag + "/store/user/sflowers/SlimTrees/Aug23/Aug12_SlimTrees_ttHTobb*.root";
+	if(SampleType == 5){
+		if(SplitType == 1)treefilename = condortag + "/store/user/sflowers/SlimTrees/Aug23/ttV/Aug12_SlimTrees_ttW_lep*.root";
+		if(SplitType == 2)treefilename = condortag + "/store/user/sflowers/SlimTrees/Aug23/ttV/Aug12_SlimTrees_ttW_had*.root";
+		if(SplitType == 3)treefilename = condortag + "/store/user/sflowers/SlimTrees/Aug23/ttV/Aug12_SlimTrees_ttZ_lep*.root";
+		if(SplitType == 4)treefilename = condortag + "/store/user/sflowers/SlimTrees/Aug23/ttV/Aug12_SlimTrees_ttZ_had*.root";
+	}
 	if(SampleType == 6)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronB_*.root";
 	if(SampleType == 7)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronC_*.root";
 	if(SampleType == 8)treefilename = condortag + "/store/user/sflowers/SlimTrees/SlimTrees_Aug5th_SingleElectronD_*.root";
@@ -550,8 +562,8 @@ int insample = 0;
 	      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(9+1,"ss");
 	      h_higgsDecayType[c][b]->GetXaxis()->SetBinLabel(10+1,"#mu#mu");
 		  
-	  	  h_category_yield[b]->GetXaxis()->SetBinLabel(1,cat_labels[c].c_str());
-	  	  h_category_yield_NoWgt[b]->GetXaxis()->SetBinLabel(1,cat_labels[c].c_str());
+	  	  h_category_yield[b]->GetXaxis()->SetBinLabel(1+c,cat_labels[c].c_str());
+	  	  h_category_yield_NoWgt[b]->GetXaxis()->SetBinLabel(1+c,cat_labels[c].c_str());
 	   }
           h_CutFlow[b]->GetXaxis()->SetBinLabel(1,"All Events ");
 		  h_CutFlow[b]->GetXaxis()->SetBinLabel(2,"Good 1st PV");
@@ -602,20 +614,35 @@ int insample = 0;
 	//Event Weighting
   
     double MyWgt = 1;
+    double lumi = 12980.;
+    
+    double MyXsec = 1;
     double ttJet_xSec = 832;
-	double ttHnobb_xSec = 0.5071-0.2934;
-	double ttHbb_xSec = 0.2934; //Hbb
+    double ttHnobb_xSec = 0.5071-0.2934;
+    double ttHbb_xSec = 0.2934; //Hbb
+    double ttW_lep_xSec = 0.210;
+    double ttW_had_xSec = 0.435;
+    double ttZ_lep_xSec = 0.2529;
+    double ttZ_had_xSec = 0.611;
     double ttZ_xSec = 2.232;
     double ttW_xSec = 1.152;
     double nGen = nentries;
     double nGenNeg=89671.4;
+  
 
    // double MyttHwgtNeg = (ttH_xSec/nGenNeg)*10000;
-	if(SampleType==1)MyWgt = (ttHnobb_xSec/nGen)*12890;
-	if(SampleType==2)MyWgt = (ttJet_xSec/nGen)*12890;
-    if(SampleType==3)MyWgt = (ttHbb_xSec/nGen)*12890;
+	if(SampleType==1)MyXsec = ttHnobb_xSec;
+	if(SampleType==2)MyXsec = ttJet_xSec;
+        if(SampleType==3)MyXsec = ttHbb_xSec;
+	if(SampleType==5){
+		if(SplitType ==1)MyXsec = ttW_lep_xSec;
+		if(SplitType ==2)MyXsec = ttW_had_xSec;
+		if(SplitType ==3)MyXsec = ttZ_lep_xSec;
+		if(SplitType ==4)MyXsec = ttZ_had_xSec;
    
-
+	}
+	MyWgt = (MyXsec/nGen)*lumi;
+	if(SampleType==6)MyWgt=1;
 	cout<<" BEGIN wgt ="<<MyWgt<<endl;
 
   
@@ -642,10 +669,11 @@ int insample = 0;
 	  	chain->GetEntry(ievt);
 		
 		long evt = eve->evt_;
+		int additionalJetEventId=-1;
 		
 	
 		if(SampleType == 2){
-		int additionalJetEventId			 = eve->additionalJetEventId_;
+		additionalJetEventId			 = eve->additionalJetEventId_;
 		additionalJetEventId = additionalJetEventId%100;
 		h_additionalJetEventId->Fill(additionalJetEventId);
 		if(SplitType ==1 && !(additionalJetEventId == 51) )continue; //ttb
@@ -764,7 +792,7 @@ int insample = 0;
 					h_CutFlow_NoCSV[iSys]->Fill(i,nocsvwgt);
 				}
 		
-				if(iSys==0 && cutflowvar==7)passEvent=true;
+				if(cutflowvar==7)passEvent=true;
 				if(!passEvent)continue;
 		
 		        
@@ -909,7 +937,7 @@ int insample = 0;
 		
 		//BDT Histograms
 		
-			h_bdtOutput[this_category][iSys]->Fill(BDToutput);
+			h_bdtOutput[this_category][iSys]->Fill(BDToutput,wgt);
 		
   		} // end loop over systematics
 	}// end event loop

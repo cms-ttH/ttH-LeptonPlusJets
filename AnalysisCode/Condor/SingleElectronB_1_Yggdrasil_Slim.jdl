@@ -1,0 +1,19 @@
+# A Condor submission file
+Executable              = Script/SingleElectronB_Yggdrasil_Slim.sh
+Universe                = vanilla
+Getenv                  = true
+
+Arguments               = 61 -1 300 $(Process)
+Output                  = Output/condor_61_$(Process).out
+Error                   = Error/condor_61_$(Process).err
+Log                     = Log/condor_61_$(Process).log
+
+use_x509userproxy = true
+Should_Transfer_Files   = YES
+When_To_Transfer_Output = ON_EXIT
+Transfer_Input_Files = /uscms_data/d3/flowers1/Summer2016/80xForReal/CMSSW_8_0_8_patch1/src/ttH-LeptonPlusJets/AnalysisCode/macros/Yggdrasil_Slim.C
+#+IsLocalJob             = true
+#Rank                    = TARGET.IsLocalSlot
+
+Queue 300
+

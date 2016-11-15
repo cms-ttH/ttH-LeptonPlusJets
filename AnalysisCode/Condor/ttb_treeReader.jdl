@@ -1,0 +1,19 @@
+# A Condor submission file
+Executable              = Script/ttb_treeReader.sh
+Universe                = vanilla
+Getenv                  = true
+
+Arguments               = 2 1 1 -1 50 $(Process)
+Output                  = Output/condor_1_$(Process).out
+Error                   = Error/condor_1_$(Process).err
+Log                     = Log/condor_1_$(Process).log
+
+use_x509userproxy = true
+Should_Transfer_Files   = YES
+When_To_Transfer_Output = ON_EXIT
+Transfer_Input_Files = /uscms_data/d3/flowers1/Summer2016/80xForReal/GITTEST/CMSSW_8_0_12/src/ttH-LeptonPlusJets/AnalysisCode/macros/Yggdrasil_TreeReader_2016.C, /uscms_data/d3/flowers1/Summer2016/80xForReal/CMSSW_8_0_8_patch1/src/ttH-LeptonPlusJets/AnalysisCode/macros/head13TeV.C
+#+IsLocalJob             = true
+#Rank                    = TARGET.IsLocalSlot
+
+Queue 50
+
