@@ -12,8 +12,8 @@ setenv SCRAM_ARCH slc6_amd64_gcc530
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 export SCRAM_ARCH=slc6_amd64_gcc530
 
-cmsrel CMSSW_8_0_12
-cd CMSSW_8_0_12/src/
+cmsrel CMSSW_8_0_24
+cd CMSSW_8_0_24/src/
 cmsenv
 
 #[skip this for the moment]  # Apply bug fix of met correction. 
@@ -22,6 +22,11 @@ cmsenv
 #[skip this for the moment]  git cms-init
 #[skip this for the moment]  echo /PhysicsTools/PatUtils/ >> .git/info/sparse-checkout
 #[skip this for the moment]  git cms-merge-topic cms-met:metTool80X   # ---[*1]
+
+git cms-init
+git cms-merge-topic cms-met:METRecipe_8020
+git cms-merge-topic cms-met:CMSSW_8_0_X-METFilterUpdate
+
 
 git clone https://github.com/cms-ttH/ttH-LeptonPlusJets.git
 
