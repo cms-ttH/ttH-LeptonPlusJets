@@ -25,7 +25,7 @@ cmsenv
 
 git clone https://github.com/cms-ttH/ttH-LeptonPlusJets.git
 
-git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi__CMSSW_8_0_8
+git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi__CMSSW_8_0_8__ImplementNonTrigMvaElTrig
 git clone https://github.com/hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
 git clone https://github.com/hsatoshi/PuppiLeptonIsolationhelper.git
 
