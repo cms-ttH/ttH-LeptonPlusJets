@@ -25,7 +25,7 @@ cmsenv
 
 git clone https://github.com/cms-ttH/ttH-LeptonPlusJets.git
 
-git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi__CMSSW_8_0_8
+git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi__CMSSW_8_0_8__ImplementNonTrigMvaElTrig
 git clone https://github.com/hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
 git clone https://github.com/hsatoshi/PuppiLeptonIsolationhelper.git
 
@@ -113,9 +113,12 @@ lepton_isLoose_ : POG Loose ID. 1=pass. [*1]
 lepton_scEta_   : Electron Super Cluster. For muon, -99 is filled.
 
 [*1] POG lepton ID : 
- Muon POG loose ID is not used at the moment. Always 1.
- Electron POG tight=MVA80. Loose=MVA90.
-
+ Muon     POG Tight ID : = Tight ID.
+ Muon     POG loose ID is not used at the moment. Always 1.
+ Electron POG Tight = NonTrigMVAid80;
+ Electron POG Loose = TriggerMVAid80;
+   (Cation : for electron, the variables in this tuple, 
+      lepton_isTight_(NonTrigMVAid80) is "looser" than lepton_isLoose_(TriggerMVAid80).)
 lepnums_  : number of tight/loose leptons [*2]
 
 [2*] not used in YggdrasilTupleMaker(and not filled) but needed by "AnalysisCode/macros/Yggdrasil_Slim.C"
@@ -128,6 +131,9 @@ jet_eta_ : eta
 jet_m_   : mass
 jet_combinedMVABJetTags_ : "pfCombinedMVAV2BJetTags"
 jet_combinedInclusiveSecondaryVertexV2BJetTags_ : "pfCombinedInclusiveSecondaryVertexV2BJetTags"
+
+jet_combinedMVABJetTags_HIP_ : "pfCombinedMVAV2BJetTags" HIP mitigation
+jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP_ : "pfCombinedInclusiveSecondaryVertexV2BJetTags" HIP mitigation
 
 jet_partonflavour_ : result of jet->partonFlavour()
 jet_flavour_       : result of jet->hadronFlavour()

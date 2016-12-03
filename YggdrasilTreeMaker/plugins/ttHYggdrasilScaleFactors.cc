@@ -57,9 +57,9 @@ void ttHYggdrasilScaleFactors::init_TrigElSF(){
 void ttHYggdrasilScaleFactors::init_TrigMuSF(){
 
   {
-    std::string input = SFfileDir +"/" + "SingleMuonTrigger_Z_RunCD_Reco76X_Feb15.root";
-    h_MuSF_Trig_HLTv4p2 = (TH2D*) getTH2HistogramFromFile( input , std::string ("runD_IsoMu20_OR_IsoTkMu20_HLTv4p2_PtEtaBins/abseta_pt_ratio") );
-    h_MuSF_Trig_HLTv4p3 = (TH2D*) getTH2HistogramFromFile( input , std::string ("runD_IsoMu20_OR_IsoTkMu20_HLTv4p3_PtEtaBins/abseta_pt_ratio") );
+    std::string input = SFfileDir +"/" + "MuonTriggerPerformance_Sep06.root";
+    h_MuSF_Trig_HLTv4p2 = (TH2D*) getTH2HistogramFromFile( input , std::string ("muontrig_sf_abseta_pt") );
+    h_MuSF_Trig_HLTv4p3 = (TH2D*) getTH2HistogramFromFile( input , std::string ("muontrig_sf_abseta_pt") );
   }
 
   // Root file taken from https://twiki.cern.ch/twiki/bin/view/CMS/MuonWorkInProgressAndPagResults?rev=15
@@ -74,11 +74,11 @@ void ttHYggdrasilScaleFactors::init_TrigMuSF(){
 void ttHYggdrasilScaleFactors::init_ElectronSF(){
   
   {
-    std::string input = SFfileDir +"/" + "eleRECO.txt.egamma_SF2D.root";
+    std::string input = SFfileDir +"/" + "EGamma_scaleFactors_ichep2016_80X_resultsEleID_runBCD_passingMVA80_egammaEffi.txt_SF2D.root";
     h_EleSF_ID = (TH2F*) getTH2HistogramFromFile( input , std::string ("EGamma_SF2D") );
   }
   { 
-    std::string input = SFfileDir +"/" + "ScaleFactor_GsfElectronToRECO_passingTrigWP80.txt.egamma_SF2D.root";
+    std::string input = SFfileDir +"/" + "EGamma_scaleFactors_ichep2016_80X_resultsGsfID_egammaEffi.txt_SF2D.root";
     h_EleSF_Reco = (TH2F*) getTH2HistogramFromFile( input , std::string ("EGamma_SF2D") );
   }
 
@@ -216,8 +216,8 @@ double ttHYggdrasilScaleFactors::getTightElectronSF( ttHYggdrasilEventSelection 
 void ttHYggdrasilScaleFactors::init_btagSF(){
 
 
-  std::string inputFileHF = SFfileDir +"/" + "csv_rwt_fit_hf_v2_final_2016_06_30test.root";
-  std::string inputFileLF = SFfileDir +"/" + "csv_rwt_fit_lf_v2_final_2016_06_30test.root";
+  std::string inputFileHF = SFfileDir +"/" + "csv_rwt_fit_hf_v2_final_2016_09_7test.root";
+  std::string inputFileLF = SFfileDir +"/" + "csv_rwt_fit_lf_v2_final_2016_09_7test.root";
 
   TFile* fileHF = new TFile ( inputFileHF .c_str());
   TFile* fileLF = new TFile ( inputFileLF .c_str());

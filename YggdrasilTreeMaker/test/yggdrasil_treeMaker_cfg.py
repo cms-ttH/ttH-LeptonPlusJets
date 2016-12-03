@@ -328,7 +328,33 @@ if isMC :
         genJetAbsEtaMax = 2.4,
         genJets = genJetCollection,
         )
-    
+
+
+
+
+############### hip mitigation
+process.load("Configuration.StandardSequences.MagneticField_cff")
+process.load("Configuration.Geometry.GeometryRecoDB_cff")
+from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
+if isMC :
+    updateJetCollection(
+        process,
+        jetSource = cms.InputTag('slimmedJets'),
+        jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute' ]),'None' ),
+        btagDiscriminators = ['pfCombinedMVAV2BJetTags' , 'pfCombinedInclusiveSecondaryVertexV2BJetTags'],
+        runIVF=True,
+        btagPrefix = 'new' # optional, in case interested in accessing both the old and new discriminator values
+        )
+else :
+    updateJetCollection(
+        process,
+        jetSource = cms.InputTag('slimmedJets'),
+        jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']),'None' ),
+        btagDiscriminators = ['pfCombinedMVAV2BJetTags' , 'pfCombinedInclusiveSecondaryVertexV2BJetTags'],
+        runIVF=True,
+        btagPrefix = 'new' # optional, in case interested in accessing both the old and new discriminator values
+        )
+
 
 
 if isMC :

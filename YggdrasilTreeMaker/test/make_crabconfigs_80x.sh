@@ -18,7 +18,7 @@ diff yggdrasil_treeMaker_cfg.py __yggdrasil_treeMaker_MCTTBAR_cfg.py
 cat yggdrasil_treeMaker_cfg.py | sed "s|isMC=True|isMC=False|g" > __yggdrasil_treeMaker_DATA_cfg.py 
 diff yggdrasil_treeMaker_cfg.py __yggdrasil_treeMaker_DATA_cfg.py
 
-nickname="Satoshi_Yggdra_Aug01"
+nickname="Satoshi_Yggdra_Sep04"
 
 
 JobIndexList=""
@@ -29,34 +29,43 @@ ds[2]=/SingleElectron/Run2016C-PromptReco-v2/MINIAOD
 ds[3]=/SingleElectron/Run2016D-PromptReco-v2/MINIAOD
 ds[4]=/SingleElectron/Run2016E-PromptReco-v2/MINIAOD
 ds[5]=/SingleElectron/Run2016F-PromptReco-v1/MINIAOD
+ds[6]=/SingleElectron/Run2016G-PromptReco-v1/MINIAOD
 name[1]=DataElB
 name[2]=DataElC
 name[3]=DataElD
 name[4]=DataElE
 name[5]=DataElF
+name[6]=DataElG
 ismc[1]=DATA
 ismc[2]=DATA
 ismc[3]=DATA
 ismc[4]=DATA
 ismc[5]=DATA
+ismc[6]=DATA
 
-JobIndexList=${JobIndexList}" 1 2 3 4 5 "
+JobIndexList=${JobIndexList}" 1 2 3 4 5 6 "
 
 
 ds[11]=/SingleMuon/Run2016B-PromptReco-v2/MINIAOD
 ds[12]=/SingleMuon/Run2016C-PromptReco-v2/MINIAOD
 ds[13]=/SingleMuon/Run2016D-PromptReco-v2/MINIAOD
 ds[14]=/SingleMuon/Run2016E-PromptReco-v2/MINIAOD
+ds[15]=/SingleMuon/Run2016F-PromptReco-v1/MINIAOD
+ds[16]=/SingleMuon/Run2016G-PromptReco-v1/MINIAOD
 name[11]=DataMuB
 name[12]=DataMuC
 name[13]=DataMuD
 name[14]=DataMuE
+name[15]=DataMuF
+name[16]=DataMuG
 ismc[11]=DATA
 ismc[12]=DATA
 ismc[13]=DATA
 ismc[14]=DATA
+ismc[15]=DATA
+ismc[16]=DATA
 
-JobIndexList=${JobIndexList}" 11 12 13 14 "
+JobIndexList=${JobIndexList}" 11 12 13 14 15 16"
 
 
 ds[21]=/ttHTobb_M125_13TeV_powheg_pythia8/RunIISpring16MiniAODv2-PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
@@ -92,6 +101,37 @@ ismc[26]=MC
 
 
 JobIndexList=${JobIndexList}" 21 22   24 26 25"
+
+# HLT = HLT, not HLT2
+ds[5]=/ttHTobb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/RunIISpring16MiniAODv2-premix_withHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+name[5]=ttbar
+ismc[5]=MC
+
+# HLT = HLT, not HLT2
+ds[5]=/ttHToNonbb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/RunIISpring16MiniAODv2-premix_withHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+name[5]=ttbar
+ismc[5]=MC
+
+
+# HLT = HLT, not HLT2
+ds[5]=/TTToSemiLeptonic_TuneCUETP8M1T4_alphaS01108_13TeV-powheg-pythia8/RunIISpring16MiniAODv2-premix_withHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+name[5]=ttbar
+ismc[5]=MC
+
+# HLT = HLT, not HLT2
+ds[5]=/TTTo2L2Nu_TuneCUETP8M1T4_alphaS01108_13TeV-powheg-pythia8/RunIISpring16MiniAODv2-premix_withHLT_80X_mcRun2_asymptotic_v14-v1/MINIAODSIM
+name[5]=ttbar
+ismc[5]=MC
+
+# HLT = HLT, not HLT2
+ds[5]=/TTTo2L2Nu_13TeV-powheg/RunIISpring16MiniAODv2-PUSpring16_80X_mcRun2_asymptotic_2016_miniAODv2_v0_ext1-v1/MINIAODSIM
+name[5]=ttbar
+ismc[5]=MC
+
+# HLT = HLT, not HLT2
+ds[5]=/TTToSemiLeptonic_13TeV-powheg/RunIISpring16MiniAODv2-PUSpring16_80X_mcRun2_asymptotic_2016_miniAODv2_v0_ext1-v2/MINIAODSIM
+name[5]=ttbar
+ismc[5]=MC
 
 
 # 
@@ -195,7 +235,7 @@ fi
 else
 cat crabconfig_template.py | sed "s|XXXXX|${name[${idx}]}|g" | sed "s|YYYYY|${nickname}|g" | sed "s|ZZZZZ|${ds[$idx]}|g" | \
                              sed "s|QQQQQ|${ismc[$idx]}|g" | \
-   sed "s|#PPPPP#|config.Data.lumiMask=\"../data/Cert_271036-276811_13TeV_PromptReco_Collisions16_JSON.txt\"|g" \
+   sed "s|#PPPPP#|config.Data.lumiMask=\"../data/Cert_271036-279588_13TeV_PromptReco_Collisions16_JSON_NoL1T.txt\"|g" \
     > __CRABCONFIG__${name[${idx}]}.py
 fi
 

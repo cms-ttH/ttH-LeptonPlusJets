@@ -54,6 +54,8 @@
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "DataFormats/HLTReco/interface/TriggerEventWithRefs.h"
 #include "DataFormats/HLTReco/interface/TriggerTypeDefs.h"
+#include "FWCore/Common/interface/TriggerNames.h"
+
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
@@ -135,6 +137,7 @@ class YggdrasilTreeMaker : public edm::EDAnalyzer {
 
   edm::EDGetTokenT <edm::TriggerResults> triggerResultsToken;
   edm::EDGetTokenT <edm::TriggerResults> filterResultsToken;
+  edm::EDGetTokenT <pat::TriggerObjectStandAloneCollection> TriggerObjectStandAloneToken ;
 
   // new MVAelectron
   edm::EDGetTokenT< edm::View<pat::Electron> > EDMElectronsToken;
@@ -261,6 +264,10 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   triggerResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), hltTag));
   filterResultsToken = consumes <edm::TriggerResults> (edm::InputTag(std::string("TriggerResults"), std::string(""), filterTag));
 
+  TriggerObjectStandAloneToken = consumes <pat::TriggerObjectStandAloneCollection>
+    ( edm::InputTag( std::string ( "selectedPatTrigger" ), std::string("") , std::string(isMC ? "PAT" : "RECO") )) ;
+
+
   // new MVAelectron
   EDMElectronsToken = consumes< edm::View<pat::Electron> >(edm::InputTag("slimmedElectrons","",""));
   EDMeleMVAvaluesToken           = consumes<edm::ValueMap<float> >(edm::InputTag("electronMVAValueMapProducer","ElectronMVAEstimatorRun2Spring15Trig25nsV1Values",""));
@@ -275,7 +282,8 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   if( usePUPPI ){
   jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJetsPuppi")));
   }else{
-  jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
+    ///  jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
+    jetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("selectedUpdatedPatJets"))); // for hip mitigation
   }
   metToken = consumes <pat::METCollection> (edm::InputTag(std::string("slimmedMETs")));
 
@@ -298,7 +306,8 @@ YggdrasilTreeMaker::YggdrasilTreeMaker(const edm::ParameterSet& iConfig):
   if( usePUPPI ) {
   tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJetsPuppi")));
   }else{
-  tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
+    //tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("slimmedJets")));
+  tempjetToken = consumes <pat::JetCollection> (edm::InputTag(std::string("selectedUpdatedPatJets"))); // For hip mitigation
   }
   // EDMConversionCollectionToken = consumes <reco::ConversionCollection > (edm::InputTag("reducedEgamma","reducedConversions",""));
   EDMBoostedJetsToken     = consumes< boosted::BoostedJetCollection >(edm::InputTag("BoostedJetMatcher","boostedjets","p"));
@@ -479,7 +488,9 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   edm::Handle<edm::TriggerResults> triggerResults;
   iEvent.getByToken(triggerResultsToken, triggerResults);
-  
+  edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
+  iEvent.getByToken( TriggerObjectStandAloneToken , triggerObjects ) ; 
+
   bool passHLT_Ele27_eta2p1_WP85_Gsf_HT200_v1 = false;
   bool passHLT_Ele27_eta2p1_WPTight_Gsf_v = false;
   
@@ -890,6 +901,62 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_ =  ( passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v ) ? 1 : 0;
 
 
+  std::vector< std::pair<float , float> > SingleMuonTriggerDirection;
+  std::vector< std::pair<float , float> > SingleElTriggerDirection;
+
+  const edm::TriggerNames &names = iEvent.triggerNames(*triggerResults);
+  for (unsigned int i = 0; i < triggerResults->size(); ++i) {
+       
+    unsigned long location1  = names.triggerName(i).find( "HLT_IsoMu22_v" ,0);
+    unsigned long location2  = names.triggerName(i).find( "HLT_IsoTkMu22_v" ,0);
+    unsigned long location3  = names.triggerName(i).find( "HLT_Ele27_eta2p1_WPTight_Gsf_v" ,0);
+    
+    if( ( location1 == 0 || location2 == 0 || location3 == 0 ) && triggerResults->accept(i) ){
+
+      for (pat::TriggerObjectStandAlone obj : *triggerObjects) { // note: not "const &" since we want to call unpackPathNames
+	obj.unpackPathNames(names);
+
+	std::vector<std::string> pathNamesAll  = obj.pathNames(false);
+	std::vector<std::string> pathNamesLast = obj.pathNames(true);
+	for (unsigned int iPathName = 0; iPathName < pathNamesAll.size(); iPathName ++ ) {
+
+	  if( ( location1 == 0 && pathNamesAll[iPathName] . find( "HLT_IsoMu22_v" , 0 ) == 0 )
+	      ||
+	      ( location2 == 0 && pathNamesAll[iPathName] . find( "HLT_IsoTkMu22_v" , 0 ) == 0 )
+	      ||
+	      ( location3 == 0 && pathNamesAll[iPathName] . find( "HLT_Ele27_eta2p1_WPTight_Gsf_v" , 0 ) == 0 )
+	      ){
+
+	    bool isBoth = obj.hasPathName( pathNamesAll[iPathName], true, true ); 
+	    if (isBoth){
+
+	      std::cout << "[debug] Trigger Object Fired the trigger)" <<
+		"| pt " << obj.pt() << ", eta " << obj.eta() << ", phi " << obj.phi() << std::endl;
+	      if( location3 == 0 ) {
+		// electron trigger 
+		SingleElTriggerDirection   . push_back( std::pair<float, float>(  obj.eta(), obj.phi() ) );
+	      }else{
+		// = muon trigger
+		SingleMuonTriggerDirection . push_back( std::pair<float, float>(  obj.eta(), obj.phi() ) );
+	      }
+
+
+	    }// end if-"the trigger-path fired due to this object."
+
+
+	  } // end if the trigger object matches the trigger.
+	           
+	} // end loop all trigger path
+	       
+	       
+      } // end of trigger object loop
+    } // end of if the trigger fired.
+  } // end of trigger-bit loop (look into all HLT path)
+
+  std::cout << "size of trigger muon : " << SingleMuonTriggerDirection.size() << std::endl ; 
+  std::cout << "size of trigger el : " << SingleElTriggerDirection.size() << std::endl ; 
+
+
 
   eve->run_ = run;
   eve->lumi_ = lumi;
@@ -940,6 +1007,7 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   vdouble lepton_dPhiSCTrackAtVtx;
   vdouble lepton_d0;
   vdouble lepton_dZ;
+  vdouble lepton_dRSingleLepTrig ; 
   vint lepton_isGlobalMuon;
   vint lepton_isTrackerMuon;
   vint lepton_isPFMuon;
@@ -1065,6 +1133,19 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     vleptons.push_back(iMu->pz());
     vleptons.push_back(iMu->energy());
     vvleptons.push_back(vleptons);
+
+    float lep_trig_dr = 10 ; 
+    for( std::vector< std::pair<float,float>>::iterator trig = SingleMuonTriggerDirection.begin ();
+	 trig != SingleMuonTriggerDirection.end() ; 
+	 trig ++ ){
+      float d_eta = iMu->eta() - trig->first;
+      float d_phi = iMu->phi() - trig->second;
+      d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
+      double dr =  sqrt( d_eta*d_eta + d_phi*d_phi );
+      lep_trig_dr = ( lep_trig_dr < dr ) ? lep_trig_dr : dr ;
+    }
+    lepton_dRSingleLepTrig.push_back( lep_trig_dr );
+
   }
 
   // Loop over electrons
@@ -1083,13 +1164,12 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
 
 
-    int isPOGTight = miniAODhelper.PassesMVAid80(*iEle ) ? 1 : 0  ;
-    int isPOGLoose = miniAODhelper.PassesMVAid90(*iEle ) ? 1 : 0  ;
+    int isPOGTight = miniAODhelper.PassesNonTrigMVAid80(*iEle ) ? 1 : 0  ;
+    int isPOGLoose = miniAODhelper.PassesMVAid80(*iEle ) ? 1 : 0  ;
 
     // our pre-selections 
     if( iEle->pt() < 15 ){ continue;}
     if( fabs( iEle->eta() ) > 2.4 ){ continue;}
-    if( isPOGLoose != 1 ){ continue;}
     //
 
 
@@ -1213,6 +1293,20 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
     vleptons.push_back(iEle->pz());
     vleptons.push_back(iEle->energy());
     vvleptons.push_back(vleptons);
+
+
+    float lep_trig_dr = 10 ; 
+    for( std::vector< std::pair<float,float>>::iterator trig = SingleElTriggerDirection.begin ();
+	 trig != SingleElTriggerDirection.end() ; 
+	 trig ++ ){
+      float d_eta = iEle->eta() - trig->first;
+      float d_phi = iEle->phi() - trig->second;
+      d_phi = ( d_phi < M_PI ) ? d_phi : 2 * M_PI - d_phi ; 
+      double dr =  sqrt( d_eta*d_eta + d_phi*d_phi );
+      lep_trig_dr = ( lep_trig_dr < dr ) ? lep_trig_dr : dr ;
+    }
+    lepton_dRSingleLepTrig.push_back( lep_trig_dr );
+
   }
 
   eve->lepton_charge_           = lepton_trkCharge;
@@ -1226,6 +1320,8 @@ YggdrasilTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   eve->lepton_relIso_           = lepton_relIso;
   eve->lepton_puppirelIso_           = lepton_puppirelIso;
   eve->lepton_scEta_           = lepton_scEta;
+
+  eve->lepton_dRSingleLepTrig_        = lepton_dRSingleLepTrig ;
 
   eve->wgt_lumi_  = intLumi_;
   eve->wgt_xs_    = mySample_xSec_;//mySample.xSec;
@@ -1364,6 +1460,8 @@ n_fatjets++;
     std::vector<double> csvV;
     std::vector<double> jet_combinedMVABJetTags;
     std::vector<double> jet_combinedInclusiveSecondaryVertexV2BJetTags;
+    std::vector<double> jet_combinedMVABJetTags_HIP;
+    std::vector<double> jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP;
     std::vector<double> jet_vtxMass;
     std::vector<double> jet_vtxNtracks;
     std::vector<double> jet_vtx3DVal;
@@ -1454,6 +1552,9 @@ n_fatjets++;
       jet_combinedMVABJetTags.push_back( iJet->bDiscriminator("pfCombinedMVAV2BJetTags") );
       jet_combinedInclusiveSecondaryVertexV2BJetTags.push_back( iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") );
 
+      jet_combinedMVABJetTags_HIP.push_back( iJet->bDiscriminator("newpfCombinedMVAV2BJetTags") );
+      jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP.push_back( iJet->bDiscriminator("newpfCombinedInclusiveSecondaryVertexV2BJetTags") );
+
 
     }// end loop over iJet
 
@@ -1471,6 +1572,9 @@ n_fatjets++;
     
     eve->jet_combinedMVABJetTags_[iSys] = jet_combinedMVABJetTags;
     eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[iSys] = jet_combinedInclusiveSecondaryVertexV2BJetTags;
+
+    eve->jet_combinedMVABJetTags_HIP_[iSys] = jet_combinedMVABJetTags_HIP;
+    eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP_[iSys] = jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP;
 
     eve->jet_vtxMass_[iSys]    = jet_vtxMass;
     eve->jet_vtxNtracks_[iSys] = jet_vtxNtracks;

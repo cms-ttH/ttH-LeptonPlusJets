@@ -103,6 +103,7 @@ struct yggdrasilEventVars{
   vdouble lepton_relIso_;
   vdouble lepton_puppirelIso_;
   vdouble lepton_scEta_;
+  vdouble lepton_dRSingleLepTrig_;
 
   Float_t wgt_lumi_;
   Float_t wgt_xs_;
@@ -129,6 +130,8 @@ struct yggdrasilEventVars{
 
   vdouble jet_combinedMVABJetTags_[rNumSys];
   vdouble jet_combinedInclusiveSecondaryVertexV2BJetTags_[rNumSys];
+  vdouble jet_combinedMVABJetTags_HIP_[rNumSys];
+  vdouble jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP_[rNumSys];
   vdouble jet_vtxMass_[rNumSys];
   vdouble jet_vtxNtracks_[rNumSys];
   vdouble jet_vtx3DVal_[rNumSys];
@@ -249,6 +252,7 @@ void yggdrasilEventVars::initialize(){
   lepton_relIso_.clear();
   lepton_puppirelIso_.clear();
   lepton_scEta_.clear();
+  lepton_dRSingleLepTrig_.clear();
 
   wgt_generator_        = -99.9;
   wgt_lumi_             = -99.9;
@@ -276,6 +280,8 @@ void yggdrasilEventVars::initialize(){
 
     jet_combinedMVABJetTags_[iSys].clear();
     jet_combinedInclusiveSecondaryVertexV2BJetTags_[iSys].clear();
+    jet_combinedMVABJetTags_HIP_[iSys].clear();
+    jet_combinedInclusiveSecondaryVertexV2BJetTags_HIP_[iSys].clear();
     jet_vtxMass_[iSys].clear();
     jet_vtxNtracks_[iSys].clear();
     jet_vtx3DVal_[iSys].clear();
