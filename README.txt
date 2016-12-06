@@ -24,6 +24,10 @@ git cms-merge-topic cms-met:METRecipe_8020
 git cms-merge-topic cms-met:fromCMSSW_8_0_20_postICHEPfilter
 git cms-merge-topic ahinzmann:METRecipe_8020_Moriond17
 
+
+scram b -j 10 
+# use "scam b" at least once to create directory "../external" which we use below.
+
 # update electron MVA tools and data
 git cms-merge-topic ikrav:egm_id_80X_v2
 cd ../external/$SCRAM_ARCH
