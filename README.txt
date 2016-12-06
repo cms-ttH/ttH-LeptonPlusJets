@@ -16,27 +16,36 @@ cmsrel CMSSW_8_0_24
 cd CMSSW_8_0_24/src/
 cmsenv
 
-#[skip this for the moment]  # Apply bug fix of met correction. 
-#[skip this for the moment]  #  - See https://twiki.cern.ch/twiki/bin/view/CMS/MissingETUncertaintyPrescription?rev=48#Instructions_for_8_0_X_X_10
-#[skip this for the moment]  #  - Combination with CMSSW_8_0_13 did not work (June 30).
-#[skip this for the moment]  git cms-init
-#[skip this for the moment]  echo /PhysicsTools/PatUtils/ >> .git/info/sparse-checkout
-#[skip this for the moment]  git cms-merge-topic cms-met:metTool80X   # ---[*1]
+export CMSSW_SRC="$( pwd )"
 
+# updated MET tools
 git cms-init
 git cms-merge-topic cms-met:METRecipe_8020
-git cms-merge-topic cms-met:CMSSW_8_0_X-METFilterUpdate
+git cms-merge-topic cms-met:fromCMSSW_8_0_20_postICHEPfilter
+git cms-merge-topic ahinzmann:METRecipe_8020_Moriond17
+
+# update electron MVA tools and data
+git cms-merge-topic ikrav:egm_id_80X_v2
+cd ../external/$SCRAM_ARCH
+git clone https://github.com/ikrav/RecoEgamma-ElectronIdentification.git data/RecoEgamma/ElectronIdentification/data
+cd data/RecoEgamma/ElectronIdentification/data
+git checkout egm_id_80X_v1
+cd $CMSSW_SRC
 
 
+scram b -j 10 ;
+# Let's check if setup CMSSW environment can be compiled before setting up our Yggdrasil code.
+# You may need to repeat scram several times (not only twice)...
+
+
+# Our yggdrasil code :
 git clone https://github.com/cms-ttH/ttH-LeptonPlusJets.git
-
 git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi__CMSSW_8_0_8__ImplementNonTrigMvaElTrig
 git clone https://github.com/hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
 git clone https://github.com/hsatoshi/PuppiLeptonIsolationhelper.git
 
-scram b -j 10 ; scram b -j 10
-# Yes,.. compile twice for the moment. First compile claims errors while the second works. Need to be solved.
-
+scram b -j 10 ;
+# You may need to repeat scram several times (not only twice)...
 
 
 
