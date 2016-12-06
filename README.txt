@@ -42,8 +42,12 @@ scram b -j 10 ;
 # You may need to repeat scram several times (not only twice)...
 
 
-# Our yggdrasil code :
+# - - - Our yggdrasil code - - - 
+
 git clone https://github.com/cms-ttH/ttH-LeptonPlusJets.git
+# or, use your branch, such as 
+#   git clone git@github.com:hsatoshi/ttH-LeptonPlusJets.git
+
 git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi__CMSSW_8_0_8__ImplementNonTrigMvaElTrig
 git clone https://github.com/hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
 git clone https://github.com/hsatoshi/PuppiLeptonIsolationhelper.git
