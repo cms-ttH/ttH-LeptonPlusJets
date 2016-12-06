@@ -12,8 +12,8 @@ setenv SCRAM_ARCH slc6_amd64_gcc530
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 export SCRAM_ARCH=slc6_amd64_gcc530
 
-cmsrel CMSSW_8_0_12
-cd CMSSW_8_0_12/src/
+cmsrel CMSSW_8_0_24_patch1
+cd CMSSW_8_0_24_patch1/src/
 cmsenv
 
 export CMSSW_SRC="$( pwd )"
@@ -23,6 +23,10 @@ git cms-init
 git cms-merge-topic cms-met:METRecipe_8020
 git cms-merge-topic cms-met:fromCMSSW_8_0_20_postICHEPfilter
 git cms-merge-topic ahinzmann:METRecipe_8020_Moriond17
+
+
+scram b -j 10 
+# use "scam b" at least once to create directory "../external" which we use below.
 
 # update electron MVA tools and data
 git cms-merge-topic ikrav:egm_id_80X_v2
@@ -38,8 +42,12 @@ scram b -j 10 ;
 # You may need to repeat scram several times (not only twice)...
 
 
-# Our yggdrasil code :
+# - - - Our yggdrasil code - - - 
+
 git clone https://github.com/cms-ttH/ttH-LeptonPlusJets.git
+# or, use your branch, such as 
+#   git clone git@github.com:hsatoshi/ttH-LeptonPlusJets.git
+
 git clone https://github.com/hsatoshi/MiniAOD.git -b satoshi__CMSSW_8_0_8__ImplementNonTrigMvaElTrig
 git clone https://github.com/hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
 git clone https://github.com/hsatoshi/PuppiLeptonIsolationhelper.git
