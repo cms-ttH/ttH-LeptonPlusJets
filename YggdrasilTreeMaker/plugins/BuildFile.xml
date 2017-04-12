@@ -12,5 +12,8 @@
 <use name="HLTrigger/HLTcore"/>
 <use name="EgammaAnalysis/ElectronTools"/>
 <use name="MiniAOD/MiniAODHelper"/>
-<use name="BoostedTTH/BoostedAnalyzer"/>
+<use name="MiniAOD/BoostedObjects"/>
+<use name="SimDataFormats/GeneratorProducts"/>
+<use name="lhapdf"/>
+<use name="AnalysisDataFormats/TopObjects"/>
 <flags EDM_PLUGIN="1"/>
