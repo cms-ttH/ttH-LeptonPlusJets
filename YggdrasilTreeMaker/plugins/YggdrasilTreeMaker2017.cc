@@ -177,8 +177,8 @@ YggdrasilTreeMaker2017::YggdrasilTreeMaker2017(const edm::ParameterSet& iConfig)
    DoSync = iConfig.getParameter<bool>("DoSync");
    SyncDebug = iConfig.getParameter<bool>("SyncDebug");
    SkipEvents = iConfig.getParameter<bool>("SkipEvents");
-   doSystematics = true;
-   saveOnlySelected = true;
+   doSystematics = iConfig.getParameter<bool>("doSystematics");
+   saveOnlySelected = iConfig.getParameter<bool>("saveOnlySelected");
    
    if(!realData)genTtbarIdToken_ = consumes<int>( edm::InputTag( "categorizeGenTtbar", "genTtbarId","" ) )  ;
    
@@ -1117,19 +1117,19 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
   
   if(FillNtuples){ 
   
-  eve->run_ = run;
-  eve->lumi_ = lumi;
-  eve->evt_ = evt;
+    eve->run_ = run;
+    eve->lumi_ = lumi;
+    eve->evt_ = evt;
 
-  eve->numTruePV_ = numTruePV;
-  eve->numGenPV_ = numGenPV;
+    eve->numTruePV_ = numTruePV;
+    eve->numGenPV_ = numGenPV;
 
-  eve->numPVs_ = numpv;
-  eve->numSys_ = rNumSys;
+    eve->numPVs_ = numpv;
+    eve->numSys_ = rNumSys;
   
-  eve->GoodFirstPV_ = firstGoodPV;
-  eve->pass_METFilters_ = pass_METFilters;
-  eve->pass_MuFilters_ = pass_MuFilters;
+    eve->GoodFirstPV_ = firstGoodPV;
+    eve->pass_METFilters_ = pass_METFilters;
+    eve->pass_MuFilters_ = pass_MuFilters;
   
   
   
@@ -1138,41 +1138,41 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
   //TRIGGER VARIABLES//
   /////////////////////
    
-  eve->passHLT_IsoMu24_v_ =  ( passHLT_IsoMu24_v) ? 1 : 0;
-  eve->passHLT_IsoTkMu24_v_ =  ( passHLT_IsoTkMu24_v) ? 1 : 0;
+    eve->passHLT_IsoMu24_v_ =  ( passHLT_IsoMu24_v) ? 1 : 0;
+    eve->passHLT_IsoTkMu24_v_ =  ( passHLT_IsoTkMu24_v) ? 1 : 0;
    
-  eve->passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v_ = ( passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v ) ? 1 : 0;
-  eve->passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v_ = ( passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v ) ? 1 : 0;
+    eve->passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v_ = ( passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v ) ? 1 : 0;
+    eve->passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v_ = ( passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v ) ? 1 : 0;
 
-  eve->passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v_ = ( passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v ) ? 1 : 0;
-  eve->passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v_ = ( passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v ) ? 1 : 0;
-  eve->passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_ = ( passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v ) ? 1 : 0;
-  eve->passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v_ = ( passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v ) ? 1 : 0;
+    eve->passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v_ = ( passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v ) ? 1 : 0;
+    eve->passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v_ = ( passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v ) ? 1 : 0;
+    eve->passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_ = ( passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v ) ? 1 : 0;
+    eve->passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v_ = ( passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v ) ? 1 : 0;
   
-  eve->passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v_		    = ( passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v	      ) ? 1 : 0 ;
-  eve->passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v_           = ( passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v           ) ? 1 : 0 ;
+    eve->passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v_		    = ( passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v	      ) ? 1 : 0 ;
+    eve->passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v_           = ( passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v           ) ? 1 : 0 ;
 
-  eve->passHLT_Ele27_eta2p1_WPTight_Gsf_v_ =  ( passHLT_Ele27_eta2p1_WPTight_Gsf_v) ? 1 : 0;
-  eve->passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_ =  ( passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v ) ? 1 : 0;
+    eve->passHLT_Ele27_eta2p1_WPTight_Gsf_v_ =  ( passHLT_Ele27_eta2p1_WPTight_Gsf_v) ? 1 : 0;
+    eve->passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_ =  ( passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v ) ? 1 : 0;
   
   
-  eve->additionalJetEventId_ = additionalJetEventId;
+    eve->additionalJetEventId_ = additionalJetEventId;
   
   
   ////////////////////
   //Lepton Variables//
   ////////////////////
   
-  eve->lepton_pt_               = lepton_pt;
-  eve->lepton_eta_              = lepton_eta;
-  eve->lepton_scEta_            = lepton_scEta;
-  eve->lepton_phi_              = lepton_phi;
-  eve->lepton_e_                = lepton_e;
-  eve->lepton_charge_           = lepton_trkCharge;
-  eve->lepton_isMuon_           = lepton_isMuon;
-  eve->lepton_relIso_           = lepton_relIso;
-  eve->lepton_isTight_          = lepton_isTight;
-  eve->lepton_isLoose_          = lepton_isLoose;
+    eve->lepton_pt_               = lepton_pt;
+    eve->lepton_eta_              = lepton_eta;
+    eve->lepton_scEta_            = lepton_scEta;
+    eve->lepton_phi_              = lepton_phi;
+    eve->lepton_e_                = lepton_e;
+    eve->lepton_charge_           = lepton_trkCharge;
+    eve->lepton_isMuon_           = lepton_isMuon;
+    eve->lepton_relIso_           = lepton_relIso;
+    eve->lepton_isTight_          = lepton_isTight;
+    eve->lepton_isLoose_          = lepton_isLoose;
   
  
   //These Variables contain systematics so we need to loop
@@ -1183,18 +1183,18 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
   //Jet Variables//
   /////////////////
   
-  eve->jet_pt_[0]	= jet_pt;
-  eve->jet_eta_[0]      = jet_eta;
-  eve->jet_phi_[0]	= jet_phi;
-  eve->jet_m_[0]	= jet_m;
-  eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[0] = jet_csvV;
-  eve->jet_flavour_[0]  = jet_flavour;
+    eve->jet_pt_[0]	= jet_pt;
+    eve->jet_eta_[0]      = jet_eta;
+    eve->jet_phi_[0]	= jet_phi;
+    eve->jet_m_[0]	= jet_m;
+    eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[0] = jet_csvV;
+    eve->jet_flavour_[0]  = jet_flavour;
   //eve->jet_sysLabel_[0] = "NA";
   /**
   eve->MET_[0] = MET_pt;
   eve->MET_[0] = MET_phi;
   */
-  if(doSystematics){
+    if(doSystematics){
   	for(int i=0;i<int(systematics.size());i++){
 		eve->jet_pt_[i+1]	= vjet_pt_sys[i];
   		eve->jet_eta_[i+1]      = vjet_eta_sys[i];
@@ -1204,10 +1204,10 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
   		eve->jet_flavour_[i+1]  = vjet_flavour_sys[i];
   		//eve->jet_sysLabel_[i+1] = systematics_list[i];
 	}
-  }
+    }
   
   
-  worldTree->Fill();
+    worldTree->Fill();
   
   };//End FillNtuples
   

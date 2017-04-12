@@ -125,6 +125,8 @@ options.register("summary",
 options.register("DoSync",True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"Do the Sync Code, output sync")
 options.register("SyncDebug",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"Extra Sync Variables for debugging")
 options.register("SkipEvents",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"Only run on certain events")
+options.register("doSystematics",True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"Do the systematics loops")
+options.register("saveOnlySelected",True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"Only save selected events")
 
 
 options.parseArguments()
@@ -638,6 +640,8 @@ process.ttHTreeMaker.realData = cms.bool(options.realData)
 process.ttHTreeMaker.DoSync = cms.bool(options.DoSync)
 process.ttHTreeMaker.SyncDebug = cms.bool(options.SyncDebug)
 process.ttHTreeMaker.SkipEvents = cms.bool(options.SkipEvents)
+process.ttHTreeMaker.doSystematics = cms.bool(options.doSystematics)
+process.ttHTreeMaker.saveOnlySelected = cms.bool(options.saveOnlySelected)
 
 
 # electron VID collections
