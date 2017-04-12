@@ -1,68 +1,48 @@
-ttH-LeptonPlusJets
-==================
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+export SCRAM_ARCH="slc6_amd64_gcc530"
+export CMSSW_VERSION="CMSSW_8_0_26_patch2"
 
-### 74x
-    source /cvmfs/cms.cern.ch/cmsset_default.csh
-    setenv SCRAM_ARCH slc6_amd64_gcc491
-    cmsrel CMSSW_7_4_4_patch4
-    cd CMSSW_7_4_4_patch4/src/
-    cmsenv
+cmsrel $CMSSW_VERSION
+cd $CMSSW_VERSION/src
+cmsenv
 
-    git cms-addpkg PhysicsTools/JetMCAlgos
-    cp /afs/cern.ch/user/l/lwming/public/74X/GenHFHadronMatcher.cc PhysicsTools/JetMCAlgos/plugins/GenHFHadronMatcher.cc
-    cp /afs/cern.ch/user/l/lwming/public/74X/GenTtbarCategorizer.cc PhysicsTools/JetMCAlgos/plugins/GenTtbarCategorizer.cc
-    cp /afs/cern.ch/user/l/lwming/public/74X/GenTtbarCategorizer_cfi.py PhysicsTools/JetMCAlgos/python/GenTtbarCategorizer_cfi.py
+git cms-init
 
-    git cms-merge-topic gkasieczka:htt-v2-74X
-    git clone https://github.com/cms-ttH/BoostedTTH.git
-    ln -s $CMSSW_RELEASE_BASE/src/RecoJets/JetProducers/plugins/VirtualJetProducer.h BoostedTTH/BoostedProducer/plugins/VirtualJetProducer.h
-    ln -s $CMSSW_RELEASE_BASE/src/RecoJets/JetProducers/plugins/VirtualJetProducer.cc BoostedTTH/BoostedProducer/plugins/VirtualJetProducer.cc
+# deterministic seed producer
+git cms-merge-topic riga:deterministicSeeds
 
-    git clone https://github.com/cms-ttH/MiniAOD.git
-    git clone https://github.com/cms-ttH/ttH-LeptonPlusJets.git
+# updated MET tools
+# this topic is branched from the official cms-met:METRecipe_8020 but fixes the badGlobalMuonTagger
+# so that it works like any other MET filter module
+git cms-merge-topic riga:badGlobalMuonTagger_fix
+git cms-merge-topic cms-met:METRecipe_80X_part2
 
-    //you can skip this part and add it later   
-    git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
-    cd HiggsAnalysis/CombinedLimit
-    git checkout 74x-root6
-    cd -
-    git clone https://github.com/cms-ttH/ttH-Limits.git ttH/Limits
+# updated MET phi corrections
+git clone https://github.com/cms-met/MetTools.git
 
-    scram b -j 32
+# EGMSmearer and data
+# this topic is branched from cms-egamma:EGM_gain_v1 and makes the EGMSmearer use our deterministic
+# seeds (and also stores the pt before calibration as a userFloat which we need later for
+# lepton/trigger scale factors)
+git cms-merge-topic riga:deterministicEGMSmearer_v2
+cd EgammaAnalysis/ElectronTools/data
+git clone https://github.com/ECALELFS/ScalesSmearings.git -b Moriond17_gainSwitch_unc
+cd $CMSSW_BASE/src
 
-    //adding Ele TriggerMVA producer   https://twiki.cern.ch/twiki/bin/viewauth/CMS/MultivariateElectronIdentificationRun2#Recipes_for_regular_users_co_AN1
-    git cms-merge-topic ikrav:egm_id_7.4.12_v1
+# ttHFGenFilter
+# (only required when you use the ttHF filtered ttJets dataset)
+git cms-merge-topic riga:ttHFGenFilter_tagging
 
-    scram b -j 32
-
-
-### 72X
-    source /cvmfs/cms.cern.ch/cmsset_default.csh
-    setenv SCRAM_ARCH slc6_amd64_gcc481
-    cmsrel CMSSW_7_2_3
-    cd CMSSW_7_2_3/src/
-    cmsenv
-
-    git cms-merge-topic HuguesBrun:trigElecIdInCommonIsoSelection720
-
-    git cms-addpkg PhysicsTools/JetMCAlgos
-    cp /afs/cern.ch/user/l/lwming/public/74X/GenHFHadronMatcher.cc PhysicsTools/JetMCAlgos/plugins/GenHFHadronMatcher.cc
-    cp /afs/cern.ch/user/l/lwming/public/74X/GenTtbarCategorizer.cc PhysicsTools/JetMCAlgos/plugins/GenTtbarCategorizer.cc
-    cp /afs/cern.ch/user/l/lwming/public/74X/GenTtbarCategorizer_cfi.py PhysicsTools/JetMCAlgos/python/GenTtbarCategorizer_cfi.py
-
-    git cms-merge-topic gkasieczka:htt-v2-74X
-    git clone https://github.com/cms-ttH/BoostedTTH.git
-    ln -s $CMSSW_RELEASE_BASE/src/RecoJets/JetProducers/plugins/VirtualJetProducer.h BoostedTTH/BoostedProducer/plugins/VirtualJetProducer.h
-    ln -s $CMSSW_RELEASE_BASE/src/RecoJets/JetProducers/plugins/VirtualJetProducer.cc BoostedTTH/BoostedProducer/plugins/VirtualJetProducer.cc
-
-    git clone https://github.com/cms-ttH/MiniAOD.git
-    git clone https://github.com/cms-ttH/ttH-LeptonPlusJets.git
-
-    git clone https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
-    git clone https://github.com/cms-ttH/ttH-Limits.git ttH/Limits
-
-    scram b -j 32
+# update PUJetId values
+git remote add ahinzmann https://github.com/ahinzmann/cmssw.git
+git fetch ahinzmann PUidMiniAODfix80
+git cherry-pick ca33756e1747aec27d13971bcfd0874b16724e7f
 
 
-#############
- 
+scram b -j
+
+
+git clone -b CMSSW_8_0_24_v1_sync https://github.com/cms-ttH/MiniAOD.git
+git clone -b PostSync2017 https://github.com/cms-ttH/MiniAOD.git 
+
+scram b -j
