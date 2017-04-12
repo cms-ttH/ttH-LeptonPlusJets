@@ -34,6 +34,6 @@ Yggdrasil Code
 ### Yggdrasil Code
 
     git clone -b CMSSW_8_0_24_v1_sync https://github.com/cms-ttH/MiniAOD.git
-    git clone -b PostSync2017 https://github.com/cms-ttH/MiniAOD.git 
+    git clone -b PostSync2017 https://github.com/cms-ttH/ttH-LeptonPlusJets.git
 
     scram b -j
