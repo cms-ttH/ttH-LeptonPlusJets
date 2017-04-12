@@ -118,6 +118,15 @@ options.register("summary",
     VarParsing.varType.bool,
     "print a summary at the end?"
 )
+
+
+##TreeMaker options
+
+options.register("DoSync",True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"Do the Sync Code, output sync")
+options.register("SyncDebug",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"Extra Sync Variables for debugging")
+options.register("SkipEvents",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"Only run on certain events")
+
+
 options.parseArguments()
 
 
@@ -625,10 +634,10 @@ process.ttHTreeMaker.METCollection      = METCollection
 process.ttHTreeMaker.jetCollection      = jetCollection
 process.ttHTreeMaker.genjetCollection   = genjetCollection
 
-process.ttHTreeMaker.realData = cms.bool(False)
-process.ttHTreeMaker.DoSync = cms.bool(True)
-process.ttHTreeMaker.SyncDebug = cms.bool(False)
-process.ttHTreeMaker.SkipEvents = cms.bool(False)
+process.ttHTreeMaker.realData = cms.bool(options.realData)
+process.ttHTreeMaker.DoSync = cms.bool(options.DoSync)
+process.ttHTreeMaker.SyncDebug = cms.bool(options.SyncDebug)
+process.ttHTreeMaker.SkipEvents = cms.bool(options.SkipEvents)
 
 
 # electron VID collections
