@@ -1,4 +1,4 @@
-Yggdrasil Code
+Yggdrasil Framework
 ================
 
 ### Sync2017 Area Setup
@@ -31,7 +31,9 @@ Yggdrasil Code
 
     scram b -j
 
-### Yggdrasil Code
+### Yggdrasil Specific Code
+    
+    git clone https://github.com/hsatoshi/GenParticleTopOriginChargedleptonFilter.git ttHAnalysisSubprogram/GenParticleTopOriginChargedleptonFilter
 
     git clone -b CMSSW_8_0_24_v1_sync https://github.com/cms-ttH/MiniAOD.git
     git clone -b PostSync2017 https://github.com/cms-ttH/ttH-LeptonPlusJets.git
