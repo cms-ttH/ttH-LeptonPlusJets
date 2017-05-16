@@ -896,21 +896,22 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     }else{
     std::cout << 1 <<",";
     }
+*/
 
-    double triggerSF =( ! isMC ?
-			1 :
+    double triggerSF =( realData ? 1 :
 			scalefactors.get_TrigMuSF( & selection )
 			*
 			scalefactors.get_TrigElSF( & selection )
 			) ;
     std::cout << triggerSF <<",";
 
-    double lepIDSF =  ( ! isMC ? 1 : 
+    double lepIDSF =  ( realData ? 1 : 
 			scalefactors.getTightMuon_IDSF( & selection )
 			* 
 			scalefactors.getTightElectron_IDSF( & selection )
 			);
-    double lepISOSF =  ( ! isMC ? 1 : 
+
+    double lepISOSF =  ( realData ? 1 : 
 			 scalefactors.getTightElectron_RecoSF( & selection ) 
 			*
 			 scalefactors.getTightMuon_IsoSF( & selection ) 
@@ -918,21 +919,19 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     std::cout << lepIDSF <<","<< lepISOSF <<",";
 
     if( false ){
- //   std::cout << eve->weight_q2_upup_ <<",";
-   // std::cout << eve->weight_q2_downdown_ <<",";
+//    std::cout << eve->weight_q2_upup_ <<",";
+//    std::cout << eve->weight_q2_downdown_ <<",";
     
-    //std::cout << eve-> weight_PDF_NNPDF30NLO_up_ <<",";
-   // std::cout << eve-> weight_PDF_NNPDF30NLO_down_<< ",";
+//    std::cout << eve-> weight_PDF_NNPDF30NLO_up_ <<",";
+//    std::cout << eve-> weight_PDF_NNPDF30NLO_down_<< ",";
     }else{
-    //std::cout << 1 <<",";
-    //std::cout << 1 <<",";
+//    std::cout << 1 <<",";
+//    std::cout << 1 <<",";
     std::cout << 1 <<",";
     std::cout << 1 <<",";
     }
     
-    
-    
-    */
+
     if(SyncDebug){
   
      //// Outputs Jet Debug Information from "selected_jets" Jet_Pt ,selected_jets_step , jet_csv, dR with lepton, jet_PUID_pass

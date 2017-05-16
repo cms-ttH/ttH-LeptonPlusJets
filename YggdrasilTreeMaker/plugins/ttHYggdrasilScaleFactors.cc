@@ -39,8 +39,8 @@ void ttHYggdrasilScaleFactors::init_all(){
   init_btagSF();
   init_Pileup();
   init_ElectronSF();
- // init_MuonSF();
-  //init_TrigMuSF();
+  init_MuonSF();
+  init_TrigMuSF();
   init_TrigElSF();
 
 }
@@ -55,25 +55,18 @@ void ttHYggdrasilScaleFactors::init_TrigElSF(){
 }
 void ttHYggdrasilScaleFactors::init_TrigMuSF(){
 
-
-
-
-
-
-/*
   {
-    std::string input = SFfileDir +"/" + "MuonTriggerPerformance_Sep06.root";
-    h_MuSF_Trig_HLTv4p2 = (TH2D*) getTH2HistogramFromFile( input , std::string ("muontrig_sf_abseta_pt") );
-    h_MuSF_Trig_HLTv4p3 = (TH2D*) getTH2HistogramFromFile( input , std::string ("muontrig_sf_abseta_pt") );
+    std::string input = SFfileDir +"/" + "MuonID_Z_RunBCD_prompt80X_7p65.root";
+    h_MuSF_Trig_HLTv4p2 = (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio") );
+    h_MuSF_Trig_HLTv4p3 = (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1/abseta_pt_ratio") );
   }
 
   // Root file taken from https://twiki.cern.ch/twiki/bin/view/CMS/MuonWorkInProgressAndPagResults?rev=15
   {
-    
     std::string input = SFfileDir +"/" + "SingleMuonTrigger_Z_RunBCD_prompt80X_7p65.root";
     h_MUEff_SingleMuonTrig = (TH2D*) getTH2HistogramFromFile( input , std::string ("IsoMu22_OR_IsoTkMu22_PtEtaBins_Run274094_to_276097/efficienciesDATA/abseta_pt_DATA") );
   }
-*/
+
 }
 
 void ttHYggdrasilScaleFactors::init_ElectronSF(){
@@ -142,9 +135,6 @@ TH2* ttHYggdrasilScaleFactors::getTH2HistogramFromFile( std::string input , std:
  
   f-> GetObject ( histoname.c_str(), h_2d );
   f-> GetObject ( histoname.c_str(), h_2f );
-  
- // h_2f = (TH2F*)f->Get(histoname.c_str());
-  //h_2d = (TH2D*)f->Get(histoname.c_str());
  
   if( h_2d != 0 ){
     return h_2d ; 
@@ -154,10 +144,9 @@ TH2* ttHYggdrasilScaleFactors::getTH2HistogramFromFile( std::string input , std:
     return h_2f ; 
   }
   
-  /*
-  std::cout <<"Failed to obtain histogarm named " << histoname<< " from file " << input << std::endl ; 
+  std::cout <<"Failed to obtain histogram named " << histoname<< " from file " << input << std::endl ; 
   assert( false );
-  */
+
   return 0 ; 
 }
 
@@ -575,22 +564,21 @@ double ttHYggdrasilScaleFactors::get_TrigMuSF( ttHYggdrasilEventSelection * even
  double weight = 1 ; 
 
   for( unsigned int i = 0 ; i < event->leptonsIsMuon().size() ; i++ ){
-    if( event->leptonsIsMuon().at( i ) != 1 ) continue ; 
-    
+    if( event->leptonsIsMuon().at( i ) != 1 ) continue ;
+
     const double abs_eta = std::fabs( event->leptons().at( i )->Eta() ) ; 
     const double pt      =  event->leptons().at( i )->Pt() ; 
-    
+
     double w_p2 = GetBinValueFromXYValues( h_MuSF_Trig_HLTv4p2 , abs_eta , pt );
     double w_p3 = GetBinValueFromXYValues( h_MuSF_Trig_HLTv4p3 , abs_eta , pt );
 
     double ratio_p2 =  754.394 / ( 754.394 + 1908.010 ) ;
     double ratio_p3 = 1908.010 / ( 754.394 + 1908.010 ) ;
-    
+
     weight *= 
       w_p2 * ratio_p2 
       +
       w_p3 * ratio_p3 ;
-
   }
   return weight ;
 }
