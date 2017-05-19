@@ -8,6 +8,7 @@
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TH2F.h>
+#include <TGraphAsymmErrors.h>
 
 #ifdef STANDALONECOMPILE
 #include "ttHYggdrasilEventSelection.h"
@@ -43,6 +44,8 @@ class ttHYggdrasilScaleFactors{
   double getTightMuon_IsoSF( ttHYggdrasilEventSelection * event );
   double getTightElectron_RecoSF( ttHYggdrasilEventSelection * event );
 
+  double getTightMuon_TrackingSF( ttHYggdrasilEventSelection * event );
+
   // - - -
 
   double get_TrigMuSF( ttHYggdrasilEventSelection * event );
@@ -63,13 +66,17 @@ class ttHYggdrasilScaleFactors{
   std::string PileupHistogram;
 
   void init_all();
-  void init_btagSF();
+  void init_TrigElSF();
+  void init_TrigMuSF();
   void init_ElectronSF();
   void init_MuonSF();
-  void init_TrigMuSF();
-  void init_TrigElSF();
+  void init_btagSF();
   TH2 * getTH2HistogramFromFile( std::string input , std::string histoname );
+  TGraphAsymmErrors * getTGraphAsymmErrorsFromFile( std::string input , std::string tgraphname );
   double GetBinValueFromXYValues( TH2 * h , double xVal , double yVal );
+  double GetTGraphAsymmErrorsValue( TGraphAsymmErrors * tg , double xVal , std::string err );
+  int GetTGraphPoint( TGraphAsymmErrors * tg , double xVal );
+  
 
   // CSV reweighting
   TH1D* h_csv_wgt_hf[9][5];
@@ -91,9 +98,13 @@ class ttHYggdrasilScaleFactors{
   std::vector< double > h_MuSF_Iso_Lumi ;
   double h_MuSF_Iso_LumiTotal ;
 
-  // Trif SF
-  TH2D * h_MuSF_Trig_HLTv4p2;
-  TH2D * h_MuSF_Trig_HLTv4p3;
+  std::vector< TGraphAsymmErrors *> tgraph_MuSF_Tracking ;
+  std::vector< double > tgraph_MuSF_Tracking_Lumi ;
+  double tgraph_MuSF_Tracking_LumiTotal ;
+
+  // Trig SF
+  TH2D * h_MuSF_Trig_BCDEF;
+  TH2D * h_MuSF_Trig_GH;
   TH2D * h_EleSF_Trig;
 
   // Trig Efficiency
