@@ -2,9 +2,17 @@ Yggdrasil Framework
 ================
 
 ### Sync2017 Area Setup
+## bash:
     source /cvmfs/cms.cern.ch/cmsset_default.sh
     export SCRAM_ARCH="slc6_amd64_gcc530"
     export CMSSW_VERSION="CMSSW_8_0_26_patch2"
+
+## csh:
+    source /cvmfs/cms.cern.ch/cmsset_default.csh
+    setenv SCRAM_ARCH "slc6_amd64_gcc530"
+    setenv CMSSW_VERSION "CMSSW_8_0_26_patch2"
+## Both:
+
     cmsrel $CMSSW_VERSION
     cd $CMSSW_VERSION/src
     cmsenv
