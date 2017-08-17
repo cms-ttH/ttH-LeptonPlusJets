@@ -76,11 +76,11 @@
 #include "DataFormats/JetReco/interface/PileupJetIdentifier.h"
 
 class YggdrasilTreeMaker2017 : public edm::EDAnalyzer {
-	public:
-	  explicit YggdrasilTreeMaker2017(const edm::ParameterSet&);
-	  ~YggdrasilTreeMaker2017();
-	  
-	  static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
+        public:
+          explicit YggdrasilTreeMaker2017(const edm::ParameterSet&);
+          ~YggdrasilTreeMaker2017();
+          
+          static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
 
    private:
@@ -264,11 +264,11 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
    
    bool DoThisEvent = true;
    if(SkipEvents){
-  	DoThisEvent = false;
-   	int skiplist[] = {31647,368651,370674,396382,624978,625032,706089,783185,783846,843469,1523860,1960867,1984818,2321482,2426173,2490426,2490547,2618343,2818409,2894546,2894588,2905966,3178582,3222965,3270603,3482144,3482145,3726213};
-  	for(int listn=0;listn<int(sizeof(skiplist));listn++){
-  		if(evt==skiplist[listn])DoThisEvent=true;
-  	}
+          DoThisEvent = false;
+           int skiplist[] = {31647,368651,370674,396382,624978,625032,706089,783185,783846,843469,1523860,1960867,1984818,2321482,2426173,2490426,2490547,2618343,2818409,2894546,2894588,2905966,3178582,3222965,3270603,3482144,3482145,3726213};
+          for(int listn=0;listn<int(sizeof(skiplist));listn++){
+                  if(evt==skiplist[listn])DoThisEvent=true;
+          }
    }
    if(DoThisEvent){
    
@@ -331,21 +331,21 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       if( accept ) flt_cppath_[pathNameNoVer]+=1;
       
       if(accept){
-      	const unsigned long MatchedAtTheBeginning = 0;
-	
-	if( pathNameNoVer.find("Flag_goodVertices" ,0) == MatchedAtTheBeginning){pass_Flag_goodVertices = true;}
-	if( pathNameNoVer.find("Flag_globalTightHalo2016Filter" ,0) == MatchedAtTheBeginning){pass_Flag_globalTightHalo2016Filter = true;}
-	if( pathNameNoVer.find("Flag_HBHENoiseFilter" ,0) == MatchedAtTheBeginning){pass_Flag_HBHENoiseFilter = true;}
-	if( pathNameNoVer.find("Flag_HBHENoiseIsoFilter" ,0) == MatchedAtTheBeginning){pass_Flag_HBHENoiseIsoFilter = true;}
-	if( pathNameNoVer.find("Flag_EcalDeadCellTriggerPrimitiveFilter" ,0) == MatchedAtTheBeginning){pass_Flag_EcalDeadCellTriggerPrimitiveFilter = true;}
-	if( pathNameNoVer.find("Flag_eeBadScFilter",0) == MatchedAtTheBeginning){pass_Flag_eeBadScFilter = true;}
-	}
+              const unsigned long MatchedAtTheBeginning = 0;
+        
+        if( pathNameNoVer.find("Flag_goodVertices" ,0) == MatchedAtTheBeginning){pass_Flag_goodVertices = true;}
+        if( pathNameNoVer.find("Flag_globalTightHalo2016Filter" ,0) == MatchedAtTheBeginning){pass_Flag_globalTightHalo2016Filter = true;}
+        if( pathNameNoVer.find("Flag_HBHENoiseFilter" ,0) == MatchedAtTheBeginning){pass_Flag_HBHENoiseFilter = true;}
+        if( pathNameNoVer.find("Flag_HBHENoiseIsoFilter" ,0) == MatchedAtTheBeginning){pass_Flag_HBHENoiseIsoFilter = true;}
+        if( pathNameNoVer.find("Flag_EcalDeadCellTriggerPrimitiveFilter" ,0) == MatchedAtTheBeginning){pass_Flag_EcalDeadCellTriggerPrimitiveFilter = true;}
+        if( pathNameNoVer.find("Flag_eeBadScFilter",0) == MatchedAtTheBeginning){pass_Flag_eeBadScFilter = true;}
+        }
       }
     }
   
     bool pass_METFilters = false;
     if(pass_Flag_goodVertices && pass_Flag_globalTightHalo2016Filter && pass_Flag_HBHENoiseFilter && pass_Flag_HBHENoiseIsoFilter && pass_Flag_EcalDeadCellTriggerPrimitiveFilter){
-  	pass_METFilters=true;
+          pass_METFilters=true;
     } 
     if(realData)pass_METFilters = pass_METFilters && pass_Flag_eeBadScFilter;
    
@@ -364,16 +364,16 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       
       iPV++;
       bool isGood = ( !(vtx->isFake()) &&
-		      (vtx->ndof() > 4.0) &&
-		      (fabs(vtx->z()) < 24.0) &&
-		      (fabs(vtx->position().Rho()) < 2.0) 
-		      );
-		      
+                      (vtx->ndof() > 4.0) &&
+                      (fabs(vtx->z()) < 24.0) &&
+                      (fabs(vtx->position().Rho()) < 2.0) 
+                      );
+                      
       if( !isGood ) continue;
 
       if( iPV==1 ){
-	firstGoodPV = true;
-	vertex = (*vtx);
+        firstGoodPV = true;
+        vertex = (*vtx);
       }
 
       numpv++;
@@ -381,17 +381,17 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     }
   
     if( numpv>0 ) miniAODhelper.SetVertex(vertex);
-  double numTruePV = -1;
-  double numGenPV = -1;
-  if( (PupInfo.isValid()) ){
-    for( std::vector<PileupSummaryInfo>::const_iterator PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI ) {
-      int BX = PVI->getBunchCrossing();
-      if( BX==0 ){
-	numTruePV = PVI->getTrueNumInteractions();
-	numGenPV  = PVI->getPU_NumInteractions();
-      }
-    }
-  }
+    double numTruePV = -1;
+    double numGenPV = -1;
+    if( (PupInfo.isValid()) ){
+     for( std::vector<PileupSummaryInfo>::const_iterator PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI ) {
+        int BX = PVI->getBunchCrossing();
+        if( BX==0 ){
+          numTruePV = PVI->getTrueNumInteractions();
+          numGenPV  = PVI->getPU_NumInteractions();
+       }
+     }
+   }
    
    /////////////////////
     // TRIGGER STUFF  ///
@@ -432,29 +432,29 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       if( accept ){
       
       
-	const unsigned long MatchedAtTheBegining = 0 ; 
+        const unsigned long MatchedAtTheBegining = 0 ; 
 
-	if( pathName.find( "HLT_IsoMu24_v"        ,0) == MatchedAtTheBegining ){ passHLT_IsoMu24_v = true;}
-	if( pathName.find( "HLT_IsoTkMu24_v"      ,0) == MatchedAtTheBegining ){ passHLT_IsoTkMu24_v = true;}
-	
-	
-	
-	if( pathName.find( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v" ,0) == MatchedAtTheBegining ){passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v = true;}
+        if( pathName.find( "HLT_IsoMu24_v"        ,0) == MatchedAtTheBegining ){ passHLT_IsoMu24_v = true;}
+        if( pathName.find( "HLT_IsoTkMu24_v"      ,0) == MatchedAtTheBegining ){ passHLT_IsoTkMu24_v = true;}
+        
+        
+        
+        if( pathName.find( "HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v" ,0) == MatchedAtTheBegining ){passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v = true;}
 
-	if( pathName.find( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v"               ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v = true;}
-	if( pathName.find( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v"             ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v = true;}
-	
-	if( pathName.find( "HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v",0) == MatchedAtTheBegining ){ passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v = true;}
-	if( pathName.find( "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v" ,0) == MatchedAtTheBegining ){ passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v = true;}
-	if( pathName.find( "HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",0) == MatchedAtTheBegining ){ passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v = true;}
-	if( pathName.find( "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v" ,0) == MatchedAtTheBegining ){ passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v = true;}
+        if( pathName.find( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v"               ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v = true;}
+        if( pathName.find( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v"             ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v = true;}
+        
+        if( pathName.find( "HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v",0) == MatchedAtTheBegining ){ passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v = true;}
+        if( pathName.find( "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v" ,0) == MatchedAtTheBegining ){ passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v = true;}
+        if( pathName.find( "HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",0) == MatchedAtTheBegining ){ passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v = true;}
+        if( pathName.find( "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v" ,0) == MatchedAtTheBegining ){ passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v = true;}
 
-	if( pathName.find( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"            ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v	        = true ; }
-	if( pathName.find( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"          ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v            = true ; }
-	
+        if( pathName.find( "HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"            ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v                = true ; }
+        if( pathName.find( "HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"          ,0) == MatchedAtTheBegining ){ passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v            = true ; }
+        
 
-	if( pathName.find( "HLT_Ele27_eta2p1_WPTight_Gsf_v"        ,0) == MatchedAtTheBegining ){ passHLT_Ele27_eta2p1_WPTight_Gsf_v = true;}
-	
+        if( pathName.find( "HLT_Ele27_eta2p1_WPTight_Gsf_v"        ,0) == MatchedAtTheBegining ){ passHLT_Ele27_eta2p1_WPTight_Gsf_v = true;}
+        
       }
      }
     } //END triggerResults.isValid
@@ -465,21 +465,21 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     
     // Dilep Trig
     int ElMuTrig = ( passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v ==1 
-		     ||
-		     passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v == 1 
-		     ||
-		     passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v ==1 
-		     ||
-		     passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v == 1 
-		     ) ? 1 : 0 ; 
+                     ||
+                     passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v == 1 
+                     ||
+                     passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v ==1 
+                     ||
+                     passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v == 1 
+                     ) ? 1 : 0 ; 
     int MuMuTrig = ( passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v
-		     ||
-		     passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v 
-		     ||
-		     passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v
-		     ||
-		     passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v 
-		     ) ? 1 : 0 ;
+                     ||
+                     passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v 
+                     ||
+                     passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v
+                     ||
+                     passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v 
+                     ) ? 1 : 0 ;
     int ElElTrig = passHLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v;
     
   /////Additional Event Information////
@@ -489,7 +489,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
    
   
   
-    /////////////////	     
+    /////////////////             
     //// LEPTONS ////
     ////////////////
 
@@ -503,70 +503,70 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     std::vector<double> lepton_relIso;
     std::vector<int>    lepton_isTight;
     std::vector<int>    lepton_isLoose;
-		 
+                 
     for( std::vector<pat::Muon>::const_iterator iMu = muons->begin(); iMu != muons->end(); iMu++ ){ 
  
    
-    	int trkCharge = -99;
-    	if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
+            int trkCharge = -99;
+            if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
 
-    	int isPOGTight = miniAODhelper.passesMuonPOGIdTight(*iMu) ? 1 : 0;
-    	int isPOGLoose = 1 ; //this is needed for the consistency of variables with electron.
+            int isPOGTight = miniAODhelper.passesMuonPOGIdTight(*iMu) ? 1 : 0;
+            int isPOGLoose = 1 ; //this is needed for the consistency of variables with electron.
 
 
 
     // our pre-selections 
-    	if( iMu->pt() < 15 ){ continue;}
-    	if( fabs( iMu->eta() ) > 2.4 ){ continue;}
+            if( iMu->pt() < 15 ){ continue;}
+            if( fabs( iMu->eta() ) > 2.4 ){ continue;}
 
     
-    	lepton_pt.push_back(iMu->pt());
-    	lepton_eta.push_back(iMu->eta());
-    	lepton_scEta.push_back(-99);
-    	lepton_phi.push_back(iMu->phi());
-    	lepton_e.push_back(iMu->energy());
-    	lepton_trkCharge.push_back(trkCharge);
-    	lepton_isMuon.push_back(1);
-    	lepton_relIso.push_back( miniAODhelper.GetMuonRelIso(*iMu, coneSize::R04, corrType::deltaBeta) ) ;
-    	lepton_isLoose.push_back(isPOGLoose);
-    	lepton_isTight.push_back(isPOGTight);
+            lepton_pt.push_back(iMu->pt());
+            lepton_eta.push_back(iMu->eta());
+            lepton_scEta.push_back(-99);
+            lepton_phi.push_back(iMu->phi());
+            lepton_e.push_back(iMu->energy());
+            lepton_trkCharge.push_back(trkCharge);
+            lepton_isMuon.push_back(1);
+            lepton_relIso.push_back( miniAODhelper.GetMuonRelIso(*iMu, coneSize::R04, corrType::deltaBeta) ) ;
+            lepton_isLoose.push_back(isPOGLoose);
+            lepton_isTight.push_back(isPOGTight);
     
      }
   
      for( std::vector<pat::Electron>::const_iterator iEle = electrons->begin(); iEle != electrons->end(); iEle++ ){ 
 
-     	int trkCharge = -99;
-    	if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
+            int trkCharge = -99;
+            if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
 
-    	int isPOGTight = miniAODhelper.PassElectron80XId(*iEle ,electronID::electron80XCutBasedM ) ? 1 : 0  ;
-    	int isPOGLoose = miniAODhelper.PassElectron80XId(*iEle ,electronID::electron80XCutBasedL ) ? 1 : 0  ;
+            int isPOGTight = miniAODhelper.PassElectron80XId(*iEle ,electronID::electron80XCutBasedM ) ? 1 : 0  ;
+            int isPOGLoose = miniAODhelper.PassElectron80XId(*iEle ,electronID::electron80XCutBasedL ) ? 1 : 0  ;
 
 
     // our pre-selections 
-    	if( iEle->pt() < 15 ){ continue;}
-    	if( fabs( iEle->eta() ) > 2.4 ){ continue;}
+            if( iEle->pt() < 15 ){ continue;}
+            if( fabs( iEle->eta() ) > 2.4 ){ continue;}
     //
 
 
-    	bool inCrack = false;
-    	double scEta = -99;
-    	if( iEle->superCluster().isAvailable() ){
-     	 inCrack = ( fabs(iEle->superCluster()->position().eta())>=1.4442 && fabs(iEle->superCluster()->position().eta())<=1.5660 );
-      	 scEta = iEle->superCluster()->position().eta();
-    	}
+            bool inCrack = false;
+            double scEta = -99;
+            if( iEle->superCluster().isAvailable() ){
+              inCrack = ( fabs(iEle->superCluster()->position().eta())>=1.4442 && fabs(iEle->superCluster()->position().eta())<=1.5660 );
+               scEta = iEle->superCluster()->position().eta();
+            }
     
-    	if(inCrack)isPOGTight=0;
+            if(inCrack)isPOGTight=0;
     
-    	lepton_pt.push_back(iEle->pt());
-    	lepton_eta.push_back(iEle->eta());
-    	lepton_scEta.push_back(scEta);
-    	lepton_phi.push_back(iEle->phi());
-   	lepton_e.push_back(iEle->energy());
-   	lepton_trkCharge.push_back(trkCharge);
-   	lepton_isMuon.push_back(0);
-   	lepton_relIso.push_back(miniAODhelper.GetElectronRelIso(*iEle, coneSize::R03, corrType::rhoEA,effAreaType::spring16) );
-   	lepton_isLoose.push_back(isPOGLoose);
-    	lepton_isTight.push_back(isPOGTight);
+            lepton_pt.push_back(iEle->pt());
+            lepton_eta.push_back(iEle->eta());
+            lepton_scEta.push_back(scEta);
+            lepton_phi.push_back(iEle->phi());
+            lepton_e.push_back(iEle->energy());
+            lepton_trkCharge.push_back(trkCharge);
+            lepton_isMuon.push_back(0);
+            lepton_relIso.push_back(miniAODhelper.GetElectronRelIso(*iEle, coneSize::R03, corrType::rhoEA,effAreaType::spring16) );
+            lepton_isLoose.push_back(isPOGLoose);
+            lepton_isTight.push_back(isPOGTight);
 
      }
      
@@ -596,7 +596,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
      std::vector<int> jet_flavour;
      std::vector<int> jet_PUID_passWPLooseV;
    
-		  // Loop over selected jets
+     // Loop over selected jets
      for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_noSys_sorted.begin(); iJet != selectedJets_noSys_sorted.end(); iJet++ ){ 
 
       jet_pt  .push_back( iJet -> pt()  );
@@ -613,7 +613,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       
        //PU jet ID
       if(!iJet->hasUserFloat("pileupJetId:fullDiscriminant") || !iJet->hasUserInt("pileupJetId:fullId")) {
- 	std::cout << "no mvaValue or idflag info for the jet ---" << std::endl;
+         std::cout << "no mvaValue or idflag info for the jet ---" << std::endl;
        }
  
       
@@ -648,21 +648,21 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     selection . SetGoodVtx( & ( firstGoodPV ) );
 
     selection . SetLeptons( & lepton_pt, 
-			    & lepton_eta, 
-			    & lepton_scEta, 
-			    & lepton_phi,
-			    & lepton_e,
-			    & lepton_trkCharge, 
-			    & lepton_isMuon, 
-			    & lepton_relIso,
-			    & lepton_isLoose,
-			    & lepton_isTight );
+                            & lepton_eta, 
+                            & lepton_scEta, 
+                            & lepton_phi,
+                            & lepton_e,
+                            & lepton_trkCharge, 
+                            & lepton_isMuon, 
+                            & lepton_relIso,
+                            & lepton_isLoose,
+                            & lepton_isTight );
     selection . SetJets( & jet_pt , 
-			 & jet_eta , 
-			 & jet_phi, 
-			 & jet_m , 
-			 & jet_csvV ,
-			 & jet_flavour  );
+                         & jet_eta , 
+                         & jet_phi, 
+                         & jet_m , 
+                         & jet_csvV ,
+                         & jet_flavour  );
 
     selection . SetMet( & ( MET_pt ) , &( MET_phi) );
 
@@ -694,32 +694,32 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     std::cout <<(selection . PassMuMu()       ?1:0) << "," ;
     
 
-	if(selection.PassElEl() || selection.PassElMu() || selection.PassMuMu()){
-		std::cout<< selection.DLSofterjets().size()<<",";
-		std::cout<< selection.DLSofterbjets().size()<<",";
-	}
-	else{
-		if(selection.jets().size()>0)    std::cout << selection.jets().size() << "," ;
-			else std::cout<<"0,";
-		if(selection.bjets().size()>0)    std::cout << selection.bjets().size() << ",";
-			else std::cout<<"0,";
-	}
+        if(selection.PassElEl() || selection.PassElMu() || selection.PassMuMu()){
+                std::cout<< selection.DLSofterjets().size()<<",";
+                std::cout<< selection.DLSofterbjets().size()<<",";
+        }
+        else{
+                if(selection.jets().size()>0)    std::cout << selection.jets().size() << "," ;
+                        else std::cout<<"0,";
+                if(selection.bjets().size()>0)    std::cout << selection.bjets().size() << ",";
+                        else std::cout<<"0,";
+        }
 
     if( selection.looseLeptons().size() >=1 ){
       long pdgid = 
-	( selection.looseLeptonsIsMuon().at(0) == 1 ? 13 : 11 )
-	*
-	( selection.looseLeptonsCharge().at(0) > 0 ? -1 : +1 ) ;
+        ( selection.looseLeptonsIsMuon().at(0) == 1 ? 13 : 11 )
+        *
+        ( selection.looseLeptonsCharge().at(0) > 0 ? -1 : +1 ) ;
       std::cout<< std::setprecision(4) << selection.looseLeptons().at(0)->Pt()<< "," ;
       if(SyncDebug){
       std::cout<<std::setprecision(4)<<selection.looseLeptons().at(0)->Eta()<<",";
       std::cout<<std::setprecision(4)<<selection.looseLeptons().at(0)->Phi()<<",";
-      	int cracker=-808;
-      	for(int i=0;i<int(selection.looseLeptons().size());i++){
-      		if(( fabs(selection.looseLeptonsScEta().at(i))>1.4442 && fabs(selection.looseLeptonsScEta().at(i))<1.5660 ))cracker=888;
-      	}
-      	std::cout<<cracker<<",";
-	
+              int cracker=-808;
+              for(int i=0;i<int(selection.looseLeptons().size());i++){
+                      if(( fabs(selection.looseLeptonsScEta().at(i))>1.4442 && fabs(selection.looseLeptonsScEta().at(i))<1.5660 ))cracker=888;
+              }
+              std::cout<<cracker<<",";
+        
       }
       std::cout<< std::setprecision(4) << selection.looseLeptonsRelIso().at(0)<< "," ;
       std::cout << pdgid << "," ;
@@ -730,9 +730,9 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
     if( selection.looseLeptons().size() >=2 ){
       long pdgid = 
-	( selection.looseLeptonsIsMuon().at(1) == 1 ? 13 : 11 )
-	*
-	( selection.looseLeptonsCharge().at(1) > 0 ? -1 : +1 ) ;
+        ( selection.looseLeptonsIsMuon().at(1) == 1 ? 13 : 11 )
+        *
+        ( selection.looseLeptonsCharge().at(1) > 0 ? -1 : +1 ) ;
       std::cout<< std::setprecision(4) << selection.looseLeptons().at(1)->Pt()<< "," ;
       std::cout<< std::setprecision(4) << selection.looseLeptonsRelIso().at(1)<< "," ;
       std::cout << pdgid << "," ;
@@ -762,48 +762,48 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       std::vector<pat::Jet> jet_JESDOWN =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::JESdown, doJES, doJER );
       
 
-	const double eta1 = selection.jets().at(0)->Eta();
-	const double phi1 = selection.jets().at(0)->Phi();
-	const double eta2 = selection.jets().at(1)->Eta();
-	const double phi2 = selection.jets().at(1)->Phi();
-	
-	//std::cout<<" RAW JETS["<<rawJets.size()<<"] ,";
-	
+        const double eta1 = selection.jets().at(0)->Eta();
+        const double phi1 = selection.jets().at(0)->Phi();
+        const double eta2 = selection.jets().at(1)->Eta();
+        const double phi2 = selection.jets().at(1)->Phi();
+        
+        //std::cout<<" RAW JETS["<<rawJets.size()<<"] ,";
+        
 
-	// Loop for JEC_nominal
-	for( unsigned int idxJet = 0 ; idxJet < rawJets.size(); idxJet ++ ){
-	
-	//cout<<idxJet<<" ";
+        // Loop for JEC_nominal
+        for( unsigned int idxJet = 0 ; idxJet < rawJets.size(); idxJet ++ ){
+        
+        //cout<<idxJet<<" ";
 
-	  pat::Jet * iRawJet = & rawJets.at( idxJet );
-	  double d_eta1 =       eta1 -  iRawJet->eta();
-	  double d_phi1 = fabs( phi1 -  iRawJet->phi() ) ; 
-	  d_phi1 = ( d_phi1 < M_PI ) ? d_phi1 : 2 * M_PI - d_phi1 ; 
+          pat::Jet * iRawJet = & rawJets.at( idxJet );
+          double d_eta1 =       eta1 -  iRawJet->eta();
+          double d_phi1 = fabs( phi1 -  iRawJet->phi() ) ; 
+          d_phi1 = ( d_phi1 < M_PI ) ? d_phi1 : 2 * M_PI - d_phi1 ; 
 
-	  if(  d_eta1*d_eta1 + d_phi1*d_phi1 < 0.01 * 0.01 ){
-	  
-	 // cout<<" this ";
-	   // matching btw Raw and Corrected (physics) jet.
-	    jet1_jesSF     = jet_JESNOMI.at( idxJet ).pt() / iRawJet->pt();
-	    jet1_jesSF_up   = jet_JESUP  .at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
-	    jet1_jesSF_down = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
-	    
-	  }
-	  
-	  double d_eta2 =       eta2 -  iRawJet->eta();
-	  double d_phi2 = fabs( phi2 -  iRawJet->phi() ) ; 
-	  d_phi2 = ( d_phi2 < M_PI ) ? d_phi2 : 2 * M_PI - d_phi2 ; 
+          if(  d_eta1*d_eta1 + d_phi1*d_phi1 < 0.01 * 0.01 ){
+          
+         // cout<<" this ";
+           // matching btw Raw and Corrected (physics) jet.
+            jet1_jesSF     = jet_JESNOMI.at( idxJet ).pt() / iRawJet->pt();
+            jet1_jesSF_up   = jet_JESUP  .at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+            jet1_jesSF_down = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+            
+          }
+          
+          double d_eta2 =       eta2 -  iRawJet->eta();
+          double d_phi2 = fabs( phi2 -  iRawJet->phi() ) ; 
+          d_phi2 = ( d_phi2 < M_PI ) ? d_phi2 : 2 * M_PI - d_phi2 ; 
 
-	  if(  d_eta2*d_eta2 + d_phi2*d_phi2 < 0.01 * 0.01 ){
-	  
-	 // cout<<" this ";
-	   // matching btw Raw and Corrected (physics) jet.
-	    jet2_jesSF     = jet_JESNOMI.at( idxJet ).pt() / iRawJet->pt();
-	    jet2_jesSF_up   = jet_JESUP  .at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
-	    jet2_jesSF_down = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
-	    
-	  }
-	}
+          if(  d_eta2*d_eta2 + d_phi2*d_phi2 < 0.01 * 0.01 ){
+          
+         // cout<<" this ";
+           // matching btw Raw and Corrected (physics) jet.
+            jet2_jesSF     = jet_JESNOMI.at( idxJet ).pt() / iRawJet->pt();
+            jet2_jesSF_up   = jet_JESUP  .at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+            jet2_jesSF_down = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+            
+          }
+        }
 
       
     
@@ -899,23 +899,23 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 */
 
     double triggerSF =( realData ? 1 :
-			scalefactors.get_TrigMuSF( & selection )
-			*
-			scalefactors.get_TrigElSF( & selection )
-			) ;
+                        scalefactors.get_TrigMuSF( & selection )
+                        *
+                        scalefactors.get_TrigElSF( & selection )
+                        ) ;
     std::cout << triggerSF <<",";
 
     double lepIDSF =  ( realData ? 1 : 
-			scalefactors.getTightMuon_IDSF( & selection )
-			* 
-			scalefactors.getTightElectron_IDSF( & selection )
-			);
+                        scalefactors.getTightMuon_IDSF( & selection )
+                        * 
+                        scalefactors.getTightElectron_IDSF( & selection )
+                        );
 
     double lepISOSF =  ( realData ? 1 : 
-			 scalefactors.getTightElectron_RecoSF( & selection ) 
-			*
-			 scalefactors.getTightMuon_IsoSF( & selection ) 
-			) ; 
+                         scalefactors.getTightElectron_RecoSF( & selection ) 
+                        *
+                         scalefactors.getTightMuon_IsoSF( & selection ) 
+                        ) ; 
     std::cout << lepIDSF <<","<< lepISOSF <<",";
 
     if( false ){
@@ -953,8 +953,8 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       TLorentzVector Tjet6;
       double dR1,dR2,dR3,dR4,dR5,dR6;
       if(nj1){
-      	Tjet1.SetPtEtaPhiE(jet_pt[0],jet_eta[0],jet_phi[0],0);
-	dR1=Tjet1.DeltaR(Telectron);
+              Tjet1.SetPtEtaPhiE(jet_pt[0],jet_eta[0],jet_phi[0],0);
+        dR1=Tjet1.DeltaR(Telectron);
       }
       if(nj2)Tjet2.SetPtEtaPhiE(jet_pt[1],jet_eta[1],jet_phi[1],0);
       if(nj3)Tjet3.SetPtEtaPhiE(jet_pt[2],jet_eta[2],jet_phi[2],0);
@@ -1051,51 +1051,51 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
      
   
   
-     	std::vector<pat::Jet> correctedJets_Sys = miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets,systematics[iSys],true,true);
+             std::vector<pat::Jet> correctedJets_Sys = miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets,systematics[iSys],true,true);
   
-     	std::vector<pat::Jet> selectedJets_Sys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_Sys, 20., 5.0, jetID::none, '-' );
-     	std::vector<pat::Jet> selectedJets_Sys_sorted = miniAODhelper.GetSortedByPt(selectedJets_Sys_unsorted);
+             std::vector<pat::Jet> selectedJets_Sys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_Sys, 20., 5.0, jetID::none, '-' );
+             std::vector<pat::Jet> selectedJets_Sys_sorted = miniAODhelper.GetSortedByPt(selectedJets_Sys_unsorted);
    
-    	std::vector<double> jet_pt_sys;
-     	std::vector<double> jet_eta_sys;
-     	std::vector<double> jet_phi_sys;
-     	std::vector<double> jet_m_sys;
-     	std::vector<double> jet_csvV_sys;
-     	std::vector<int> jet_flavour_sys;
-     	std::vector<int> jet_PUID_passWPLooseV_sys;
+            std::vector<double> jet_pt_sys;
+             std::vector<double> jet_eta_sys;
+             std::vector<double> jet_phi_sys;
+             std::vector<double> jet_m_sys;
+             std::vector<double> jet_csvV_sys;
+             std::vector<int> jet_flavour_sys;
+             std::vector<int> jet_PUID_passWPLooseV_sys;
    
-		  // Loop over selected jets
-     	for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_Sys_sorted.begin(); iJet != selectedJets_Sys_sorted.end(); iJet++ ){ 
+                  // Loop over selected jets
+             for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_Sys_sorted.begin(); iJet != selectedJets_Sys_sorted.end(); iJet++ ){ 
 
-      		jet_pt_sys  .push_back( iJet -> pt()  );
-      		jet_phi_sys .push_back( iJet -> phi() );
-      		jet_eta_sys .push_back( iJet -> eta() );
-      		jet_m_sys   .push_back( iJet -> mass()   );
-      	
-      		double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
-      		jet_csvV.push_back(myCSV);
-      		jet_flavour.push_back(iJet->hadronFlavour());
+                      jet_pt_sys  .push_back( iJet -> pt()  );
+                      jet_phi_sys .push_back( iJet -> phi() );
+                      jet_eta_sys .push_back( iJet -> eta() );
+                      jet_m_sys   .push_back( iJet -> mass()   );
+              
+                      double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
+                      jet_csvV.push_back(myCSV);
+                      jet_flavour.push_back(iJet->hadronFlavour());
       
-      		int    idflag = iJet->userInt("pileupJetId:fullId");
-        	bool passPUIDLoose = PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kLoose ); 
- 		if(passPUIDLoose)jet_PUID_passWPLooseV.push_back(99);
-        	else jet_PUID_passWPLooseV.push_back(88);
-	
-	}// end loop over iJet    
+                      int    idflag = iJet->userInt("pileupJetId:fullId");
+                bool passPUIDLoose = PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kLoose ); 
+                 if(passPUIDLoose)jet_PUID_passWPLooseV.push_back(99);
+                else jet_PUID_passWPLooseV.push_back(88);
+        
+        }// end loop over iJet    
 
 /*
-    	pat::MET correctedMET = pfmet->at(0);
-    	Float_t MET_pt = correctedMET.pt();
-    	Float_t MET_phi = correctedMET.phi();
-	*/
-	vjet_pt_sys.push_back(jet_pt_sys);
-	vjet_eta_sys.push_back(jet_eta_sys);
-	vjet_phi_sys.push_back(jet_phi_sys);
-	vjet_m_sys.push_back(jet_m_sys);
-	vjet_csvV_sys.push_back(jet_csvV_sys);
-	vjet_flavour_sys.push_back(jet_flavour_sys);
-	//vjet_PUID_passWPLooseV_sys(jet_PUID_passWPLooseV_sys);
-	
+            pat::MET correctedMET = pfmet->at(0);
+            Float_t MET_pt = correctedMET.pt();
+            Float_t MET_phi = correctedMET.phi();
+        */
+        vjet_pt_sys.push_back(jet_pt_sys);
+        vjet_eta_sys.push_back(jet_eta_sys);
+        vjet_phi_sys.push_back(jet_phi_sys);
+        vjet_m_sys.push_back(jet_m_sys);
+        vjet_csvV_sys.push_back(jet_csvV_sys);
+        vjet_flavour_sys.push_back(jet_flavour_sys);
+        //vjet_PUID_passWPLooseV_sys(jet_PUID_passWPLooseV_sys);
+        
       }// End Systematics Loop
       }
     
@@ -1148,7 +1148,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     eve->passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v_ = ( passHLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v ) ? 1 : 0;
     eve->passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v_ = ( passHLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v ) ? 1 : 0;
   
-    eve->passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v_		    = ( passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v	      ) ? 1 : 0 ;
+    eve->passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v_                    = ( passHLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v              ) ? 1 : 0 ;
     eve->passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v_           = ( passHLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v           ) ? 1 : 0 ;
 
     eve->passHLT_Ele27_eta2p1_WPTight_Gsf_v_ =  ( passHLT_Ele27_eta2p1_WPTight_Gsf_v) ? 1 : 0;
@@ -1182,10 +1182,10 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
   //Jet Variables//
   /////////////////
   
-    eve->jet_pt_[0]	= jet_pt;
+    eve->jet_pt_[0]        = jet_pt;
     eve->jet_eta_[0]      = jet_eta;
-    eve->jet_phi_[0]	= jet_phi;
-    eve->jet_m_[0]	= jet_m;
+    eve->jet_phi_[0]        = jet_phi;
+    eve->jet_m_[0]        = jet_m;
     eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[0] = jet_csvV;
     eve->jet_flavour_[0]  = jet_flavour;
   //eve->jet_sysLabel_[0] = "NA";
@@ -1194,15 +1194,15 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
   eve->MET_[0] = MET_phi;
   */
     if(doSystematics){
-  	for(int i=0;i<int(systematics.size());i++){
-		eve->jet_pt_[i+1]	= vjet_pt_sys[i];
-  		eve->jet_eta_[i+1]      = vjet_eta_sys[i];
-  		eve->jet_phi_[i+1]	= vjet_phi_sys[i];
-  		eve->jet_m_[i+1]	= vjet_m_sys[i];
-  		eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[i+1] = vjet_csvV_sys[i];
-  		eve->jet_flavour_[i+1]  = vjet_flavour_sys[i];
-  		//eve->jet_sysLabel_[i+1] = systematics_list[i];
-	}
+          for(int i=0;i<int(systematics.size());i++){
+                eve->jet_pt_[i+1]        = vjet_pt_sys[i];
+                  eve->jet_eta_[i+1]      = vjet_eta_sys[i];
+                  eve->jet_phi_[i+1]        = vjet_phi_sys[i];
+                  eve->jet_m_[i+1]        = vjet_m_sys[i];
+                  eve->jet_combinedInclusiveSecondaryVertexV2BJetTags_[i+1] = vjet_csvV_sys[i];
+                  eve->jet_flavour_[i+1]  = vjet_flavour_sys[i];
+                  //eve->jet_sysLabel_[i+1] = systematics_list[i];
+        }
     }
   
   

@@ -26,7 +26,7 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing("python")
 
 # set defaults of common options
-options.setDefault("inputFiles", "/store/user/sflowers/44949CF4-96C6-E611-B9A0-0025905A6122.root") 
+options.setDefault("inputFiles", "file:/afs/cern.ch/work/a/alefeld/public/44949CF4-96C6-E611-B9A0-0025905A6122.root") 
 #options.setDefault("inputFiles","root://cmsxrootd.fnal.gov//store/mc/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/0693E0E7-97BE-E611-B32F-0CC47A78A3D8.root")
 #options.setDefault("outputFile", "yggdrasil_treeMaker_simplified.root")
 options.setDefault("maxEvents", 1000)
@@ -219,27 +219,27 @@ if options.deterministicSeeds:
 # electron energy regression
 #
 
-#if options.electronRegression:
-  #  if options.electronRegression == "GT":
-  #      from EgammaAnalysis.ElectronTools.regressionWeights_cfi import regressionWeights
- #       process = regressionWeights(process)
-#    else:
-       # from EgammaAnalysis.ElectronTools.regressionWeights_local_cfi import GBRDWrapperRcd
-      #  GBRDWrapperRcd.connect = cms.string("sqlite_file:" + options.electronRegression)
-     #   process.regressions = GBRDWrapperRcd
-    #    process.regressions.DumpStat = cms.untracked.bool(False)
-   #     process.es_prefer_regressions = cms.ESPrefer("PoolDBESSource", "regressions")
-  #  process.load("EgammaAnalysis.ElectronTools.regressionApplication_cff")
- #   seq += process.regressionApplication
-#
-   # # set the electron and photon sources
-  #  process.slimmedElectrons.src = electronCollection
- #   process.slimmedPhotons.src = photonCollection
-#
-   # # overwrite output collections
-  #  electronCollection = cms.InputTag("slimmedElectrons", "", process.name_())
- #   photonCollection = cms.InputTag("slimmedPhotons", "", process.name_())
-#
+if options.electronRegression:
+    if options.electronRegression == "GT":
+        from EgammaAnalysis.ElectronTools.regressionWeights_cfi import regressionWeights
+        process = regressionWeights(process)
+    else:
+        from EgammaAnalysis.ElectronTools.regressionWeights_local_cfi import GBRDWrapperRcd
+        GBRDWrapperRcd.connect = cms.string("sqlite_file:" + options.electronRegression)
+        process.regressions = GBRDWrapperRcd
+        process.regressions.DumpStat = cms.untracked.bool(False)
+        process.es_prefer_regressions = cms.ESPrefer("PoolDBESSource", "regressions")
+    process.load("EgammaAnalysis.ElectronTools.regressionApplication_cff")
+    seq += process.regressionApplication
+
+    # set the electron and photon sources
+    process.slimmedElectrons.src = electronCollection
+    process.slimmedPhotons.src = photonCollection
+
+    # overwrite output collections
+    electronCollection = cms.InputTag("slimmedElectrons", "", process.name_())
+    photonCollection = cms.InputTag("slimmedPhotons", "", process.name_())
+
 
 
 
