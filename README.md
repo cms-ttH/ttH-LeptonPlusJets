@@ -37,8 +37,7 @@ Yggdrasil Framework
     git fetch ahinzmann PUidMiniAODfix80
     git cherry-pick ca33756e1747aec27d13971bcfd0874b16724e7f
 
-    scramv1 b -j 2
-#   ^^^ Or some other low number. Too many cores and the process will run out of memory.
+    scramv1 b -j 4
 
 ### Yggdrasil Specific Code
     
@@ -47,4 +46,5 @@ Yggdrasil Framework
     git clone -b CMSSW_8_0_24_v1_sync https://github.com/cms-ttH/MiniAOD.git
     git clone -b PostSync2017 https://github.com/cms-ttH/ttH-LeptonPlusJets.git
 
-    scramv1 b -j 2
+    scramv1 b -j 4
+    scramv1 b -j 4
