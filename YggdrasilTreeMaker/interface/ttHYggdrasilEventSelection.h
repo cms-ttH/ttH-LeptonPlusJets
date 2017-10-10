@@ -36,7 +36,8 @@ class ttHYggdrasilEventSelection{
 		   const std::vector<int>    * isMuon, 
 		   const std::vector<double> * relIso,
 		   const std::vector<int> * POGLoose,
-		   const std::vector<int> * POGTight );
+		   const std::vector<int> * POGTight,
+		   const std::vector<uint32_t> * seed );
 
   void SetJets( const std::vector<double> * pt, 
 		const std::vector<double> * eta, 
@@ -57,6 +58,7 @@ class ttHYggdrasilEventSelection{
   std::vector<double>                leptonsSCEta();
   std::vector<int>                   leptonsIsMuon();
   std::vector<int>                   leptonsCharge();
+  std::vector<uint32_t>              leptonsSeed();
 
   // ttH Loose leoton
   std::vector<const TLorentzVector*> looseLeptons();
@@ -64,6 +66,7 @@ class ttHYggdrasilEventSelection{
   std::vector<double>                looseLeptonsScEta();
   std::vector<int>                   looseLeptonsIsMuon();
   std::vector<int>                   looseLeptonsCharge();
+  std::vector<uint32_t>              looseLeptonsSeed();
 
   // ttH Jet 
   std::vector<const TLorentzVector*> jets();
@@ -92,6 +95,7 @@ class ttHYggdrasilEventSelection{
   std::vector<double>                DLTightLeptonsRelIso();
   std::vector<int>                   DLTightLeptonsIsMuon();
   std::vector<int>                   DLTightLeptonsCharge();
+  std::vector<unsigned int>          DLTightLeptonsSeed();
   
   double DLinvMass;
   std::vector<int>                selected_jets_step;
@@ -128,7 +132,8 @@ class ttHYggdrasilEventSelection{
 			   std::vector<double>                * v_iso ,
 			   std::vector<double>                * v_scEta ,
 			   std::vector<int>                   * v_isMuon ,
-			   std::vector<int>                   * v_charge );
+			   std::vector<int>                   * v_charge ,
+			   std::vector<unsigned int>          * v_seed );
   bool _OverlapWithLooseLeptons( double eta, double phi);
   double _calcDR2( double eta1, double eta2, double phi1, double phi2 );
 
@@ -172,6 +177,7 @@ class ttHYggdrasilEventSelection{
   const std::vector<double> * lep_relIso;
   const std::vector<int>    * lep_POGLoose;
   const std::vector<int>    * lep_POGTight;
+  const std::vector<uint32_t> * lep_seed;
 
   const std::vector<double> * jet_pt; 
   const std::vector<double> * jet_eta; 
@@ -188,12 +194,14 @@ class ttHYggdrasilEventSelection{
   std::vector<int>                   selected_tightLeptonsIsMuon;
   std::vector<int>                   selected_tightLeptonsCharge;
   std::vector<double>                selected_tightLeptonsScEta;
+  std::vector<unsigned int>          selected_tightLeptonsSeed;
 
   std::vector<const TLorentzVector*> selected_looseLeptons;
   std::vector<double>                selected_looseLeptonsRelIso;
   std::vector<double>                selected_looseLeptonsScEta;
   std::vector<int>                   selected_looseLeptonsIsMuon;
   std::vector<int>                   selected_looseLeptonsCharge;
+  std::vector<unsigned int>          selected_looseLeptonsSeed;
 
   std::vector<const TLorentzVector*> selected_jets;
   std::vector<double>                selected_jetsBdiscriminant;
@@ -210,6 +218,7 @@ class ttHYggdrasilEventSelection{
   std::vector<double>                DLselected_tightLeptonsScEta;
   std::vector<int>                   DLselected_tightLeptonsIsMuon;
   std::vector<int>                   DLselected_tightLeptonsCharge;
+  std::vector<unsigned int>          DLselected_tightLeptonsSeed;
 
   // ** for DiLepton channel Study **
   std::vector<const TLorentzVector*> DLsofterselected_jets;

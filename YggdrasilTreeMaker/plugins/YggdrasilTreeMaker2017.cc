@@ -503,9 +503,13 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     std::vector<double> lepton_relIso;
     std::vector<int>    lepton_isTight;
     std::vector<int>    lepton_isLoose;
+    std::vector<uint32_t> lepton_seed;
 		 
     for( std::vector<pat::Muon>::const_iterator iMu = muons->begin(); iMu != muons->end(); iMu++ ){ 
- 
+
+        TRandom3 rng;
+        int32_t seed = iMu->userInt("deterministicSeed");
+        rng.SetSeed((uint32_t)seed);
    
     	int trkCharge = -99;
     	if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
@@ -530,10 +534,15 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     	lepton_relIso.push_back( miniAODhelper.GetMuonRelIso(*iMu, coneSize::R04, corrType::deltaBeta) ) ;
     	lepton_isLoose.push_back(isPOGLoose);
     	lepton_isTight.push_back(isPOGTight);
+    	lepton_seed.push_back(seed);
     
      }
   
      for( std::vector<pat::Electron>::const_iterator iEle = electrons->begin(); iEle != electrons->end(); iEle++ ){ 
+
+        TRandom3 rng;
+        int32_t seed = iEle->userInt("deterministicSeed");
+        rng.SetSeed((uint32_t)seed);
 
      	int trkCharge = -99;
     	if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
@@ -546,7 +555,6 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     	if( iEle->pt() < 15 ){ continue;}
     	if( fabs( iEle->eta() ) > 2.4 ){ continue;}
     //
-
 
     	bool inCrack = false;
     	double scEta = -99;
@@ -567,6 +575,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
    	lepton_relIso.push_back(miniAODhelper.GetElectronRelIso(*iEle, coneSize::R03, corrType::rhoEA,effAreaType::spring16) );
    	lepton_isLoose.push_back(isPOGLoose);
     	lepton_isTight.push_back(isPOGTight);
+        lepton_seed.push_back(seed);
 
      }
      
@@ -656,7 +665,8 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 			    & lepton_isMuon, 
 			    & lepton_relIso,
 			    & lepton_isLoose,
-			    & lepton_isTight );
+			    & lepton_isTight,
+			    & lepton_seed );
     selection . SetJets( & jet_pt , 
 			 & jet_eta , 
 			 & jet_phi, 
@@ -679,8 +689,8 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
   bool selected = true;
   if(!(selection . PassSingleElCh()) && !(selection.PassSingleMuCh()) && !(selection.PassElEl()) && !(selection.PassElMu()) && !(selection.PassMuMu()))selected=false;
   if(selected && pass_METFilters && pass_MuFilters && DoSync){
-
- 
+//  if(selected && pass_METFilters && pass_MuFilters && DoSync && lumi==1499 && evt==209064){
+    // HACKED FOR EASY SYNC DEBUG FIXME
 
     std::cout << run<< "," ;
     std::cout <<lumi << "," ;
@@ -705,27 +715,40 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 			else std::cout<<"0,";
 	}
 
+    double lepIDSF =  ( realData ? 1 : 
+			scalefactors.getTightMuon_IDSF( & selection )
+			* 
+			scalefactors.getTightElectron_IDSF( & selection )
+	);
+    double lepISOSF =  ( realData ? 1 : 
+			 scalefactors.getTightElectron_RecoSF( & selection ) 
+			*
+			 scalefactors.getTightMuon_IsoSF( & selection ) 
+	);
+
     if( selection.looseLeptons().size() >=1 ){
       long pdgid = 
 	( selection.looseLeptonsIsMuon().at(0) == 1 ? 13 : 11 )
 	*
 	( selection.looseLeptonsCharge().at(0) > 0 ? -1 : +1 ) ;
-      std::cout<< std::setprecision(4) << selection.looseLeptons().at(0)->Pt()<< "," ;
+      std::cout<< std::setprecision(4) << selection.looseLeptons().at(0)->Pt() << ",";
+      std::cout<< std::setprecision(4) << selection.looseLeptons().at(0)->Eta()<< ",";
       if(SyncDebug){
-      std::cout<<std::setprecision(4)<<selection.looseLeptons().at(0)->Eta()<<",";
-      std::cout<<std::setprecision(4)<<selection.looseLeptons().at(0)->Phi()<<",";
-      	int cracker=-808;
-      	for(int i=0;i<int(selection.looseLeptons().size());i++){
-      		if(( fabs(selection.looseLeptonsScEta().at(i))>1.4442 && fabs(selection.looseLeptonsScEta().at(i))<1.5660 ))cracker=888;
+        std::cout<<std::setprecision(4)<<selection.looseLeptons().at(0)->Phi()<<",";
+        int cracker=-808;
+        for(int i=0;i<int(selection.looseLeptons().size());i++){
+      	  if(( fabs(selection.looseLeptonsScEta().at(i))>1.4442 && fabs(selection.looseLeptonsScEta().at(i))<1.5660 ))cracker=888;
       	}
-      	std::cout<<cracker<<",";
-	
+        std::cout<<cracker<<",";	
       }
       std::cout<< std::setprecision(4) << selection.looseLeptonsRelIso().at(0)<< "," ;
       std::cout << pdgid << "," ;
+      std::cout << lepIDSF << "," ;
+      std::cout << lepISOSF << "," ;
+      std::cout << selection.looseLeptonsSeed().at(0) << "," ;
     }else{
-      std::cout << "-1,-1,-1," ;
-      if(SyncDebug)cout<<"-1,";
+      std::cout << "-1,-1,-1,-1,-1,-1,-1," ;
+      if(SyncDebug)cout<<"-1,-1";
     }
 
     if( selection.looseLeptons().size() >=2 ){
@@ -734,10 +757,14 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	*
 	( selection.looseLeptonsCharge().at(1) > 0 ? -1 : +1 ) ;
       std::cout<< std::setprecision(4) << selection.looseLeptons().at(1)->Pt()<< "," ;
+      std::cout<< std::setprecision(4) << selection.looseLeptons().at(1)->Eta()<< "," ;
       std::cout<< std::setprecision(4) << selection.looseLeptonsRelIso().at(1)<< "," ;
       std::cout << pdgid << "," ;
+      std::cout << lepIDSF << "," ;
+      std::cout << lepISOSF << "," ;
+      std::cout << selection.looseLeptonsSeed().at(1) << "," ;
     }else{
-      std::cout << "-1,-1,-1," ;
+      std::cout << "-1,-1,-1,-1,-1,-1,-1," ;
     }
     
     {
@@ -750,9 +777,21 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       double jet1_jesSF = -1;
       double jet1_jesSF_up = -1;
       double jet1_jesSF_down = -1;
+      double jet1_jesSF_PileUpDataMC_down = -1;
+      double jet1_jesSF_RelativeFSR_up = -1;
+      double jet1_jerSF_nominal = -1;
+      double jet1_PUJetID = -1;
+      double jet1_PUJetIDDiscriminant = -1;
+      uint32_t jet1_seed = 999999999;
       double jet2_jesSF = -1;
       double jet2_jesSF_up = -1;
       double jet2_jesSF_down = -1;
+      double jet2_jesSF_PileUpDataMC_down = -1;
+      double jet2_jesSF_RelativeFSR_up = -1;
+      double jet2_jerSF_nominal = -1;
+      double jet2_PUJetID = -1;
+      double jet2_PUJetIDDiscriminant = -1;
+      uint32_t jet2_seed = 999999999;
 
       const bool  doJES = true;
       const bool  doJER = false;
@@ -760,6 +799,10 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       std::vector<pat::Jet> jet_JESNOMI =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::NA     , doJES, doJER );
       std::vector<pat::Jet> jet_JESUP   =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::JESup  , doJES, doJER );
       std::vector<pat::Jet> jet_JESDOWN =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::JESdown, doJES, doJER );
+      std::vector<pat::Jet> jet_JESPileUpDataMCDOWN   =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::JESPileUpDataMCdown  , doJES, doJER );
+      std::vector<pat::Jet> jet_JESRelativeFSRUP =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::JESRelativeFSRup, doJES, doJER );
+
+      std::vector<pat::Jet> jet_JERNOMI =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::NA, false, true );
       
 
 	const double eta1 = selection.jets().at(0)->Eta();
@@ -787,6 +830,12 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	    jet1_jesSF     = jet_JESNOMI.at( idxJet ).pt() / iRawJet->pt();
 	    jet1_jesSF_up   = jet_JESUP  .at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
 	    jet1_jesSF_down = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+            jet1_jesSF_PileUpDataMC_down = jet_JESPileUpDataMCDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+            jet1_jesSF_RelativeFSR_up = jet_JESRelativeFSRUP.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+            jet1_jerSF_nominal = jet_JERNOMI.at( idxJet ).pt() / iRawJet->pt();
+            jet1_PUJetID = jet_JESNOMI.at( idxJet ).userInt("pileupJetIdUpdated:fullId");
+            jet1_PUJetIDDiscriminant = jet_JESNOMI.at( idxJet ).userFloat("pileupJetIdUpdated:fullDiscriminant");
+            jet1_seed = jet_JESNOMI.at( idxJet ).userInt("deterministicSeed");
 	    
 	  }
 	  
@@ -801,6 +850,12 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	    jet2_jesSF     = jet_JESNOMI.at( idxJet ).pt() / iRawJet->pt();
 	    jet2_jesSF_up   = jet_JESUP  .at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
 	    jet2_jesSF_down = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+            jet2_jesSF_PileUpDataMC_down = jet_JESPileUpDataMCDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+            jet2_jesSF_RelativeFSR_up = jet_JESRelativeFSRUP.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+            jet2_jerSF_nominal = jet_JERNOMI.at( idxJet ).pt() / iRawJet->pt();
+            jet2_PUJetID = jet_JESNOMI.at( idxJet ).userInt("pileupJetIdUpdated:fullId");
+            jet2_PUJetIDDiscriminant = jet_JESNOMI.at( idxJet ).userFloat("pileupJetIdUpdated:fullDiscriminant");
+            jet2_seed = jet_JESNOMI.at( idxJet ).userInt("deterministicSeed");
 	    
 	  }
 	}
@@ -814,7 +869,13 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF : -1)<< ",";
       std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_up : -1)<< ",";
       std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_down : -1)<< ",";
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_PileUpDataMC_down : -1)<< ",";
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_RelativeFSR_up : -1)<< ",";
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jerSF_nominal : -1)<< ",";
       std::cout<< std::setprecision(4) << ( nJet_ge_one ? selection.jetsBdiscriminant().at(0) : -1 )<< "," ;
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_PUJetID : -1)<< ",";
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_PUJetIDDiscriminant : -1)<< ",";
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_seed : -1)<< ",";
       
       
  
@@ -825,7 +886,15 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       std::cout<< std::setprecision(4) << ( nJet_ge_two ? jet2_jesSF : -1)<< ",";
       std::cout<< std::setprecision(4) << ( nJet_ge_two ? jet2_jesSF_up : -1)<< ",";
       std::cout<< std::setprecision(4) << ( nJet_ge_two ? jet2_jesSF_down : -1)<< ",";
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_jesSF_PileUpDataMC_down : -1)<< ",";
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_jesSF_RelativeFSR_up : -1)<< ",";
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_jerSF_nominal : -1)<< ",";
       std::cout<< std::setprecision(4) << ( nJet_ge_two ? selection.jetsBdiscriminant().at(1) : -1 )<< "," ;
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_PUJetID : -1)<< ",";
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_PUJetIDDiscriminant : -1)<< ",";
+      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_seed : -1)<< ",";
+
+
       if(SyncDebug){
       
            std::cout<< std::setprecision(4) << ( nJet_ge_three ? selection.jets().at(2)->Pt() : -1 )<< "," ;
@@ -856,16 +925,18 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     
     
     //MASS OF TOO LLs
-    std::cout<<selection.DLinvMass<<",";
+    std::cout << selection.DLinvMass << ",";
 
     if( !realData ){
-    std::cout <<additionalJetEventId<<",";
-    std::cout << numTruePV <<",";
-    std::cout << scalefactors.get_pu_wgt( numTruePV) << "," ;    // PUWeight,
+    std::cout << additionalJetEventId << ","; //ttHFCategory
+    std::cout << -1 << ","; //ttHFGenFilterTag
+    std::cout << numTruePV << ",";
+    std::cout << scalefactors.get_pu_wgt(numTruePV) << "," ;    // PUWeight,
     }else{
-    std::cout << 1<<",";
-    std::cout << 1<< "," ;
-    std::cout << 1<<",";    // PUWeight,
+    std::cout << 1 << ",";
+    std::cout << 1 << ",";
+    std::cout << 1 << ",";
+    std::cout << 1 << ",";    // PUWeight,
     }
 
     double csvSF = 1 ;
@@ -889,14 +960,14 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     std::cout << csvSF_hf_down <<",";
     std::cout << csvSF_cErr1_down <<",";
     
-/*
-    //  top PT weight 
-    if( isMC ){
-    std::cout << eve -> weight_topPt_ <<",";
-    }else{
-    std::cout << 1 <<",";
-    }
-*/
+
+    //pdf weight
+    std::cout<<1<<",";
+    std::cout<<1<<",";
+    
+    //mem weight
+    std::cout<< 1 <<",";
+    std::cout<< 1 <<",";
 
     double triggerSF =( realData ? 1 :
 			scalefactors.get_TrigMuSF( & selection )
@@ -905,18 +976,17 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 			) ;
     std::cout << triggerSF <<",";
 
-    double lepIDSF =  ( realData ? 1 : 
-			scalefactors.getTightMuon_IDSF( & selection )
-			* 
-			scalefactors.getTightElectron_IDSF( & selection )
-			);
+    //top PT weight 
+    if( !realData ){
+      std::cout << eve->weight_topPt_ <<",";
+    }else{
+      std::cout << 1 <<",";
+    }
 
-    double lepISOSF =  ( realData ? 1 : 
-			 scalefactors.getTightElectron_RecoSF( & selection ) 
-			*
-			 scalefactors.getTightMuon_IsoSF( & selection ) 
-			) ; 
-    std::cout << lepIDSF <<","<< lepISOSF <<",";
+    //Discriminators
+    std::cout<< std::setprecision(4) << -1 << "," ;
+    std::cout<< std::setprecision(4) << -1 << "," ;
+    std::cout<< std::setprecision(4) << -1 << "," ;
 
     if( false ){
 //    std::cout << eve->weight_q2_upup_ <<",";
@@ -927,8 +997,8 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     }else{
 //    std::cout << 1 <<",";
 //    std::cout << 1 <<",";
-    std::cout << 1 <<",";
-    std::cout << 1 <<",";
+//    std::cout << 1 <<",";
+//    std::cout << 1 <<",";
     }
     
 
@@ -1002,14 +1072,6 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       
     
     }
-    
-    //pdf weight
-    std::cout<<1<<",";
-    std::cout<<1<<",";
-    
-    //mem weight
-    std::cout<< 1 <<",";
-    std::cout<< 1;
     
     std::cout << std::endl ;
   }//if selected (Sync Stuff)
@@ -1172,6 +1234,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     eve->lepton_relIso_           = lepton_relIso;
     eve->lepton_isTight_          = lepton_isTight;
     eve->lepton_isLoose_          = lepton_isLoose;
+    eve->lepton_seed_             = lepton_seed;
   
  
   //These Variables contain systematics so we need to loop
@@ -1236,9 +1299,29 @@ YggdrasilTreeMaker2017::beginJob()
    cloneglobalmucount=0;
 
  
-  if(DoSync && !SyncDebug)std::cout<<"run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,lep1_pt,lep1_iso,lep1_pdgId,lep2_pt,lep2_iso,lep2_pdgId,jet1_pt,jet1_eta,jet1_phi,jet1_jesSF,jet1_jesSF_up,jet1_jesSF_down,jet1_csv,jet2_pt,jet2_eta,jet2_phi,jet2_jesSF,jet2_jesSF_up,jet2_jesSF_down,jet2_csv,MET_pt,MET_phi,mll,ttHFCategory,n_interactions,puWeight,csvSF,csvSF_lf_up,csvSF_hf_down,csvSF_cErr1_down,pdf_up,pdf_down,me_up,me_down"<<endl;
+  if(DoSync && !SyncDebug)
+    std::cout<< "run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,"
+             << "lep1_pt,lep1_eta,lep1_iso,lep1_pdgId,lep1_idSF,lep1_isoSF,lep1_seed,"
+             << "lep2_pt,lep2_eta,lep2_iso,lep2_pdgId,lep2_idSF,lep2_isoSF,lep2_seed,"
+             << "jet1_pt,jet1_eta,jet1_phi,jet1_jesSF,jet1_jesSF_up,jet1_jesSF_down,jet1_jesSF_PileUpDataMC_down,jet1_jesSF_RelativeFSR_up,jet1_jerSF_nominal,jet1_csv,jet1_PUJetId,jet1_PUJetDiscriminant,jet1_seed,"
+             << "jet2_pt,jet2_eta,jet2_phi,jet2_jesSF,jet2_jesSF_up,jet2_jesSF_down,jet2_jesSF_PileUpDataMC_down,jet2_jesSF_RelativeFSR_up,jet2_jerSF_nominal,jet2_csv,jet2_PUJetId,jet2_PUJetDiscriminant,jet2_seed,"
+             << "MET_pt,MET_phi,mll,ttHFCategory,ttHFGenFilterTag,n_interactions,puWeight,"
+             << "csvSF,csvSF_lf_up,csvSF_hf_down,csvSF_cErr1_down,"
+             << "pdf_up,pdf_down,me_up,me_down,triggerSF,top_pt_weight,"
+             << "bdt_output,dnn_ttH_output,dnn_ttbb_output"<<endl;
 
-  if(DoSync && SyncDebug)std::cout<<"run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,lep1_pt,lep1_crack,lep1_iso,lep1_pdgId,lep2_pt,lep2_iso,lep2_pdgId,jet1_pt,jet1_eta,jet1_phi,jet1_jesSF,jet1_jesSF_up,jet1_jesSF_down,jet1_csv,jet2_pt,jet2_eta,jet2_phi,jet2_jesSF,jet2_jesSF_up,jet2_jesSF_down,jet2_csv,jet3_pt,jet3_eta,jet3_phi,jet3_csv,jet4_pt,jet4_eta,jet4_phi,jet4_csv,jetClose,MET_pt,MET_phi,mll,ttHFCategory,n_interactions,puWeight,csvSF,csvSF_lf_up,csvSF_hf_down,csvSF_cErr1_down,pdf_up,pdf_down,me_up,me_down"<<endl;
+  if(DoSync && SyncDebug) 
+    std::cout<< "run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,"
+             << "lep1_pt,lep1_eta,lep1_phi,lep1_crack,lep1_iso,lep1_pdgId,lep1_idSF,lep1_isoSF,lep1_seed,"
+             << "lep2_pt,lep2_eta,lep2_iso,lep2_pdgId,lep2_idSF,lep2_isoSF,lep2_seed,"
+             << "jet1_pt,jet1_eta,jet1_phi,jet1_jesSF,jet1_jesSF_up,jet1_jesSF_down,jet1_jesSF_PileUpDataMC_down,jet1_jesSF_RelativeFSR_up,jet1_jerSF_nominal,jet1_csv,jet1_PUJetId,jet1_PUJetDiscriminant,jet1_seed,"
+             << "jet2_pt,jet2_eta,jet2_phi,jet2_jesSF,jet2_jesSF_up,jet2_jesSF_down,jet2_jesSF_PileUpDataMC_down,jet2_jesSF_RelativeFSR_up,jet2_jerSF_nominal,jet2_csv,jet2_PUJetId,jet2_PUJetDiscriminant,jet2_seed,"
+             << "jet3_pt,jet3_eta,jet3_phi,jet3_csv,"
+             << "jet4_pt,jet4_eta,jet4_phi,jet4_csv,"
+             << "jetClose,MET_pt,MET_phi,mll,ttHFCategory,ttHFGenFilterTag,n_interactions,puWeight,"
+             << "csvSF,csvSF_lf_up,csvSF_hf_down,csvSF_cErr1_down,"
+             << "pdf_up,pdf_down,me_up,me_down,triggerSF,top_pt_weight,"
+             << "bdt_output,dnn_ttH_output,dnn_ttbb_output"<<endl;
  
 
 }

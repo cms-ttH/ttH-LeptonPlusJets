@@ -110,6 +110,7 @@ struct yggdrasilEventVars{
   vdouble lepton_puppirelIso_;
   vdouble lepton_scEta_;
   vdouble lepton_dRSingleLepTrig_;
+  std::vector<unsigned int> lepton_seed_;
 
   Float_t wgt_lumi_;
   Float_t wgt_xs_;
@@ -264,6 +265,7 @@ void yggdrasilEventVars::initialize(){
   lepton_puppirelIso_.clear();
   lepton_scEta_.clear();
   lepton_dRSingleLepTrig_.clear();
+  lepton_seed_.clear();
 
   wgt_generator_        = -99.9;
   wgt_lumi_             = -99.9;

@@ -193,7 +193,8 @@ void ttHYggdrasilEventSelection::SetLeptons( const std::vector<double> * pt,
 					     const std::vector<int>    * isMuon, 
 					     const std::vector<double> * relIso,
 					     const std::vector<int> * POGLoose,
-					     const std::vector<int> * POGTight ){
+					     const std::vector<int> * POGTight,
+					     const std::vector<uint32_t> * seed ){
   
   lep_pt  = pt ;  
   lep_eta = eta ;  
@@ -205,6 +206,7 @@ void ttHYggdrasilEventSelection::SetLeptons( const std::vector<double> * pt,
   lep_relIso = relIso ; 
   lep_POGLoose = POGLoose ; 
   lep_POGTight = POGTight ;
+  lep_seed = seed ;
 
 }
 
@@ -249,20 +251,22 @@ void  ttHYggdrasilEventSelection::_SortChargedLepton(){
 		      & selected_tightLeptonsRelIso,
 		      & selected_tightLeptonsScEta,
 		      & selected_tightLeptonsIsMuon,
-		      & selected_tightLeptonsCharge );
+		      & selected_tightLeptonsCharge,
+		      & selected_tightLeptonsSeed );
 
   _SortChargedLepton( & selected_looseLeptons,
 		      & selected_looseLeptonsRelIso,
 		      & selected_looseLeptonsScEta,
 		      & selected_looseLeptonsIsMuon,
-		      & selected_looseLeptonsCharge );
+		      & selected_looseLeptonsCharge,
+		      & selected_looseLeptonsSeed );
 
   _SortChargedLepton( & DLselected_tightLeptons,
 		      & DLselected_tightLeptonsRelIso,
 		      & DLselected_tightLeptonsScEta,
 		      & DLselected_tightLeptonsIsMuon,
-		      & DLselected_tightLeptonsCharge
-		      );
+		      & DLselected_tightLeptonsCharge,
+		      & DLselected_tightLeptonsSeed );
 
 }
 
@@ -271,7 +275,8 @@ void  ttHYggdrasilEventSelection::_SortChargedLepton( std::vector<const TLorentz
 						      std::vector<double>                * v_iso ,
 						      std::vector<double>                * v_scEta ,
 						      std::vector<int>                   * v_isMuon ,
-						      std::vector<int>                   * v_charge ){
+						      std::vector<int>                   * v_charge ,
+						      std::vector<unsigned int>          * v_seed ){
 
 
   for( unsigned int i = 0 ; i < v_TLV -> size() ; i++  ){
@@ -354,12 +359,14 @@ void ttHYggdrasilEventSelection::_InitInternalVariables(){
   selected_tightLeptonsScEta.clear();
   selected_tightLeptonsIsMuon.clear();
   selected_tightLeptonsCharge.clear();
+  selected_tightLeptonsSeed.clear();
   
   selected_looseLeptons.clear();
   selected_looseLeptonsRelIso.clear();
   selected_looseLeptonsScEta.clear();
   selected_looseLeptonsIsMuon.clear();
   selected_looseLeptonsCharge.clear();
+  selected_looseLeptonsSeed.clear();
   
   selected_jets.clear();
   selected_jetsBdiscriminant.clear();
@@ -375,6 +382,7 @@ void ttHYggdrasilEventSelection::_InitInternalVariables(){
   DLselected_tightLeptonsScEta.clear();
   DLselected_tightLeptonsIsMuon.clear();
   DLselected_tightLeptonsCharge.clear();
+  DLselected_tightLeptonsSeed.clear();
 
   // ** For DiLepton channel study **  
   DLsofterselected_jets.clear();
@@ -414,6 +422,7 @@ void ttHYggdrasilEventSelection::_ElectronSelection(){
     selected_looseLeptonsScEta.push_back( lep_scEta -> at(idx) );
     selected_looseLeptonsIsMuon.push_back( 0 );
     selected_looseLeptonsCharge.push_back( lep_charge -> at(idx) );
+    selected_looseLeptonsSeed.push_back( lep_seed -> at(idx) );
 
     if(     lep_POGTight -> at(idx)  != 1  ) continue ;
     if(        lep_pt    -> at(idx)   < Thre_TightEl_PT  ) continue ;
@@ -425,6 +434,7 @@ void ttHYggdrasilEventSelection::_ElectronSelection(){
     selected_tightLeptonsScEta.push_back( lep_scEta -> at(idx) );
     selected_tightLeptonsIsMuon.push_back( 0 );
     selected_tightLeptonsCharge.push_back( lep_charge -> at(idx) );
+    selected_tightLeptonsSeed.push_back( lep_seed -> at(idx) );
 
   }
 
@@ -450,6 +460,7 @@ void ttHYggdrasilEventSelection::_ElectronSelection(){
     DLselected_tightLeptonsScEta.push_back( lep_scEta -> at(idx) );
     DLselected_tightLeptonsIsMuon.push_back( 0 );
     DLselected_tightLeptonsCharge.push_back( lep_charge -> at(idx) );
+    DLselected_tightLeptonsSeed.push_back( lep_seed -> at(idx) );
 
   }
 
@@ -478,6 +489,7 @@ void ttHYggdrasilEventSelection::_MuonSelection(){
     selected_looseLeptonsScEta.push_back( lep_scEta -> at(idx) );
     selected_looseLeptonsIsMuon.push_back( 1 );
     selected_looseLeptonsCharge.push_back( lep_charge -> at(idx) );
+    selected_looseLeptonsSeed.push_back( lep_seed -> at(idx) );
 
     if(     lep_POGTight -> at(idx)  != 1  ) continue ;
     if(        lep_pt    -> at(idx)   < Thre_TightMu_PT  ) continue ;
@@ -489,6 +501,7 @@ void ttHYggdrasilEventSelection::_MuonSelection(){
     selected_tightLeptonsScEta.push_back( lep_scEta -> at(idx) );
     selected_tightLeptonsIsMuon.push_back( 1 );
     selected_tightLeptonsCharge.push_back( lep_charge -> at(idx) );
+    selected_tightLeptonsSeed.push_back( lep_seed -> at(idx) );
 
   }
 
@@ -513,6 +526,7 @@ void ttHYggdrasilEventSelection::_MuonSelection(){
     DLselected_tightLeptonsScEta.push_back( lep_scEta -> at(idx) );
     DLselected_tightLeptonsIsMuon.push_back( 1 );
     DLselected_tightLeptonsCharge.push_back( lep_charge -> at(idx) );
+    DLselected_tightLeptonsSeed.push_back( lep_seed -> at(idx) );
 
   }
 
@@ -872,12 +886,14 @@ std::vector<double>                ttHYggdrasilEventSelection::leptonsRelIso(){r
 std::vector<int>                   ttHYggdrasilEventSelection::leptonsIsMuon(){return selected_tightLeptonsIsMuon; }
 std::vector<int>                   ttHYggdrasilEventSelection::leptonsCharge(){return selected_tightLeptonsCharge; }
 std::vector<double>                ttHYggdrasilEventSelection::leptonsSCEta (){return selected_tightLeptonsScEta; }
+std::vector<unsigned int>          ttHYggdrasilEventSelection::leptonsSeed () {return selected_tightLeptonsSeed; }
 
 std::vector<const TLorentzVector*> ttHYggdrasilEventSelection::looseLeptons()      {return selected_looseLeptons;}
 std::vector<double>                ttHYggdrasilEventSelection::looseLeptonsRelIso(){return selected_looseLeptonsRelIso;}
 std::vector<int>                   ttHYggdrasilEventSelection::looseLeptonsIsMuon(){return selected_looseLeptonsIsMuon;}
 std::vector<int>                   ttHYggdrasilEventSelection::looseLeptonsCharge(){return selected_looseLeptonsCharge;}
 std::vector<double>                ttHYggdrasilEventSelection::looseLeptonsScEta (){return selected_looseLeptonsScEta;}
+std::vector<unsigned int>          ttHYggdrasilEventSelection::looseLeptonsSeed (){return selected_looseLeptonsSeed;}
 
 std::vector<const TLorentzVector*> ttHYggdrasilEventSelection::jets()             { return selected_jets;}
 std::vector<double> ttHYggdrasilEventSelection::jetsBdiscriminant(){ return selected_jetsBdiscriminant;}
@@ -893,6 +909,7 @@ std::vector<const TLorentzVector*> ttHYggdrasilEventSelection::DLTightLeptons() 
 std::vector<double>                ttHYggdrasilEventSelection::DLTightLeptonsRelIso(){return DLselected_tightLeptonsRelIso; }
 std::vector<int>                   ttHYggdrasilEventSelection::DLTightLeptonsIsMuon(){return DLselected_tightLeptonsIsMuon; }
 std::vector<int>                   ttHYggdrasilEventSelection::DLTightLeptonsCharge(){return DLselected_tightLeptonsCharge; }
+std::vector<unsigned int>          ttHYggdrasilEventSelection::DLTightLeptonsSeed()  {return DLselected_tightLeptonsSeed; }
 std::vector<const TLorentzVector*> ttHYggdrasilEventSelection::DLSofterjets() { return DLsofterselected_jets;}
 std::vector<double> ttHYggdrasilEventSelection::DLSofterjetsBdiscriminant()   { return DLsofterselected_jetsBdiscriminant;}
 std::vector<const TLorentzVector*> ttHYggdrasilEventSelection::DLSofterbjets(){ return DLsofterselected_bjets;}

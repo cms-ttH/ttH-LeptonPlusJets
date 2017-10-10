@@ -59,10 +59,10 @@ options.register("realData",
  #   "the era of the data taking period, e.g. '2016B', empty for MC"
 #)
 #options.register("lumiFile",
-    #"os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON.txt'",
-   # VarParsing.multiplicity.singleton,
-  #  VarParsing.varType.string,
- #   "file for selecting runs and lumis"
+#    os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON.txt',
+#    VarParsing.multiplicity.singleton,
+#    VarParsing.varType.string,
+#    "file for selecting runs and lumis"
 #)
 options.register("deterministicSeeds",
     True,
@@ -219,27 +219,27 @@ if options.deterministicSeeds:
 # electron energy regression
 #
 
-#if options.electronRegression:
-  #  if options.electronRegression == "GT":
-  #      from EgammaAnalysis.ElectronTools.regressionWeights_cfi import regressionWeights
- #       process = regressionWeights(process)
-#    else:
-       # from EgammaAnalysis.ElectronTools.regressionWeights_local_cfi import GBRDWrapperRcd
-      #  GBRDWrapperRcd.connect = cms.string("sqlite_file:" + options.electronRegression)
-     #   process.regressions = GBRDWrapperRcd
-    #    process.regressions.DumpStat = cms.untracked.bool(False)
-   #     process.es_prefer_regressions = cms.ESPrefer("PoolDBESSource", "regressions")
-  #  process.load("EgammaAnalysis.ElectronTools.regressionApplication_cff")
- #   seq += process.regressionApplication
-#
-   # # set the electron and photon sources
-  #  process.slimmedElectrons.src = electronCollection
- #   process.slimmedPhotons.src = photonCollection
-#
-   # # overwrite output collections
-  #  electronCollection = cms.InputTag("slimmedElectrons", "", process.name_())
- #   photonCollection = cms.InputTag("slimmedPhotons", "", process.name_())
-#
+if options.electronRegression:
+    if options.electronRegression == "GT":
+        from EgammaAnalysis.ElectronTools.regressionWeights_cfi import regressionWeights
+        process = regressionWeights(process)
+    else:
+        from EgammaAnalysis.ElectronTools.regressionWeights_local_cfi import GBRDWrapperRcd
+        GBRDWrapperRcd.connect = cms.string("sqlite_file:" + options.electronRegression)
+        process.regressions = GBRDWrapperRcd
+        process.regressions.DumpStat = cms.untracked.bool(False)
+        process.es_prefer_regressions = cms.ESPrefer("PoolDBESSource", "regressions")
+    process.load("EgammaAnalysis.ElectronTools.regressionApplication_cff")
+    seq += process.regressionApplication
+
+    # set the electron and photon sources
+    process.slimmedElectrons.src = electronCollection
+    process.slimmedPhotons.src = photonCollection
+
+    # overwrite output collections
+    electronCollection = cms.InputTag("slimmedElectrons", "", process.name_())
+    photonCollection = cms.InputTag("slimmedPhotons", "", process.name_())
+
 
 
 
@@ -251,7 +251,7 @@ if options.deterministicSeeds:
 #
 
 # only allowed when regression was used
-if options.electronSmearing and options.electronRegression and False:
+if options.electronSmearing and options.electronRegression:
     process.load("Configuration.StandardSequences.Services_cff")
     process.RandomNumberGeneratorService = cms.Service("RandomNumberGeneratorService",
         calibratedPatElectrons = cms.PSet(
@@ -264,7 +264,7 @@ if options.electronSmearing and options.electronRegression and False:
     process.calibratedPatElectrons.isMC           = cms.bool(not options.realData)
     process.calibratedPatElectrons.correctionFile = cms.string(files[options.electronSmearing])
     process.calibratedPatElectrons.electrons      = electronCollection
-    if options.fillSeeds:
+    if options.deterministicSeeds:
         process.calibratedPatElectrons.seedUserInt = process.deterministicSeeds.seedUserInt
     seq += process.calibratedPatElectrons
 
@@ -424,7 +424,7 @@ if options.updatePUJetId:
 #    process.load("FOO.BAR.ttHFGenFilter_cff") # replace FOO.BAR with your subystem.module
 
 #if options.tagTThf:
- #   process.load("FOO.BAR.ttbarCategorization_cff") # replace FOO.BAR with your subystem.module
+#    process.load("ttH-LeptonPlusJets.YggdrasilTreeMaker.ttbarCategorization_cff") # replace FOO.BAR with your subystem.module
 
 
 #
