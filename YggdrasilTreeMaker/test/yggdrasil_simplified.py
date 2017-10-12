@@ -31,8 +31,20 @@ options = VarParsing("python")
 # ttH
 options.setDefault("inputFiles", "/store/mc/RunIISummer16MiniAODv2/ttHTobb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/44949CF4-96C6-E611-B9A0-0025905A6122.root")
 #options.setDefault("inputFiles", "/store/user/sflowers/44949CF4-96C6-E611-B9A0-0025905A6122.root")
+options.register("SyncType",
+    "ttH",
+    VarParsing.multiplicity.singleton,
+    VarParsing.varType.string,
+    "Which type of file to sync on (ttH, ttJets, data)"
+)
 # ttjets
 #options.setDefault("inputFiles","/store/mc/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/0693E0E7-97BE-E611-B32F-0CC47A78A3D8.root")
+#options.register("SyncType",
+#    "ttJets",
+#    VarParsing.multiplicity.singleton,
+#    VarParsing.varType.string,
+#    "Which type of file to sync on (ttH, ttJets, data)"
+#)
 
 #options.setDefault("inputFiles", "/store/user/sflowers/44949CF4-96C6-E611-B9A0-0025905A6122.root")
 #options.setDefault("outputFile", "yggdrasil_treeMaker_simplified.root")
@@ -60,7 +72,7 @@ options.register("realData",
     "input dataset contains real data"
 )
 options.register("dataEra",
-    "",
+    "2015_74x",
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "the era of the data taking period, e.g. '2016B', empty for MC"
@@ -644,8 +656,9 @@ process.ttHTreeMaker.jetCollection      = jetCollection
 process.ttHTreeMaker.genjetCollection   = genjetCollection
 
 process.ttHTreeMaker.realData = cms.bool(options.realData)
-#process.ttHTreeMaker.dataEra = cms.bool(options.dataEra)
+process.ttHTreeMaker.dataEra = cms.string(options.dataEra)
 process.ttHTreeMaker.DoSync = cms.bool(options.DoSync)
+process.ttHTreeMaker.SyncType = cms.string(options.SyncType)
 process.ttHTreeMaker.SyncDebug = cms.bool(options.SyncDebug)
 process.ttHTreeMaker.SkipEvents = cms.bool(options.SkipEvents)
 process.ttHTreeMaker.doSystematics = cms.bool(options.doSystematics)
