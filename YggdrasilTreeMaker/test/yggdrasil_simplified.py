@@ -16,6 +16,7 @@ https://gitlab.cern.ch/ttH/reference/blob/master/definitions/Moriond17.md#11-cms
 import os
 import FWCore.ParameterSet.Config as cms
 #import PhysicsTools.PythonAnalysis.LumiList as LumiList
+import FWCore.PythonUtilities.LumiList as LumiList
 from FWCore.ParameterSet.VarParsing import VarParsing
 
 
@@ -25,9 +26,15 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 
 options = VarParsing("python")
 
+
 # set defaults of common options
-options.setDefault("inputFiles", "/store/user/sflowers/44949CF4-96C6-E611-B9A0-0025905A6122.root") 
-#options.setDefault("inputFiles","root://cmsxrootd.fnal.gov//store/mc/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/0693E0E7-97BE-E611-B32F-0CC47A78A3D8.root")
+# ttH
+options.setDefault("inputFiles", "/store/mc/RunIISummer16MiniAODv2/ttHTobb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/44949CF4-96C6-E611-B9A0-0025905A6122.root")
+#options.setDefault("inputFiles", "/store/user/sflowers/44949CF4-96C6-E611-B9A0-0025905A6122.root")
+# ttjets
+#options.setDefault("inputFiles","/store/mc/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/0693E0E7-97BE-E611-B32F-0CC47A78A3D8.root")
+
+#options.setDefault("inputFiles", "/store/user/sflowers/44949CF4-96C6-E611-B9A0-0025905A6122.root")
 #options.setDefault("outputFile", "yggdrasil_treeMaker_simplified.root")
 options.setDefault("maxEvents", 1000)
 
@@ -39,7 +46,7 @@ options.register("globalTag",
     "the global tag to use"
 )
 
-
+### Implemented in YggdrasilTreeMaker2017.cc
 #options.register("triggers",
  #   [],
   #  VarParsing.multiplicity.list,
@@ -52,18 +59,18 @@ options.register("realData",
     VarParsing.varType.bool,
     "input dataset contains real data"
 )
-#options.register("dataEra",
- #   "",
- #   VarParsing.multiplicity.singleton,
- #   VarParsing.varType.string,
- #   "the era of the data taking period, e.g. '2016B', empty for MC"
-#)
-#options.register("lumiFile",
-#    os.environ.get('CMSSW_BASE')+'/src/ttH-LeptonPlusJets/YggdrasilTreeMaker/data/Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON.txt',
-#    VarParsing.multiplicity.singleton,
-#    VarParsing.varType.string,
-#    "file for selecting runs and lumis"
-#)
+options.register("dataEra",
+    "",
+    VarParsing.multiplicity.singleton,
+    VarParsing.varType.string,
+    "the era of the data taking period, e.g. '2016B', empty for MC"
+)
+options.register("lumiFile",
+    "/afs/cern.ch/cms/CAF/CMSCOMM/COMM_DQM/certification/Collisions16/13TeV/ReReco/Final/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt",
+    VarParsing.multiplicity.singleton,
+    VarParsing.varType.string,
+    "file for selecting runs and lumis"
+)
 options.register("deterministicSeeds",
     True,
     VarParsing.multiplicity.singleton,
@@ -173,8 +180,8 @@ process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = options.reportEvery
 
 # good run and lumi selection
-#if options.lumiFile:
-#    process.source.lumisToProcess = LumiList.LumiList(filename=options.lumiFile).getVLuminosityBlockRange()
+if options.lumiFile and options.realData:
+    process.source.lumisToProcess = LumiList.LumiList(filename=options.lumiFile).getVLuminosityBlockRange()
 
 # standard seuquences with global tag
 if options.globalTag:
@@ -637,6 +644,7 @@ process.ttHTreeMaker.jetCollection      = jetCollection
 process.ttHTreeMaker.genjetCollection   = genjetCollection
 
 process.ttHTreeMaker.realData = cms.bool(options.realData)
+#process.ttHTreeMaker.dataEra = cms.bool(options.dataEra)
 process.ttHTreeMaker.DoSync = cms.bool(options.DoSync)
 process.ttHTreeMaker.SyncDebug = cms.bool(options.SyncDebug)
 process.ttHTreeMaker.SkipEvents = cms.bool(options.SkipEvents)
@@ -644,17 +652,18 @@ process.ttHTreeMaker.doSystematics = cms.bool(options.doSystematics)
 process.ttHTreeMaker.saveOnlySelected = cms.bool(options.saveOnlySelected)
 
 
-# electron VID collections
-process.ttHTreeMaker.electronVIDCollections = cms.VInputTag(
-     "egmGsfElectronIDs:mvaEleID-Spring15-25ns-Trig-V1-wp80",
-     "egmGsfElectronIDs:mvaEleID-Spring15-25ns-Trig-V1-wp90",
-     "egmGsfElectronIDs:mvaEleID-Spring16-GeneralPurpose-V1-wp80",
-     "egmGsfElectronIDs:mvaEleID-Spring16-GeneralPurpose-V1-wp90",
-     "egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-veto",
-     "egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-loose",
-     "egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium",
-     "egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"
- )
+
+# electron VID collections - currently not used
+#process.ttHTreeMaker.electronVIDCollections = cms.VInputTag(
+#     "egmGsfElectronIDs:mvaEleID-Spring15-25ns-Trig-V1-wp80",
+#     "egmGsfElectronIDs:mvaEleID-Spring15-25ns-Trig-V1-wp90",
+#     "egmGsfElectronIDs:mvaEleID-Spring16-GeneralPurpose-V1-wp80",
+#     "egmGsfElectronIDs:mvaEleID-Spring16-GeneralPurpose-V1-wp90",
+#     "egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-veto",
+#     "egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-loose",
+#     "egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium",
+#     "egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"
+# )
 
 process.ttHTreeMaker.BadPFMuonFilter = cms.InputTag("BadPFMuonFilter")
 process.ttHTreeMaker.BadChargedCandidateFilter = cms.InputTag("BadChargedCandidateFilter")

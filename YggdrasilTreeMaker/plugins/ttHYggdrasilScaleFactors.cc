@@ -504,11 +504,18 @@ double ttHYggdrasilScaleFactors::get_csv_wgt( std::vector<double> jetPts, std::v
     int flavor = jetFlavors[iJet];
 
     int iPt = -1; int iEta = -1;
-    if (jetPt >=19.99 && jetPt<30) iPt = 0;
-    else if (jetPt >=30 && jetPt<40) iPt = 1;
-    else if (jetPt >=40 && jetPt<60) iPt = 2;
-    else if (jetPt >=60 && jetPt<100) iPt = 3;
-    else if (jetPt >=100) iPt = 4;
+    if(abs(flavor) == 4 || abs(flavor) == 5) {
+      if (jetPt >=19.99 && jetPt<30) iPt = 0;
+      else if (jetPt >=30 && jetPt<50) iPt = 1;
+      else if (jetPt >=50 && jetPt<70) iPt = 2;
+      else if (jetPt >=70 && jetPt<100) iPt = 3;
+      else if (jetPt >=100) iPt = 4;
+    } else {
+      if (jetPt >=19.99 && jetPt<30) iPt = 0;
+      else if (jetPt >=30 && jetPt<40) iPt = 1;
+      else if (jetPt >=40 && jetPt<60) iPt = 2;
+      else if (jetPt >=60 ) iPt = 3;
+    }
 
     if (jetAbsEta >=0 &&  jetAbsEta<0.8 ) iEta = 0;
     else if ( jetAbsEta>=0.8 && jetAbsEta<1.6 )  iEta = 1;
@@ -527,7 +534,6 @@ double ttHYggdrasilScaleFactors::get_csv_wgt( std::vector<double> jetPts, std::v
       if( iCSVWgtC!=0 ) csvWgtC *= iCSVWgtC;
     }
     else {
-      if (iPt >=3) iPt=3;       /// [30-40], [40-60] and [60-10000] only 3 Pt bins for lf
       int useCSVBin = (csv>=0.) ? h_csv_wgt_lf[iSysLF][iPt][iEta]->FindBin(csv) : 1;
       double iCSVWgtLF = h_csv_wgt_lf[iSysLF][iPt][iEta]->GetBinContent(useCSVBin);
       if( iCSVWgtLF!=0 ) csvWgtlf *= iCSVWgtLF;

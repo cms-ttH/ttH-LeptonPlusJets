@@ -127,7 +127,9 @@ class YggdrasilTreeMaker2017 : public edm::EDAnalyzer {
       ttHYggdrasilScaleFactors scalefactors;
      
       bool realData;
+      
       bool DoSync;
+//      std::string dataEra;
       bool SkipEvents;
       bool SyncDebug;
       bool doSystematics;
@@ -174,6 +176,7 @@ YggdrasilTreeMaker2017::YggdrasilTreeMaker2017(const edm::ParameterSet& iConfig)
 
 
    realData = iConfig.getParameter<bool>("realData");
+//   dataEra = iConfig.getParameter<std::string>("dataEra");
    DoSync = iConfig.getParameter<bool>("DoSync");
    SyncDebug = iConfig.getParameter<bool>("SyncDebug");
    SkipEvents = iConfig.getParameter<bool>("SkipEvents");
@@ -184,8 +187,7 @@ YggdrasilTreeMaker2017::YggdrasilTreeMaker2017(const edm::ParameterSet& iConfig)
    
    analysisType::analysisType iAnalysisType = analysisType::LJ;
    const int sampleID = realData ? -1 : 1;
-   const std::string era = "2015_74x";
-   miniAODhelper.SetUp(era, sampleID, iAnalysisType, realData);
+   miniAODhelper.SetUp("2015_74x", sampleID, iAnalysisType, realData);
    
    edm::Service<TFileService> fs_;
    worldTree = fs_->make<TTree>("worldTree", "worldTree");
@@ -689,30 +691,30 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
   bool selected = true;
   if(!(selection . PassSingleElCh()) && !(selection.PassSingleMuCh()) && !(selection.PassElEl()) && !(selection.PassElMu()) && !(selection.PassMuMu()))selected=false;
   if(selected && pass_METFilters && pass_MuFilters && DoSync){
-//  if(selected && pass_METFilters && pass_MuFilters && DoSync && lumi==1499 && evt==209064){
-    // HACKED FOR EASY SYNC DEBUG FIXME
 
-    std::cout << run<< "," ;
-    std::cout <<lumi << "," ;
-    std::cout <<evt << "," ;
+    std::ofstream csvfile ("ttH.csv",std::ofstream::app);
+
+    csvfile << run<< "," ;
+    csvfile <<lumi << "," ;
+    csvfile <<evt << "," ;
     
     //      is_e, is_mu, is_ee, is_emu, is_mumu,
-    std::cout <<(selection . PassSingleElCh() ?1:0) << "," ;
-    std::cout <<(selection . PassSingleMuCh() ?1:0) << "," ;
-    std::cout <<(selection . PassElEl()       ?1:0) << "," ;
-    std::cout <<(selection . PassElMu()       ?1:0) << "," ;
-    std::cout <<(selection . PassMuMu()       ?1:0) << "," ;
+    csvfile <<(selection . PassSingleElCh() ?1:0) << "," ;
+    csvfile <<(selection . PassSingleMuCh() ?1:0) << "," ;
+    csvfile <<(selection . PassElEl()       ?1:0) << "," ;
+    csvfile <<(selection . PassElMu()       ?1:0) << "," ;
+    csvfile <<(selection . PassMuMu()       ?1:0) << "," ;
     
 
 	if(selection.PassElEl() || selection.PassElMu() || selection.PassMuMu()){
-		std::cout<< selection.DLSofterjets().size()<<",";
-		std::cout<< selection.DLSofterbjets().size()<<",";
+		csvfile << selection.DLSofterjets().size()<<",";
+		csvfile << selection.DLSofterbjets().size()<<",";
 	}
 	else{
-		if(selection.jets().size()>0)    std::cout << selection.jets().size() << "," ;
-			else std::cout<<"0,";
-		if(selection.bjets().size()>0)    std::cout << selection.bjets().size() << ",";
-			else std::cout<<"0,";
+		if(selection.jets().size()>0)    csvfile << selection.jets().size() << "," ;
+			else csvfile <<"0,";
+		if(selection.bjets().size()>0)    csvfile << selection.bjets().size() << ",";
+			else csvfile <<"0,";
 	}
 
     double lepIDSF =  ( realData ? 1 : 
@@ -731,23 +733,23 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	( selection.looseLeptonsIsMuon().at(0) == 1 ? 13 : 11 )
 	*
 	( selection.looseLeptonsCharge().at(0) > 0 ? -1 : +1 ) ;
-      std::cout<< std::setprecision(4) << selection.looseLeptons().at(0)->Pt() << ",";
-      std::cout<< std::setprecision(4) << selection.looseLeptons().at(0)->Eta()<< ",";
+      csvfile << std::setprecision(4) << selection.looseLeptons().at(0)->Pt() << ",";
+      csvfile << std::setprecision(4) << selection.looseLeptons().at(0)->Eta()<< ",";
       if(SyncDebug){
-        std::cout<<std::setprecision(4)<<selection.looseLeptons().at(0)->Phi()<<",";
+        csvfile <<std::setprecision(4)<<selection.looseLeptons().at(0)->Phi()<<",";
         int cracker=-808;
         for(int i=0;i<int(selection.looseLeptons().size());i++){
       	  if(( fabs(selection.looseLeptonsScEta().at(i))>1.4442 && fabs(selection.looseLeptonsScEta().at(i))<1.5660 ))cracker=888;
       	}
-        std::cout<<cracker<<",";	
+        csvfile <<cracker<<",";	
       }
-      std::cout<< std::setprecision(4) << selection.looseLeptonsRelIso().at(0)<< "," ;
-      std::cout << pdgid << "," ;
-      std::cout << lepIDSF << "," ;
-      std::cout << lepISOSF << "," ;
-      std::cout << selection.looseLeptonsSeed().at(0) << "," ;
+      csvfile << std::setprecision(4) << selection.looseLeptonsRelIso().at(0)<< "," ;
+      csvfile << pdgid << "," ;
+      csvfile << lepIDSF << "," ;
+      csvfile << lepISOSF << "," ;
+      csvfile << selection.looseLeptonsSeed().at(0) << "," ;
     }else{
-      std::cout << "-1,-1,-1,-1,-1,-1,-1," ;
+      csvfile << "-1,-1,-1,-1,-1,-1,-1," ;
       if(SyncDebug)cout<<"-1,-1";
     }
 
@@ -756,15 +758,15 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	( selection.looseLeptonsIsMuon().at(1) == 1 ? 13 : 11 )
 	*
 	( selection.looseLeptonsCharge().at(1) > 0 ? -1 : +1 ) ;
-      std::cout<< std::setprecision(4) << selection.looseLeptons().at(1)->Pt()<< "," ;
-      std::cout<< std::setprecision(4) << selection.looseLeptons().at(1)->Eta()<< "," ;
-      std::cout<< std::setprecision(4) << selection.looseLeptonsRelIso().at(1)<< "," ;
-      std::cout << pdgid << "," ;
-      std::cout << lepIDSF << "," ;
-      std::cout << lepISOSF << "," ;
-      std::cout << selection.looseLeptonsSeed().at(1) << "," ;
+      csvfile << std::setprecision(4) << selection.looseLeptons().at(1)->Pt()<< "," ;
+      csvfile << std::setprecision(4) << selection.looseLeptons().at(1)->Eta()<< "," ;
+      csvfile << std::setprecision(4) << selection.looseLeptonsRelIso().at(1)<< "," ;
+      csvfile << pdgid << "," ;
+      csvfile << lepIDSF << "," ;
+      csvfile << lepISOSF << "," ;
+      csvfile << selection.looseLeptonsSeed().at(1) << "," ;
     }else{
-      std::cout << "-1,-1,-1,-1,-1,-1,-1," ;
+      csvfile << "-1,-1,-1,-1,-1,-1,-1," ;
     }
     
     {
@@ -863,80 +865,80 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       
     
     
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? selection.jets().at(0)->Pt() : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? selection.jets().at(0)->Eta() : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? selection.jets().at(0)->Phi() : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_up : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_down : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_PileUpDataMC_down : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_RelativeFSR_up : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_jerSF_nominal : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? selection.jetsBdiscriminant().at(0) : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_PUJetID : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_PUJetIDDiscriminant : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet1_seed : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? selection.jets().at(0)->Pt() : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? selection.jets().at(0)->Eta() : -1)<< "," ;
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? selection.jets().at(0)->Phi() : -1)<< "," ;
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_up : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_down : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_PileUpDataMC_down : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet1_jesSF_RelativeFSR_up : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet1_jerSF_nominal : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? selection.jetsBdiscriminant().at(0) : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet1_PUJetID : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet1_PUJetIDDiscriminant : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet1_seed : -1)<< ",";
       
       
  
      
-      std::cout<< std::setprecision(4) << ( nJet_ge_two ? selection.jets().at(1)->Pt() : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_two ? selection.jets().at(1)->Eta() : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_two ? selection.jets().at(1)->Phi() : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_two ? jet2_jesSF : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_two ? jet2_jesSF_up : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_two ? jet2_jesSF_down : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_jesSF_PileUpDataMC_down : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_jesSF_RelativeFSR_up : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_jerSF_nominal : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_two ? selection.jetsBdiscriminant().at(1) : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_PUJetID : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_PUJetIDDiscriminant : -1)<< ",";
-      std::cout<< std::setprecision(4) << ( nJet_ge_one ? jet2_seed : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_two ? selection.jets().at(1)->Pt() : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nJet_ge_two ? selection.jets().at(1)->Eta() : -1)<< "," ;
+      csvfile << std::setprecision(4) << ( nJet_ge_two ? selection.jets().at(1)->Phi() : -1)<< "," ;
+      csvfile << std::setprecision(4) << ( nJet_ge_two ? jet2_jesSF : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_two ? jet2_jesSF_up : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_two ? jet2_jesSF_down : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet2_jesSF_PileUpDataMC_down : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet2_jesSF_RelativeFSR_up : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet2_jerSF_nominal : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_two ? selection.jetsBdiscriminant().at(1) : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet2_PUJetID : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet2_PUJetIDDiscriminant : -1)<< ",";
+      csvfile << std::setprecision(4) << ( nJet_ge_one ? jet2_seed : -1)<< ",";
 
 
       if(SyncDebug){
       
-           std::cout<< std::setprecision(4) << ( nJet_ge_three ? selection.jets().at(2)->Pt() : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_three ? selection.jets().at(2)->Eta() : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_three ? selection.jets().at(2)->Phi() : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_three ? selection.jetsBdiscriminant().at(2) : -1 )<< "," ;
-      
-           std::cout<< std::setprecision(4) << ( nJet_ge_four ? selection.jets().at(3)->Pt() : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_four ? selection.jets().at(3)->Eta() : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_four ? selection.jets().at(3)->Phi() : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nJet_ge_four ? selection.jetsBdiscriminant().at(3) : -1 )<< "," ;
-      
-      int closeone = -2;
-      for(int i=0;i<int(selectedJets_noSys_sorted.size());i++){
-      pat::Jet * iJet = & selectedJets_noSys_sorted.at(i);
-      if(fabs(iJet->pt()-30.0)<1.5)closeone=87;
-      }
-      std::cout<<std::setprecision(4)<<closeone<<",";
-      }
+        csvfile << std::setprecision(4) << ( nJet_ge_three ? selection.jets().at(2)->Pt() : -1 )<< "," ;
+        csvfile << std::setprecision(4) << ( nJet_ge_three ? selection.jets().at(2)->Eta() : -1)<< "," ;
+        csvfile << std::setprecision(4) << ( nJet_ge_three ? selection.jets().at(2)->Phi() : -1)<< "," ;
+        csvfile << std::setprecision(4) << ( nJet_ge_three ? selection.jetsBdiscriminant().at(2) : -1 )<< "," ;
+
+        csvfile << std::setprecision(4) << ( nJet_ge_four ? selection.jets().at(3)->Pt() : -1 )<< "," ;
+        csvfile << std::setprecision(4) << ( nJet_ge_four ? selection.jets().at(3)->Eta() : -1)<< "," ;
+        csvfile << std::setprecision(4) << ( nJet_ge_four ? selection.jets().at(3)->Phi() : -1)<< "," ;
+        csvfile << std::setprecision(4) << ( nJet_ge_four ? selection.jetsBdiscriminant().at(3) : -1 )<< "," ;
+
+        int closeone = -2;
+        for(int i=0;i<int(selectedJets_noSys_sorted.size());i++){
+        pat::Jet * iJet = & selectedJets_noSys_sorted.at(i);
+        if(fabs(iJet->pt()-30.0)<1.5)closeone=87;
+        }
+        csvfile <<std::setprecision(4)<<closeone<<",";
+        }
       
       
      
       
       
     }
-    std::cout<< std::setprecision(4) << MET_pt << "," ;
-    std::cout<< std::setprecision(4) << MET_phi<< "," ;
+    csvfile << std::setprecision(4) << MET_pt << "," ;
+    csvfile << std::setprecision(4) << MET_phi<< "," ;
     
     
     //MASS OF TOO LLs
-    std::cout << selection.DLinvMass << ",";
+    csvfile << selection.DLinvMass << ",";
 
     if( !realData ){
-    std::cout << additionalJetEventId << ","; //ttHFCategory
-    std::cout << -1 << ","; //ttHFGenFilterTag
-    std::cout << numTruePV << ",";
-    std::cout << scalefactors.get_pu_wgt(numTruePV) << "," ;    // PUWeight,
+    csvfile << additionalJetEventId << ","; //ttHFCategory
+    csvfile << -1 << ","; //ttHFGenFilterTag
+    csvfile << numTruePV << ",";
+    csvfile << scalefactors.get_pu_wgt(numTruePV) << "," ;    // PUWeight,
     }else{
-    std::cout << 1 << ",";
-    std::cout << 1 << ",";
-    std::cout << 1 << ",";
-    std::cout << 1 << ",";    // PUWeight,
+    csvfile << 1 << ",";
+    csvfile << 1 << ",";
+    csvfile << 1 << ",";
+    csvfile << 1 << ",";    // PUWeight,
     }
 
     double csvSF = 1 ;
@@ -955,50 +957,50 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       csvSF_hf_down = scalefactors.get_csv_wgt( & selection , hf_down_sys,  dummy , dummy , dummy );
       csvSF_cErr1_down = scalefactors.get_csv_wgt( & selection , cErr1_down_sys,  dummy , dummy , dummy );
     }
-    std::cout << csvSF <<",";
-    std::cout << csvSF_lf_up <<",";
-    std::cout << csvSF_hf_down <<",";
-    std::cout << csvSF_cErr1_down <<",";
+    csvfile << csvSF <<",";
+    csvfile << csvSF_lf_up <<",";
+    csvfile << csvSF_hf_down <<",";
+    csvfile << csvSF_cErr1_down <<",";
     
 
     //pdf weight
-    std::cout<<1<<",";
-    std::cout<<1<<",";
+    csvfile <<1<<",";
+    csvfile <<1<<",";
     
     //mem weight
-    std::cout<< 1 <<",";
-    std::cout<< 1 <<",";
+    csvfile << 1 <<",";
+    csvfile << 1 <<",";
 
     double triggerSF =( realData ? 1 :
 			scalefactors.get_TrigMuSF( & selection )
 			*
 			scalefactors.get_TrigElSF( & selection )
 			) ;
-    std::cout << triggerSF <<",";
+    csvfile << triggerSF <<",";
 
     //top PT weight 
     if( !realData ){
-      std::cout << eve->weight_topPt_ <<",";
+      csvfile << eve->weight_topPt_ <<",";
     }else{
-      std::cout << 1 <<",";
+      csvfile << 1 <<",";
     }
 
     //Discriminators
-    std::cout<< std::setprecision(4) << -1 << "," ;
-    std::cout<< std::setprecision(4) << -1 << "," ;
-    std::cout<< std::setprecision(4) << -1 << "," ;
+    csvfile << std::setprecision(4) << -1 << "," ;
+    csvfile << std::setprecision(4) << -1 << "," ;
+    csvfile << std::setprecision(4) << -1;
 
     if( false ){
-//    std::cout << eve->weight_q2_upup_ <<",";
-//    std::cout << eve->weight_q2_downdown_ <<",";
+//    csvfile << eve->weight_q2_upup_ <<",";
+//    csvfile << eve->weight_q2_downdown_ <<",";
     
-//    std::cout << eve-> weight_PDF_NNPDF30NLO_up_ <<",";
-//    std::cout << eve-> weight_PDF_NNPDF30NLO_down_<< ",";
+//    csvfile << eve-> weight_PDF_NNPDF30NLO_up_ <<",";
+//    csvfile << eve-> weight_PDF_NNPDF30NLO_down_<< ",";
     }else{
-//    std::cout << 1 <<",";
-//    std::cout << 1 <<",";
-//    std::cout << 1 <<",";
-//    std::cout << 1 <<",";
+//    csvfile << 1 <<",";
+//    csvfile << 1 <<",";
+//    csvfile << 1 <<",";
+//    csvfile << 1 <<",";
     }
     
 
@@ -1039,41 +1041,43 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       if(nj6)dR6=Tjet6.DeltaR(Telectron);
       
       
-      std::cout<< std::setprecision(4) << ( nj1? jet_pt[0] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj1 ? selection.selected_jets_step[0] : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nj1 ? jet_csvV[0] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj1 ? dR1 : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[0] : -1)<<","; 
-      std::cout<< std::setprecision(4) << ( nj2 ? jet_pt[1] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj2 ? selection.selected_jets_step[1] : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nj2 ? jet_csvV[1] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj1 ? dR2 : -1 )<< "," ;
-       std::cout<< std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[1] : -1)<<","; 
-      std::cout<< std::setprecision(4) << ( nj3 ? jet_pt[2] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj3 ? selection.selected_jets_step[2] : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nj3 ? jet_csvV[2] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj1 ? dR3 : -1 )<< "," ;
-       std::cout<< std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[2] : -1)<<","; 
-      std::cout<< std::setprecision(4) << ( nj4 ? jet_pt[3] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj4 ? selection.selected_jets_step[3] : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nj4 ? jet_csvV[3] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj1 ? dR4 : -1 )<< "," ;
-       std::cout<< std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[3] : -1)<<","; 
-      std::cout<< std::setprecision(4) << ( nj5 ? jet_pt[4] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj5 ? selection.selected_jets_step[4] : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nj5 ? jet_csvV[4] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj1 ? dR5 : -1 )<< "," ;
-       std::cout<< std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[4] : -1)<<","; 
-      std::cout<< std::setprecision(4) << ( nj6 ? jet_pt[5] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj6 ? selection.selected_jets_step[5] : -1)<< "," ;
-      std::cout<< std::setprecision(4) << ( nj6 ? jet_csvV[5] : -1 )<< "," ;
-      std::cout<< std::setprecision(4) << ( nj1 ? dR6 : -1 )<< "," ;
-       std::cout<< std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[5] : -1)<<","; 
+      csvfile << std::setprecision(4) << "," <<( nj1? jet_pt[0] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj1 ? selection.selected_jets_step[0] : -1)<< "," ;
+      csvfile << std::setprecision(4) << ( nj1 ? jet_csvV[0] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj1 ? dR1 : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[0] : -1)<<","; 
+      csvfile << std::setprecision(4) << ( nj2 ? jet_pt[1] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj2 ? selection.selected_jets_step[1] : -1)<< "," ;
+      csvfile << std::setprecision(4) << ( nj2 ? jet_csvV[1] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj1 ? dR2 : -1 )<< "," ;
+       csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[1] : -1)<<","; 
+      csvfile << std::setprecision(4) << ( nj3 ? jet_pt[2] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj3 ? selection.selected_jets_step[2] : -1)<< "," ;
+      csvfile << std::setprecision(4) << ( nj3 ? jet_csvV[2] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj1 ? dR3 : -1 )<< "," ;
+       csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[2] : -1)<<","; 
+      csvfile << std::setprecision(4) << ( nj4 ? jet_pt[3] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj4 ? selection.selected_jets_step[3] : -1)<< "," ;
+      csvfile << std::setprecision(4) << ( nj4 ? jet_csvV[3] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj1 ? dR4 : -1 )<< "," ;
+       csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[3] : -1)<<","; 
+      csvfile << std::setprecision(4) << ( nj5 ? jet_pt[4] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj5 ? selection.selected_jets_step[4] : -1)<< "," ;
+      csvfile << std::setprecision(4) << ( nj5 ? jet_csvV[4] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj1 ? dR5 : -1 )<< "," ;
+       csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[4] : -1)<<","; 
+      csvfile << std::setprecision(4) << ( nj6 ? jet_pt[5] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj6 ? selection.selected_jets_step[5] : -1)<< "," ;
+      csvfile << std::setprecision(4) << ( nj6 ? jet_csvV[5] : -1 )<< "," ;
+      csvfile << std::setprecision(4) << ( nj1 ? dR6 : -1 )<< "," ;
+       csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[5] : -1)<<","; 
       
     
     }
     
-    std::cout << std::endl ;
+    csvfile << std::endl ;
+
+    csvfile.close();
   }//if selected (Sync Stuff)
   
   
@@ -1298,9 +1302,10 @@ YggdrasilTreeMaker2017::beginJob()
    badglobalmucount=0;
    cloneglobalmucount=0;
 
+   std::ofstream csvfile ("ttH.csv",std::ofstream::trunc);
  
   if(DoSync && !SyncDebug)
-    std::cout<< "run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,"
+    csvfile  << "run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,"
              << "lep1_pt,lep1_eta,lep1_iso,lep1_pdgId,lep1_idSF,lep1_isoSF,lep1_seed,"
              << "lep2_pt,lep2_eta,lep2_iso,lep2_pdgId,lep2_idSF,lep2_isoSF,lep2_seed,"
              << "jet1_pt,jet1_eta,jet1_phi,jet1_jesSF,jet1_jesSF_up,jet1_jesSF_down,jet1_jesSF_PileUpDataMC_down,jet1_jesSF_RelativeFSR_up,jet1_jerSF_nominal,jet1_csv,jet1_PUJetId,jet1_PUJetDiscriminant,jet1_seed,"
@@ -1311,7 +1316,7 @@ YggdrasilTreeMaker2017::beginJob()
              << "bdt_output,dnn_ttH_output,dnn_ttbb_output"<<endl;
 
   if(DoSync && SyncDebug) 
-    std::cout<< "run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,"
+    csvfile  << "run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,"
              << "lep1_pt,lep1_eta,lep1_phi,lep1_crack,lep1_iso,lep1_pdgId,lep1_idSF,lep1_isoSF,lep1_seed,"
              << "lep2_pt,lep2_eta,lep2_iso,lep2_pdgId,lep2_idSF,lep2_isoSF,lep2_seed,"
              << "jet1_pt,jet1_eta,jet1_phi,jet1_jesSF,jet1_jesSF_up,jet1_jesSF_down,jet1_jesSF_PileUpDataMC_down,jet1_jesSF_RelativeFSR_up,jet1_jerSF_nominal,jet1_csv,jet1_PUJetId,jet1_PUJetDiscriminant,jet1_seed,"
@@ -1323,6 +1328,7 @@ YggdrasilTreeMaker2017::beginJob()
              << "pdf_up,pdf_down,me_up,me_down,triggerSF,top_pt_weight,"
              << "bdt_output,dnn_ttH_output,dnn_ttbb_output"<<endl;
  
+  csvfile.close();
 
 }
 
