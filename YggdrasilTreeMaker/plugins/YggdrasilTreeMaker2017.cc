@@ -497,6 +497,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     ////////////////
 
     std::vector<double> lepton_pt;  
+    std::vector<double> lepton_pt_preSmear;  
     std::vector<double> lepton_eta;
     std::vector<double> lepton_scEta;
     std::vector<double> lepton_phi;
@@ -512,7 +513,11 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
         TRandom3 rng;
         int32_t seed = iMu->userInt("deterministicSeed");
-        rng.SetSeed((uint32_t)seed);
+        rng.SetSeed((uint32_t)seed); // Unused! FIXME
+
+        //FIXME
+//        double ptPreSmear = iMu->userFloat("ptBeforeRun2Calibration");
+        double ptPreSmear = iMu->pt();
    
     	int trkCharge = -99;
     	if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
@@ -528,6 +533,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
     
     	lepton_pt.push_back(iMu->pt());
+    	lepton_pt_preSmear.push_back(ptPreSmear);
     	lepton_eta.push_back(iMu->eta());
     	lepton_scEta.push_back(-99);
     	lepton_phi.push_back(iMu->phi());
@@ -546,6 +552,10 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
         TRandom3 rng;
         int32_t seed = iEle->userInt("deterministicSeed");
         rng.SetSeed((uint32_t)seed);
+
+        //FIXME
+//        double ptPreSmear = iEle->userFloat("ptBeforeRun2Calibration");
+        double ptPreSmear = iEle->pt();
 
      	int trkCharge = -99;
     	if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
@@ -569,6 +579,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     	if(inCrack)isPOGTight=0;
     
     	lepton_pt.push_back(iEle->pt());
+    	lepton_pt_preSmear.push_back(ptPreSmear);
     	lepton_eta.push_back(iEle->eta());
     	lepton_scEta.push_back(scEta);
     	lepton_phi.push_back(iEle->phi());
@@ -659,7 +670,9 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
     selection . SetGoodVtx( & ( firstGoodPV ) );
 
-    selection . SetLeptons( & lepton_pt, 
+    selection . SetLeptons(
+                & lepton_pt, 
+                & lepton_pt_preSmear, 
 			    & lepton_eta, 
 			    & lepton_scEta, 
 			    & lepton_phi,
@@ -670,12 +683,13 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 			    & lepton_isLoose,
 			    & lepton_isTight,
 			    & lepton_seed );
-    selection . SetJets( & jet_pt , 
-			 & jet_eta , 
-			 & jet_phi, 
-			 & jet_m , 
-			 & jet_csvV ,
-			 & jet_flavour  );
+    selection . SetJets(
+                & jet_pt , 
+                & jet_eta , 
+                & jet_phi, 
+                & jet_m , 
+                & jet_csvV ,
+                & jet_flavour  );
 
     selection . SetMet( & ( MET_pt ) , &( MET_phi) );
 
@@ -723,11 +737,21 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 			* 
 			scalefactors.getTightElectron_IDSF( & selection )
 	);
-    double lepISOSF =  ( realData ? 1 : 
-			 scalefactors.getTightElectron_RecoSF( & selection ) 
-			*
-			 scalefactors.getTightMuon_IsoSF( & selection ) 
+    double lepISOSF;
+    if( selection.looseLeptons().size() >=1  ){
+        lepISOSF =  ( realData ? 1 : 
+		      scalefactors.getTightElectron_RecoSF( & selection ) 
+		      *
+		      scalefactors.getTightMuon_IsoSF( & selection ) 
 	);
+    } else {
+         lepISOSF =  ( realData ? 1 : 
+                       scalefactors.getTightElectron_RecoSF( & selection ) 
+                       *
+                       scalefactors.getLooseMuon_IsoSF( & selection ) 
+	 );
+    }
+
 
     if( selection.looseLeptons().size() >=1 ){
       long pdgid = 
@@ -940,10 +964,10 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     csvfile << numTruePV << ",";
     csvfile << scalefactors.get_pu_wgt(numTruePV) << "," ;    // PUWeight,
     }else{
-    csvfile << 1 << ",";
-    csvfile << 1 << ",";
-    csvfile << 1 << ",";
-    csvfile << 1 << ",";    // PUWeight,
+    csvfile << -1 << ",";
+    csvfile << -1 << ",";
+    csvfile << -1 << ",";
+    csvfile << -1 << ",";    // PUWeight,
     }
 
     double csvSF = 1 ;
@@ -969,12 +993,12 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     
 
     //pdf weight
-    csvfile <<1<<",";
-    csvfile <<1<<",";
+    csvfile <<-1<<",";
+    csvfile <<-1<<",";
     
     //mem weight
-    csvfile << 1 <<",";
-    csvfile << 1 <<",";
+    csvfile << -1 <<",";
+    csvfile << -1 <<",";
 
     double triggerSF =( realData ? 1 :
 			scalefactors.get_TrigMuSF( & selection )
@@ -987,7 +1011,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     if( !realData ){
       csvfile << eve->weight_topPt_ <<",";
     }else{
-      csvfile << 1 <<",";
+      csvfile << -1 <<",";
     }
 
     //Discriminators
@@ -1235,6 +1259,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
   ////////////////////
   
     eve->lepton_pt_               = lepton_pt;
+    eve->lepton_pt_preSmear_      = lepton_pt_preSmear;
     eve->lepton_eta_              = lepton_eta;
     eve->lepton_scEta_            = lepton_scEta;
     eve->lepton_phi_              = lepton_phi;

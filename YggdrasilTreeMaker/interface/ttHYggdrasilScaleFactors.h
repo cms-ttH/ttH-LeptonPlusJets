@@ -42,6 +42,7 @@ class ttHYggdrasilScaleFactors{
   double getTightElectron_IDSF( ttHYggdrasilEventSelection * event );
 
   double getTightMuon_IsoSF( ttHYggdrasilEventSelection * event );
+  double getLooseMuon_IsoSF( ttHYggdrasilEventSelection * event );
   double getTightElectron_RecoSF( ttHYggdrasilEventSelection * event );
 
   double getTightMuon_TrackingSF( ttHYggdrasilEventSelection * event );
@@ -88,19 +89,24 @@ class ttHYggdrasilScaleFactors{
 
 
   // Lepton SF
-  TH2F * h_EleSF_ID ;
+  std::vector< TH2F *> h_EleSF_ID;
+  std::vector< double> EleSF_ID_Lumi;
+  double EleSF_ID_LumiTotal;
+
   TH2F * h_EleSF_Reco;
+
   std::vector< TH2D *> h_MuSF_ID;
-  std::vector< double> h_MuSF_ID_Lumi;
-  double h_MuSF_ID_LumiTotal;
+  std::vector< double> MuSF_ID_Lumi;
+  double MuSF_ID_LumiTotal;
   
-  std::vector< TH2D *> h_MuSF_Iso ;
-  std::vector< double > h_MuSF_Iso_Lumi ;
-  double h_MuSF_Iso_LumiTotal ;
+  std::vector< TH2D *> h_tightMuSF_Iso ;
+  std::vector< TH2D *> h_looseMuSF_Iso ;
+  std::vector< double > MuSF_Iso_Lumi ;
+  double MuSF_Iso_LumiTotal ;
 
   std::vector< TGraphAsymmErrors *> tgraph_MuSF_Tracking ;
-  std::vector< double > tgraph_MuSF_Tracking_Lumi ;
-  double tgraph_MuSF_Tracking_LumiTotal ;
+  std::vector< double > MuSF_Tracking_Lumi ;
+  double MuSF_Tracking_LumiTotal ;
 
   // Trig SF
   TH2D * h_MuSF_Trig_BCDEF;

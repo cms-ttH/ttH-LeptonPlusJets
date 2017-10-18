@@ -103,6 +103,7 @@ struct yggdrasilEventVars{
   vint lepton_isTight_;
   vint lepton_isLoose_;
   vdouble lepton_pt_;
+  vdouble lepton_pt_preSmear_;
   vdouble lepton_eta_;
   vdouble lepton_phi_;
   vdouble lepton_e_;
@@ -258,6 +259,7 @@ void yggdrasilEventVars::initialize(){
   lepton_isTight_.clear();
   lepton_isLoose_.clear();
   lepton_pt_.clear();
+  lepton_pt_preSmear_.clear();
   lepton_eta_.clear();
   lepton_phi_.clear();
   lepton_e_.clear();

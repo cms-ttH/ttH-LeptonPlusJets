@@ -71,12 +71,31 @@ void ttHYggdrasilScaleFactors::init_TrigMuSF(){
 }
 
 void ttHYggdrasilScaleFactors::init_ElectronSF(){
-  
-  {
-//    std::string input = SFfileDir +"/" + "el/gsf_trackingEff/egammaEffi.txt_SF2D.root" ;
+
+  // Muon ID : setup histogram for 2 files (Moriond17)
+  h_EleSF_ID      .clear();
+  EleSF_ID_Lumi .clear();
+  { // BCDEF
     std::string input = SFfileDir +"/" + "el/ID/egammaEffi.txt_EGM2D.root" ;
-    h_EleSF_ID = (TH2F*) getTH2HistogramFromFile( input , std::string ("EGamma_SF2D") );
+    h_EleSF_ID . push_back( (TH2F*) getTH2HistogramFromFile( input , std::string ("EGamma_SF2D") ) );
+    EleSF_ID_Lumi . push_back( 20236179680.471 ); // amount of data in the period
   }
+  { // GH
+    std::string input = SFfileDir +"/" + "el/ID/egammaEffi.txt_EGM2D_6.root" ;
+    h_EleSF_ID . push_back( (TH2F*) getTH2HistogramFromFile( input , std::string ("EGamma_SF2D") ) );
+    EleSF_ID_Lumi . push_back( 16578401309.707 ); // amount of data in the period
+  }
+  EleSF_ID_LumiTotal = 0 ;
+  for( unsigned int i = 0 ; i < EleSF_ID_Lumi.size() ; i++ ){
+    EleSF_ID_LumiTotal += EleSF_ID_Lumi[i];
+  }
+
+//  {
+//    std::string input_BCDEF = SFfileDir +"/" + "el/ID/egammaEffi.txt_EGM2D.root" ;
+//    std::string input_GH = SFfileDir +"/" + "el/ID/egammaEffi.txt_EGM2D_6.root" ;
+//    h_EleSF_ID_BCDEF = (TH2F*) getTH2HistogramFromFile( input , std::string ("EGamma_SF2D") );
+//    h_EleSF_ID_GH = (TH2F*) getTH2HistogramFromFile( input , std::string ("EGamma_SF2D") );
+//  }
   { 
     std::string input = SFfileDir +"/" + "el/Reco/egammaEffi.txt_EGM2D.root";
     h_EleSF_Reco = (TH2F*) getTH2HistogramFromFile( input , std::string ("EGamma_SF2D") );
@@ -89,37 +108,39 @@ void ttHYggdrasilScaleFactors::init_MuonSF(){
 
   // Muon ID : setup histogram for 2 files (Moriond17)
   h_MuSF_ID      .clear();
-  h_MuSF_ID_Lumi .clear();
+  MuSF_ID_Lumi .clear();
   {
     std::string input = SFfileDir +"/" + "muon/ID/EfficienciesAndSF_BCDEF.root"; 
     h_MuSF_ID . push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio")) );
-    h_MuSF_ID_Lumi . push_back( 20236179680.471 ); // amount of data in the period
+    MuSF_ID_Lumi . push_back( 20236179680.471 ); // amount of data in the period
   }
   {
     std::string input = SFfileDir +"/" + "muon/ID/EfficienciesAndSF_GH.root";
     h_MuSF_ID . push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio")) );
-    h_MuSF_ID_Lumi . push_back( 16578401309.707 ); // amount of data in the period
+    MuSF_ID_Lumi . push_back( 16578401309.707 ); // amount of data in the period
   }
-  h_MuSF_ID_LumiTotal = 0 ;
-  for( unsigned int i = 0 ; i < h_MuSF_ID_Lumi.size() ; i++ ){
-    h_MuSF_ID_LumiTotal += h_MuSF_ID_Lumi[i];
+  MuSF_ID_LumiTotal = 0 ;
+  for( unsigned int i = 0 ; i < MuSF_ID_Lumi.size() ; i++ ){
+    MuSF_ID_LumiTotal += MuSF_ID_Lumi[i];
   }
 
   
   // Muon Iso : setup histogram with 2 files (Moriond17)
   { 
     std::string input = SFfileDir +"/" + "muon/ISO/EfficienciesAndSF_BCDEF.root";
-    h_MuSF_Iso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("TightISO_TightID_pt_eta/abseta_pt_ratio") ) );
-    h_MuSF_Iso_Lumi . push_back( 20236179680.471 );
+    h_tightMuSF_Iso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("TightISO_TightID_pt_eta/abseta_pt_ratio") ) );
+    h_looseMuSF_Iso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("LooseISO_TightID_pt_eta/abseta_pt_ratio") ) );
+    MuSF_Iso_Lumi . push_back( 20236179680.471 );
   }
   {
     std::string input = SFfileDir +"/" + "muon/ISO/EfficienciesAndSF_GH.root";
-    h_MuSF_Iso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("TightISO_TightID_pt_eta/abseta_pt_ratio") ) ) ;
-    h_MuSF_Iso_Lumi . push_back( 16578401309.707 );
+    h_tightMuSF_Iso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("TightISO_TightID_pt_eta/abseta_pt_ratio") ) ) ;
+    h_looseMuSF_Iso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("LooseISO_TightID_pt_eta/abseta_pt_ratio") ) ) ;
+    MuSF_Iso_Lumi . push_back( 16578401309.707 );
   }
-  h_MuSF_Iso_LumiTotal = 0 ;
-  for( unsigned int i = 0 ; i < h_MuSF_Iso_Lumi.size() ; i++ ){
-    h_MuSF_Iso_LumiTotal += h_MuSF_Iso_Lumi[i];
+  MuSF_Iso_LumiTotal = 0 ;
+  for( unsigned int i = 0 ; i < MuSF_Iso_Lumi.size() ; i++ ){
+    MuSF_Iso_LumiTotal += MuSF_Iso_Lumi[i];
   }
 
   // Muon Tracking : setup TGraphAsymmErrors with 2 files (Moriond17)
@@ -128,19 +149,19 @@ void ttHYggdrasilScaleFactors::init_MuonSF(){
 //    TFile * f = TFile::Open( input.c_str() );
 
     tgraph_MuSF_Tracking .push_back( (TGraphAsymmErrors*) getTGraphAsymmErrorsFromFile( input , std::string ("ratio_eff_aeta_dr030e030_corr") ) );
-    tgraph_MuSF_Tracking_Lumi . push_back( 20236179680.471 );
+    MuSF_Tracking_Lumi . push_back( 20236179680.471 );
   }
   {
     std::string input = SFfileDir +"/" + "muon/Tracking/fits_GH.root";
 //    TFile * f = TFile::Open( input.c_str() );
 
     tgraph_MuSF_Tracking .push_back( (TGraphAsymmErrors*) getTGraphAsymmErrorsFromFile( input , std::string ("ratio_eff_aeta_dr030e030_corr") ) );
-    tgraph_MuSF_Tracking_Lumi . push_back( 16578401309.707 );
+    MuSF_Tracking_Lumi . push_back( 16578401309.707 );
   }
 
-  tgraph_MuSF_Tracking_LumiTotal = 0 ;
-  for( unsigned int i = 0 ; i < tgraph_MuSF_Tracking_Lumi.size() ; i++ ){
-    tgraph_MuSF_Tracking_LumiTotal += tgraph_MuSF_Tracking_Lumi[i];
+  MuSF_Tracking_LumiTotal = 0 ;
+  for( unsigned int i = 0 ; i < MuSF_Tracking_Lumi.size() ; i++ ){
+    MuSF_Tracking_LumiTotal += MuSF_Tracking_Lumi[i];
   }
 
 
@@ -261,14 +282,14 @@ double ttHYggdrasilScaleFactors::getTightMuon_IDSF( ttHYggdrasilEventSelection *
     const double abs_eta = std::fabs( event->leptons().at( i )->Eta() ) ; 
     const double pt      =            event->leptons().at( i )->Pt()  ; 
 
-    double wgt_fot_this_mu = 0 ;
+    double wgt_for_this_mu = 0 ;
     for( unsigned int iSF = 0 ; iSF < h_MuSF_ID.size() ; iSF ++ ){
-      wgt_fot_this_mu +=
+      wgt_for_this_mu +=
       GetBinValueFromXYValues( h_MuSF_ID[iSF] , pt , abs_eta )
       *
-      ( h_MuSF_ID_Lumi[iSF] / h_MuSF_ID_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+      ( MuSF_ID_Lumi[iSF] / MuSF_ID_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
     }
-    weight *= wgt_fot_this_mu ;
+    weight *= wgt_for_this_mu ;
     
   }
   return weight ;
@@ -285,19 +306,44 @@ double ttHYggdrasilScaleFactors::getTightMuon_IsoSF( ttHYggdrasilEventSelection 
     const double abs_eta = std::fabs( event->leptons().at( i )->Eta() ) ; 
     const double pt      =            event->leptons().at( i )->Pt()  ; 
 
-    double wgt_fot_this_mu = 0 ;
-    for( unsigned int iSF = 0 ; iSF < h_MuSF_Iso.size() ; iSF ++ ){
-      wgt_fot_this_mu +=
-	GetBinValueFromXYValues( h_MuSF_Iso[iSF] , pt , abs_eta )
+    double wgt_for_this_mu = 0 ;
+    for( unsigned int iSF = 0 ; iSF < h_tightMuSF_Iso.size() ; iSF ++ ){
+      wgt_for_this_mu +=
+	GetBinValueFromXYValues( h_tightMuSF_Iso[iSF] , pt , abs_eta )
 	*
-	( h_MuSF_Iso_Lumi[iSF] / h_MuSF_Iso_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+	( MuSF_Iso_Lumi[iSF] / MuSF_Iso_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
     }
-    weight *= wgt_fot_this_mu ;
+    weight *= wgt_for_this_mu ;
     
   }
   return weight ;
 
 }
+
+double ttHYggdrasilScaleFactors::getLooseMuon_IsoSF( ttHYggdrasilEventSelection * event ){
+
+  double weight = 1 ; 
+
+  for( unsigned int i = 0 ; i < event->leptonsIsMuon().size() ; i++ ){
+    if( event->leptonsIsMuon().at( i ) != 1 ) continue ; 
+
+    const double abs_eta = std::fabs( event->leptons().at( i )->Eta() ) ; 
+    const double pt      =            event->leptons().at( i )->Pt()  ; 
+
+    double wgt_for_this_mu = 0 ;
+    for( unsigned int iSF = 0 ; iSF < h_looseMuSF_Iso.size() ; iSF ++ ){
+      wgt_for_this_mu +=
+	GetBinValueFromXYValues( h_looseMuSF_Iso[iSF] , pt , abs_eta )
+	*
+	( MuSF_Iso_Lumi[iSF] / MuSF_Iso_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+    }
+    weight *= wgt_for_this_mu ;
+    
+  }
+  return weight ;
+
+}
+
 
 double ttHYggdrasilScaleFactors::getTightMuon_TrackingSF( ttHYggdrasilEventSelection * event ){
 
@@ -309,14 +355,14 @@ double ttHYggdrasilScaleFactors::getTightMuon_TrackingSF( ttHYggdrasilEventSelec
     const double abs_eta = std::fabs( event->leptons().at( i )->Eta() ) ;
     std::string err = "nominal";
 
-    double wgt_fot_this_mu = 0 ;
+    double wgt_for_this_mu = 0 ;
     for( unsigned int iSF = 0 ; iSF < tgraph_MuSF_Tracking.size() ; iSF ++ ){
-      wgt_fot_this_mu +=
+      wgt_for_this_mu +=
 	GetTGraphAsymmErrorsValue( tgraph_MuSF_Tracking[iSF] , abs_eta , err )
 	*
-	( tgraph_MuSF_Tracking_Lumi[iSF] / tgraph_MuSF_Tracking_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+	( MuSF_Tracking_Lumi[iSF] / MuSF_Tracking_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
     }
-    weight *= wgt_fot_this_mu ;
+    weight *= wgt_for_this_mu ;
     
   }
   return weight ;
@@ -332,9 +378,17 @@ double ttHYggdrasilScaleFactors::getTightElectron_IDSF( ttHYggdrasilEventSelecti
     if( event->leptonsIsMuon().at( i ) != 0 ) continue ; 
     
     const double sc_eta =  event->leptonsSCEta().at(i); 
-    const double pt     =  event->leptons().at( i )->Pt() ; 
-    
-    weight *= GetBinValueFromXYValues( h_EleSF_ID , sc_eta , pt );
+    const double pt     =  event->leptonsPtPreSmear().at(i) ; 
+
+    double wgt_for_this_ele = 0 ;
+    for( unsigned int iSF = 0 ; iSF < h_EleSF_ID.size() ; iSF ++ ){
+      wgt_for_this_ele +=
+      GetBinValueFromXYValues( h_EleSF_ID[iSF] , sc_eta , pt )
+      *
+      ( EleSF_ID_Lumi[iSF] / EleSF_ID_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+    }
+    weight*=wgt_for_this_ele ;
+
   }
   return weight ;
 
@@ -680,17 +734,6 @@ double ttHYggdrasilScaleFactors::get_TrigMuSF( ttHYggdrasilEventSelection * even
 
     double w_BCDEF = GetBinValueFromXYValues( h_MuSF_Trig_BCDEF , pt , abs_eta );
     double w_GH = GetBinValueFromXYValues( h_MuSF_Trig_GH , pt , abs_eta );
-
-//    double w_p2 = GetBinValueFromXYValues( h_MuSF_Trig_HLTv4p2 , abs_eta , pt );
-//    double w_p3 = GetBinValueFromXYValues( h_MuSF_Trig_HLTv4p3 , abs_eta , pt );
-
-//    double ratio_p2 =  754.394 / ( 754.394 + 1908.010 ) ;
-//    double ratio_p3 = 1908.010 / ( 754.394 + 1908.010 ) ;
-
-//    weight *= 
-//      w_p2 * ratio_p2 
-//      +
-//      w_p3 * ratio_p3 ;
 
     double ratio_BCDEF =  20.236 / ( 20.236 + 16.578 ) ;
     double ratio_GH = 16.578 / ( 20.236 + 16.578 ) ;
