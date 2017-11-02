@@ -72,8 +72,12 @@
 
 #include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilEventSelection.h"
 #include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilScaleFactors.h"
+//#include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/RoccoR.h"
+//#include "ttH-LeptonPlusJets/YggdrasilTreeMaker/plugins/RoccoR.cc"
 
 #include "DataFormats/JetReco/interface/PileupJetIdentifier.h"
+
+
 
 class YggdrasilTreeMaker2017 : public edm::EDAnalyzer {
 	public:
@@ -511,16 +515,34 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 		 
     for( std::vector<pat::Muon>::const_iterator iMu = muons->begin(); iMu != muons->end(); iMu++ ){ 
 
-        TRandom3 rng;
-        int32_t seed = iMu->userInt("deterministicSeed");
-        rng.SetSeed((uint32_t)seed); // Unused! FIXME
+      TRandom3 rng; 
+      int32_t seed = iMu->userInt("deterministicSeed");
+      rng.SetSeed((uint32_t)seed); // Unused! FIXME
 
-        //FIXME
-//        double ptPreSmear = iMu->userFloat("ptBeforeRun2Calibration");
+        //Muons don't have smearing, so use regular pt.
         double ptPreSmear = iMu->pt();
    
     	int trkCharge = -99;
     	if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
+
+        // Rochester correction
+//        rochcor2016 *rmcor = new rochcor2016(seed);
+//        TLorentzVector mu;
+//        mu.SetPtEtaPhiM(iMu->pt(),iMu->eta(),iMu->phi(),iMu->mass());
+//        float qter = 1.0;
+//        int ntrk = iMu->innerTrack()->hitPattern().trackerLayersWithMeasurement();
+////        int ntrk = iMu->track()->hitPattern().trackerLayersWithMeasurement();
+//        if(realData) {
+//          rmcor->momcor_data(mu, (float)trkCharge, 0, qter);
+//        } else {
+//          rmcor->momcor_mc(mu, (float)trkCharge, ntrk, qter);
+//        }
+//        RoccoR  rc("rcdata.2016.v3");
+//        if(realData) {
+//          double dataSF = rc.kScaleDT(trkCharge, iMu->pt(), iMu->eta(), iMu->phi(), 0, 0);
+//        } else {
+//          double mcSF = rc.kScaleFromGenMC(trkCharge, iMu->pt(), iMu->eta(), iMu->phi(), iMu->innerTrack()->hitPattern().trackerLayersWithMeasurement(), rng.Rndm(), rng.Rndm(), 0, 0);
+//        }
 
     	int isPOGTight = miniAODhelper.passesMuonPOGIdTight(*iMu) ? 1 : 0;
     	int isPOGLoose = 1 ; //this is needed for the consistency of variables with electron.
@@ -553,9 +575,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
         int32_t seed = iEle->userInt("deterministicSeed");
         rng.SetSeed((uint32_t)seed);
 
-        //FIXME
-//        double ptPreSmear = iEle->userFloat("ptBeforeRun2Calibration");
-        double ptPreSmear = iEle->pt();
+        double ptPreSmear = iEle->userFloat("ptBeforeRun2Calibration");
 
      	int trkCharge = -99;
     	if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
@@ -725,35 +745,20 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 		csvfile << selection.DLSofterjets().size()<<",";
 		csvfile << selection.DLSofterbjets().size()<<",";
 	}
-	else{
+	else{ //FIXME Uh, why not just print size?
 		if(selection.jets().size()>0)    csvfile << selection.jets().size() << "," ;
 			else csvfile <<"0,";
 		if(selection.bjets().size()>0)    csvfile << selection.bjets().size() << ",";
 			else csvfile <<"0,";
 	}
 
-    double lepIDSF =  ( realData ? 1 : 
-			scalefactors.getTightMuon_IDSF( & selection )
-			* 
-			scalefactors.getTightElectron_IDSF( & selection )
-	);
-    double lepISOSF;
-    if( selection.looseLeptons().size() >=1  ){
-        lepISOSF =  ( realData ? 1 : 
-		      scalefactors.getTightElectron_RecoSF( & selection ) 
-		      *
-		      scalefactors.getTightMuon_IsoSF( & selection ) 
-	);
-    } else {
-         lepISOSF =  ( realData ? 1 : 
-                       scalefactors.getTightElectron_RecoSF( & selection ) 
-                       *
-                       scalefactors.getLooseMuon_IsoSF( & selection ) 
-	 );
-    }
-
+    // Get individual lepton SFs
+    std::vector<double> lepIDSFv = scalefactors.getLooseLepton_IDSF_vector( & selection );
+    std::vector<double> lepIsoSFv = scalefactors.getLooseLepton_IsoSF_vector( & selection );
+    std::vector<double> lepRecoSFv = scalefactors.getLooseLepton_RecoSF_vector( & selection );
 
     if( selection.looseLeptons().size() >=1 ){
+
       long pdgid = 
 	( selection.looseLeptonsIsMuon().at(0) == 1 ? 13 : 11 )
 	*
@@ -772,8 +777,8 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       csvfile << std::setprecision(4) << std::fixed 
               << selection.looseLeptonsRelIso().at(0)<< ","
               << pdgid << ","
-              << lepIDSF << "," 
-              << lepISOSF << ","
+              << lepIDSFv.at(0) << "," 
+              << lepIsoSFv.at(0)*lepRecoSFv.at(0) << ","
               << selection.looseLeptonsSeed().at(0) << "," ;
     }else{
       csvfile << "-1,-1,-1,-1,-1,-1,-1," ;
@@ -790,8 +795,8 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
               << selection.looseLeptons().at(1)->Eta()<< "," 
               << selection.looseLeptonsRelIso().at(1)<< ","
               << pdgid << ","
-              << lepIDSF << "," 
-              << lepISOSF << ","
+              << lepIDSFv.at(1) << "," 
+              << lepIsoSFv.at(1)*lepRecoSFv.at(1) << ","
               << selection.looseLeptonsSeed().at(1) << "," ;
     }else{
       csvfile << "-1,-1,-1,-1,-1,-1,-1," ;
@@ -1017,8 +1022,8 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     //Discriminators
     csvfile << std::setprecision(4) << std::fixed
             << -1 << "," 
-            << std::setprecision(4) << -1 << "," 
-            << std::setprecision(4) << -1;
+            << -1 << "," 
+            << -1;
 
     if( false ){
 //    csvfile << eve->weight_q2_upup_ <<",";

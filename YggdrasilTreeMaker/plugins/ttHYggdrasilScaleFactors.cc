@@ -72,7 +72,7 @@ void ttHYggdrasilScaleFactors::init_TrigMuSF(){
 
 void ttHYggdrasilScaleFactors::init_ElectronSF(){
 
-  // Muon ID : setup histogram for 2 files (Moriond17)
+  // Ele ID : setup histogram for 2 files (Moriond17)
   h_EleSF_ID      .clear();
   EleSF_ID_Lumi .clear();
   { // BCDEF
@@ -111,12 +111,12 @@ void ttHYggdrasilScaleFactors::init_MuonSF(){
   MuSF_ID_Lumi .clear();
   {
     std::string input = SFfileDir +"/" + "muon/ID/EfficienciesAndSF_BCDEF.root"; 
-    h_MuSF_ID . push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio")) );
+    h_MuSF_ID . push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/pt_abseta_ratio")) );
     MuSF_ID_Lumi . push_back( 20236179680.471 ); // amount of data in the period
   }
   {
     std::string input = SFfileDir +"/" + "muon/ID/EfficienciesAndSF_GH.root";
-    h_MuSF_ID . push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/abseta_pt_ratio")) );
+    h_MuSF_ID . push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("MC_NUM_TightID_DEN_genTracks_PAR_pt_eta/pt_abseta_ratio")) );
     MuSF_ID_Lumi . push_back( 16578401309.707 ); // amount of data in the period
   }
   MuSF_ID_LumiTotal = 0 ;
@@ -128,14 +128,14 @@ void ttHYggdrasilScaleFactors::init_MuonSF(){
   // Muon Iso : setup histogram with 2 files (Moriond17)
   { 
     std::string input = SFfileDir +"/" + "muon/ISO/EfficienciesAndSF_BCDEF.root";
-    h_tightMuSF_Iso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("TightISO_TightID_pt_eta/abseta_pt_ratio") ) );
-    h_looseMuSF_Iso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("LooseISO_TightID_pt_eta/abseta_pt_ratio") ) );
+    h_MuSF_tightIso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("TightISO_TightID_pt_eta/pt_abseta_ratio") ) );
+    h_MuSF_looseIso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("LooseISO_TightID_pt_eta/pt_abseta_ratio") ) );
     MuSF_Iso_Lumi . push_back( 20236179680.471 );
   }
   {
     std::string input = SFfileDir +"/" + "muon/ISO/EfficienciesAndSF_GH.root";
-    h_tightMuSF_Iso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("TightISO_TightID_pt_eta/abseta_pt_ratio") ) ) ;
-    h_looseMuSF_Iso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("LooseISO_TightID_pt_eta/abseta_pt_ratio") ) ) ;
+    h_MuSF_tightIso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("TightISO_TightID_pt_eta/pt_abseta_ratio") ) ) ;
+    h_MuSF_looseIso .push_back( (TH2D*) getTH2HistogramFromFile( input , std::string ("LooseISO_TightID_pt_eta/pt_abseta_ratio") ) ) ;
     MuSF_Iso_Lumi . push_back( 16578401309.707 );
   }
   MuSF_Iso_LumiTotal = 0 ;
@@ -272,6 +272,13 @@ double ttHYggdrasilScaleFactors::getTightMuonSF( ttHYggdrasilEventSelection * ev
 }
 
 
+double ttHYggdrasilScaleFactors::getTightElectronSF( ttHYggdrasilEventSelection * event ){
+
+  return getTightElectron_IDSF( event ) * getTightElectron_RecoSF( event );
+
+}
+
+
 double ttHYggdrasilScaleFactors::getTightMuon_IDSF( ttHYggdrasilEventSelection * event ){
 
   double weight = 1 ; 
@@ -307,9 +314,9 @@ double ttHYggdrasilScaleFactors::getTightMuon_IsoSF( ttHYggdrasilEventSelection 
     const double pt      =            event->leptons().at( i )->Pt()  ; 
 
     double wgt_for_this_mu = 0 ;
-    for( unsigned int iSF = 0 ; iSF < h_tightMuSF_Iso.size() ; iSF ++ ){
+    for( unsigned int iSF = 0 ; iSF < h_MuSF_tightIso.size() ; iSF ++ ){
       wgt_for_this_mu +=
-	GetBinValueFromXYValues( h_tightMuSF_Iso[iSF] , pt , abs_eta )
+	GetBinValueFromXYValues( h_MuSF_tightIso[iSF] , pt , abs_eta )
 	*
 	( MuSF_Iso_Lumi[iSF] / MuSF_Iso_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
     }
@@ -320,20 +327,21 @@ double ttHYggdrasilScaleFactors::getTightMuon_IsoSF( ttHYggdrasilEventSelection 
 
 }
 
+// Not implemented in TreeReader
 double ttHYggdrasilScaleFactors::getLooseMuon_IsoSF( ttHYggdrasilEventSelection * event ){
 
   double weight = 1 ; 
 
-  for( unsigned int i = 0 ; i < event->leptonsIsMuon().size() ; i++ ){
-    if( event->leptonsIsMuon().at( i ) != 1 ) continue ; 
+  for( unsigned int i = 0 ; i < event->looseLeptonsIsMuon().size() ; i++ ){
+    if( event->looseLeptonsIsMuon().at( i ) != 1 ) continue ; 
 
-    const double abs_eta = std::fabs( event->leptons().at( i )->Eta() ) ; 
-    const double pt      =            event->leptons().at( i )->Pt()  ; 
+    const double abs_eta = std::fabs( event->looseLeptons().at( i )->Eta() ) ; 
+    const double pt      =            event->looseLeptons().at( i )->Pt()  ; 
 
     double wgt_for_this_mu = 0 ;
-    for( unsigned int iSF = 0 ; iSF < h_looseMuSF_Iso.size() ; iSF ++ ){
+    for( unsigned int iSF = 0 ; iSF < h_MuSF_looseIso.size() ; iSF ++ ){
       wgt_for_this_mu +=
-	GetBinValueFromXYValues( h_looseMuSF_Iso[iSF] , pt , abs_eta )
+	GetBinValueFromXYValues( h_MuSF_looseIso[iSF] , pt , abs_eta )
 	*
 	( MuSF_Iso_Lumi[iSF] / MuSF_Iso_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
     }
@@ -411,12 +419,132 @@ double ttHYggdrasilScaleFactors::getTightElectron_RecoSF( ttHYggdrasilEventSelec
 }
 
 
-double ttHYggdrasilScaleFactors::getTightElectronSF( ttHYggdrasilEventSelection * event ){
 
-  return getTightElectron_IDSF( event ) * getTightElectron_RecoSF( event );
+// Similar functions as above, but returning a vector of values for loose leptons instead the product of tight.
+// Also combined all leptons instead of separate functions for ele/mu
+std::vector<double> ttHYggdrasilScaleFactors::getLooseLepton_IDSF_vector( ttHYggdrasilEventSelection * event ){
+
+  std::vector<double> weight ; 
+
+  for( unsigned int i = 0 ; i < event->looseLeptonsIsMuon().size() ; i++ ){
+    if( event->looseLeptonsIsMuon().at( i ) == 0 ) {
+      // Ele ID
+      const double sc_eta =  event->looseLeptonsScEta().at(i); 
+      const double pt     =  event->looseLeptonsPtPreSmear().at(i) ; 
+
+      double wgt_for_this_ele = 0 ;
+      for( unsigned int iSF = 0 ; iSF < h_EleSF_ID.size() ; iSF ++ ){
+        wgt_for_this_ele +=
+        GetBinValueFromXYValues( h_EleSF_ID[iSF] , sc_eta , pt )
+        *
+        ( EleSF_ID_Lumi[iSF] / EleSF_ID_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+      }
+      weight.push_back( wgt_for_this_ele );
+    } else {
+      // Mu ID
+      const double abs_eta = std::fabs( event->looseLeptons().at( i )->Eta() ) ; 
+      const double pt      =            event->looseLeptons().at( i )->Pt()  ; 
+
+      double wgt_for_this_mu = 0 ;
+      for( unsigned int iSF = 0 ; iSF < h_MuSF_ID.size() ; iSF ++ ){
+        wgt_for_this_mu +=
+        GetBinValueFromXYValues( h_MuSF_ID[iSF] , pt , abs_eta )
+        *
+        ( MuSF_ID_Lumi[iSF] / MuSF_ID_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+      }
+      weight.push_back( wgt_for_this_mu );
+    }
+  }
+  return weight ;
 
 }
 
+
+std::vector<double> ttHYggdrasilScaleFactors::getLooseLepton_IsoSF_vector( ttHYggdrasilEventSelection * event ){
+
+  std::vector<double> weight ; 
+
+  for( unsigned int i = 0 ; i < event->looseLeptonsIsMuon().size() ; i++ ){
+
+    if( event->looseLeptonsIsMuon().at( i ) == 0 ) {
+        weight.push_back(1); // No SF for ele
+        continue ;
+    }
+
+    const double abs_eta = std::fabs( event->looseLeptons().at( i )->Eta() ) ; 
+    const double pt      =            event->looseLeptons().at( i )->Pt()  ; 
+
+    double wgt_for_this_mu = 0 ;
+    if( event->looseLeptonsIsMuon().size() == 1 ) {
+      for( unsigned int iSF = 0 ; iSF < h_MuSF_tightIso.size() ; iSF ++ ){
+        wgt_for_this_mu +=
+                GetBinValueFromXYValues( h_MuSF_tightIso[iSF] , pt , abs_eta )
+                *
+                ( MuSF_Iso_Lumi[iSF] / MuSF_Iso_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+      }
+      weight.push_back( wgt_for_this_mu );
+    } else {
+      for( unsigned int iSF = 0 ; iSF < h_MuSF_looseIso.size() ; iSF ++ ){
+        wgt_for_this_mu +=
+                GetBinValueFromXYValues( h_MuSF_looseIso[iSF] , pt , abs_eta )
+                *
+                ( MuSF_Iso_Lumi[iSF] / MuSF_Iso_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+      }
+      weight.push_back( wgt_for_this_mu );
+    }
+  }
+  return weight ;
+
+}
+
+
+std::vector<double> ttHYggdrasilScaleFactors::getLooseLepton_TrackingSF_vector( ttHYggdrasilEventSelection * event ){
+
+  std::vector<double> weight ; 
+
+  for( unsigned int i = 0 ; i < event->looseLeptonsIsMuon().size() ; i++ ){
+
+    if( event->looseLeptonsIsMuon().at( i ) == 0 ) {
+        weight.push_back(1); // No SF for ele
+        continue ; 
+    }
+
+    const double abs_eta = std::fabs( event->looseLeptons().at( i )->Eta() ) ;
+    std::string err = "nominal";
+
+    double wgt_for_this_mu = 0 ;
+    for( unsigned int iSF = 0 ; iSF < tgraph_MuSF_Tracking.size() ; iSF ++ ){
+      wgt_for_this_mu +=
+	GetTGraphAsymmErrorsValue( tgraph_MuSF_Tracking[iSF] , abs_eta , err )
+	*
+	( MuSF_Tracking_Lumi[iSF] / MuSF_Tracking_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+    }
+    weight.push_back( wgt_for_this_mu );
+    
+  }
+  return weight ;
+
+}
+
+
+std::vector<double> ttHYggdrasilScaleFactors::getLooseLepton_RecoSF_vector( ttHYggdrasilEventSelection * event ){
+
+  std::vector<double> weight ; 
+
+  for( unsigned int i = 0 ; i < event->looseLeptonsIsMuon().size() ; i++ ){
+    if( event->looseLeptonsIsMuon().at( i ) == 1 ) {
+        weight.push_back(1); // No SF for mu
+        continue ; 
+    }
+    
+    const double sc_eta =  event->looseLeptonsScEta().at(i); 
+    const double pt     =  event->looseLeptons().at( i )->Pt() ; 
+    
+    weight.push_back( GetBinValueFromXYValues( h_EleSF_Reco , sc_eta , pt ) );
+    
+  }
+  return weight ;
+}
 
 void ttHYggdrasilScaleFactors::init_btagSF(){
 
@@ -755,7 +883,7 @@ double ttHYggdrasilScaleFactors::get_TrigElSF( ttHYggdrasilEventSelection * even
     if( event->leptonsIsMuon().at( i ) != 0 ) continue ; 
     
     const double sc_eta =  event->leptonsSCEta().at(i); 
-    const double pt     =  event->leptons().at( i )->Pt() ; 
+    const double pt     =  event->leptonsPtPreSmear().at( i ) ; 
     
     weight *= GetBinValueFromXYValues( h_EleSF_Trig , pt ,  sc_eta ); // <- Unlike Reco/Iso SF, x=PT and y=SC_Eta.
     

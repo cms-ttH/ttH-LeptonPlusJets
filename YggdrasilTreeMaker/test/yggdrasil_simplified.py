@@ -29,10 +29,10 @@ options = VarParsing("python")
 
 # set defaults of common options
 # ttH
-options.setDefault("inputFiles", "/store/mc/RunIISummer16MiniAODv2/ttHTobb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/44949CF4-96C6-E611-B9A0-0025905A6122.root")
 #options.setDefault("inputFiles", "/store/user/sflowers/44949CF4-96C6-E611-B9A0-0025905A6122.root")
+options.setDefault("inputFiles", "/store/mc/RunIISummer16MiniAODv2/ttHTobb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/44949CF4-96C6-E611-B9A0-0025905A6122.root")
 options.register("SyncType",
-    "ttH",
+    "ttH_test",
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Which type of file to sync on (ttH, ttJets, data)"
@@ -46,9 +46,9 @@ options.register("SyncType",
 #    "Which type of file to sync on (ttH, ttJets, data)"
 #)
 
-#options.setDefault("inputFiles", "/store/user/sflowers/44949CF4-96C6-E611-B9A0-0025905A6122.root")
 #options.setDefault("outputFile", "yggdrasil_treeMaker_simplified.root")
 options.setDefault("maxEvents", 1000)
+#options.setDefault("maxEvents", -1)
 
 # add custom options
 options.register("globalTag",
@@ -271,21 +271,30 @@ if options.electronRegression:
 
 # only allowed when regression was used
 if options.electronSmearing and options.electronRegression:
-    process.load("Configuration.StandardSequences.Services_cff")
-    process.RandomNumberGeneratorService = cms.Service("RandomNumberGeneratorService",
-        calibratedPatElectrons = cms.PSet(
-            initialSeed = cms.untracked.uint32(81),
-            engineName  = cms.untracked.string("TRandom3")
-        )
+    process.selectedElectrons = cms.EDFilter("PATElectronSelector",
+        src = electronCollection,
+        cut = cms.string("pt>5 && abs(eta)")
     )
+    electronCollection = cms.InputTag("selectedElectrons", "", process.name_())
+
     process.load("EgammaAnalysis.ElectronTools.calibratedPatElectronsRun2_cfi")
     from EgammaAnalysis.ElectronTools.calibratedPatElectronsRun2_cfi import files
     process.calibratedPatElectrons.isMC           = cms.bool(not options.realData)
     process.calibratedPatElectrons.correctionFile = cms.string(files[options.electronSmearing])
     process.calibratedPatElectrons.electrons      = electronCollection
+    seq += process.calibratedPatElectrons
     if options.deterministicSeeds:
         process.calibratedPatElectrons.seedUserInt = process.deterministicSeeds.seedUserInt
-    seq += process.calibratedPatElectrons
+    else:
+      process.load("Configuration.StandardSequences.Services_cff")
+      process.RandomNumberGeneratorService = cms.Service("RandomNumberGeneratorService",
+          calibratedPatElectrons = cms.PSet(
+              initialSeed = cms.untracked.uint32(81),
+              engineName  = cms.untracked.string("TRandom3")
+          )
+      )
+
+
 
     # overwrite output collections
     electronCollection = cms.InputTag("calibratedPatElectrons", "", process.name_())
@@ -295,8 +304,6 @@ if options.electronSmearing and options.electronRegression:
 # electron VIDs
 #
 
-from PhysicsTools.SelectorUtils.tools.vid_id_tools import DataFormat, \
-        switchOnVIDElectronIdProducer, setupAllVIDIdsInModule, setupVIDElectronSelection
 
 eleVIDModules = [
     "RecoEgamma.ElectronIdentification.Identification.mvaElectronID_Spring15_25ns_Trig_V1_cff",
@@ -304,18 +311,19 @@ eleVIDModules = [
     "RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Summer16_80X_V1_cff"
 ]
 
+from PhysicsTools.SelectorUtils.tools.vid_id_tools import DataFormat, \
+        switchOnVIDElectronIdProducer, setupAllVIDIdsInModule, setupVIDElectronSelection
 switchOnVIDElectronIdProducer(process, DataFormat.MiniAOD)
 
 for mod in eleVIDModules:
     setupAllVIDIdsInModule(process, mod, setupVIDElectronSelection)
 
 # update some VID modules to work with potentially changed electron collections
-process.selectedElectrons = cms.EDFilter("PATElectronSelector",
-    src = electronCollection,
-    cut = cms.string("pt>5 && abs(eta)")
-)
-# overwrite the electron output collection
-electronCollection = cms.InputTag("selectedElectrons", "", process.name_())
+#process.selectedElectrons = cms.EDFilter("PATElectronSelector",
+#    src = electronCollection,
+#    cut = cms.string("pt>5 && abs(eta)")
+#)
+
 # update the modules
 process.egmGsfElectronIDs.physicsObjectSrc = electronCollection
 process.electronRegressionValueMapProducer.srcMiniAOD = electronCollection
@@ -746,3 +754,6 @@ process.ttHTreeMaker.cloneGlobalMuonTaggerMAOD = cms.InputTag("cloneGlobalMuonTa
 #process.p = cms.Path(seq + process.BadPFMuonFilter*process.BadChargedCandidateFilter*process.GenParticleWithoutChargedLeptonFromTop * process.myGenParticlesWithChargedLeptonFromTopForJet * process.ak4GenJetsWithChargedLepFromTop *  
 process.p = cms.Path(seq + process.BadPFMuonFilter*process.BadChargedCandidateFilter*process.ttHTreeMaker) 
        #process.ttHTreeMaker)
+#print seq
+#print process.p
+# print process.dumpPython()

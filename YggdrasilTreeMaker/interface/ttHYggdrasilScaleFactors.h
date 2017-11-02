@@ -39,13 +39,20 @@ class ttHYggdrasilScaleFactors{
   double getTightElectronSF( ttHYggdrasilEventSelection * event );
 
   double getTightMuon_IDSF( ttHYggdrasilEventSelection * event );
-  double getTightElectron_IDSF( ttHYggdrasilEventSelection * event );
-
   double getTightMuon_IsoSF( ttHYggdrasilEventSelection * event );
   double getLooseMuon_IsoSF( ttHYggdrasilEventSelection * event );
+  double getTightMuon_TrackingSF( ttHYggdrasilEventSelection * event );
+
+  double getTightElectron_IDSF( ttHYggdrasilEventSelection * event );
   double getTightElectron_RecoSF( ttHYggdrasilEventSelection * event );
 
-  double getTightMuon_TrackingSF( ttHYggdrasilEventSelection * event );
+  std::vector<double> getLooseLepton_IDSF_vector( ttHYggdrasilEventSelection * event );
+  std::vector<double> getLooseLepton_IsoSF_vector( ttHYggdrasilEventSelection * event );
+  std::vector<double> getLooseLepton_TrackingSF_vector( ttHYggdrasilEventSelection * event );
+  std::vector<double> getLooseLepton_RecoSF_vector( ttHYggdrasilEventSelection * event );
+
+
+
 
   // - - -
 
@@ -99,8 +106,8 @@ class ttHYggdrasilScaleFactors{
   std::vector< double> MuSF_ID_Lumi;
   double MuSF_ID_LumiTotal;
   
-  std::vector< TH2D *> h_tightMuSF_Iso ;
-  std::vector< TH2D *> h_looseMuSF_Iso ;
+  std::vector< TH2D *> h_MuSF_tightIso ;
+  std::vector< TH2D *> h_MuSF_looseIso ;
   std::vector< double > MuSF_Iso_Lumi ;
   double MuSF_Iso_LumiTotal ;
 
