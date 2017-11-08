@@ -889,10 +889,10 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	  double d_phi2 = fabs( phi2 -  iRawJet->phi() ) ; 
 	  d_phi2 = ( d_phi2 < M_PI ) ? d_phi2 : 2 * M_PI - d_phi2 ; 
 
-//	  if(  d_eta2*d_eta2 + d_phi2*d_phi2 < 0.01 * 0.01 ){
+	  if(  d_eta2*d_eta2 + d_phi2*d_phi2 < 0.01 * 0.01 ){
 //          if(evt==31726) {
 //            printf("jet1 jesnomi = %f, jernomi = %f, rawjet pt = %f, selected jet pt = %f\n",jet_JESNOMI.at( idxJet ).pt(), jet_JERNOMI.at( idxJet ).pt(),iRawJet->pt(),selection.jets().at(1)->Pt());
-//    }
+//          }
 	 // cout<<" this ";
 	   // matching btw Raw and Corrected (physics) jet.
 	    jet2_jesSF     = jet_JESNOMI.at( idxJet ).pt() / iRawJet->pt();
