@@ -681,8 +681,8 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
 
     pat::MET correctedMET = pfmet->at(0);
-    Float_t MET_pt = correctedMET.pt();
-    Float_t MET_phi = correctedMET.phi();
+    Float_t MET_pt = correctedMET.corPt(pat::MET::Type1XY);
+    Float_t MET_phi = correctedMET.corPhi(pat::MET::Type1XY);
     
     
     
@@ -1252,11 +1252,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	
 	}// end loop over iJet    
 
-/*
-    	pat::MET correctedMET = pfmet->at(0);
-    	Float_t MET_pt = correctedMET.pt();
-    	Float_t MET_phi = correctedMET.phi();
-	*/
+
 	vjet_pt_sys.push_back(jet_pt_sys);
 	vjet_eta_sys.push_back(jet_eta_sys);
 	vjet_phi_sys.push_back(jet_phi_sys);

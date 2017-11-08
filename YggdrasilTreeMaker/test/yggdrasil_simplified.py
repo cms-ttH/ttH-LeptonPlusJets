@@ -329,22 +329,6 @@ process.electronMVAValueMapProducer.srcMiniAOD = electronCollection
 #
 
 if options.recorrectMET:
-    # patch the phi correction parameter sets that are used in runMetCorAndUncFromMiniAOD,
-    # we only need to overwrite patMultPhiCorrParams_T1Txy_25ns with the new one
-    if options.realData:
-        if options.dataEra in ("2016B", "2016C", "2016D", "2016E", "2016F"):
-            from MetTools.MetPhiCorrections.tools.multPhiCorr_ReMiniAOD_Data_BCDEF_80X_sumPt_cfi \
-                    import multPhiCorr_Data_BCDEF_80X as metPhiCorrParams
-        else: # "2016G", "2016Hv2", "2016Hv3"
-            from MetTools.MetPhiCorrections.tools.multPhiCorr_ReMiniAOD_Data_GH_80X_sumPt_cfi \
-                    import multPhiCorr_Data_GH_80X as metPhiCorrParams
-    else:
-        from MetTools.MetPhiCorrections.tools.multPhiCorr_Summer16_MC_DY_80X_sumPt_cfi \
-                import multPhiCorr_MC_DY_sumPT_80X as metPhiCorrParams
-    # actual patch
-    import PhysicsTools.PatUtils.patPFMETCorrections_cff as metCors
-    metCors.patMultPhiCorrParams_T1Txy_25ns = metPhiCorrParams
-
     # use the standard tool
     from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
     # do not use a postfix here!
@@ -386,6 +370,26 @@ if options.recorrectMET:
         # overwrite output collections
         METCollection = cms.InputTag("slimmedMETsMuEGClean", "", process.name_())
 
+    # patch the phi correction parameter sets that are used in runMetCorAndUncFromMiniAOD,
+    # we only need to overwrite patMultPhiCorrParams_T1Txy_25ns with the new one
+    if options.realData:
+        if options.dataEra in ("2016B", "2016C", "2016D", "2016E", "2016F"):
+            from MetTools.MetPhiCorrections.tools.multPhiCorr_ReMiniAOD_Data_BCDEF_80X_sumPt_cfi \
+                    import multPhiCorr_Data_BCDEF_80X as metPhiCorrParams
+        else: # "2016G", "2016Hv2", "2016Hv3"
+            from MetTools.MetPhiCorrections.tools.multPhiCorr_ReMiniAOD_Data_GH_80X_sumPt_cfi \
+                    import multPhiCorr_Data_GH_80X as metPhiCorrParams
+    else:
+        from MetTools.MetPhiCorrections.tools.multPhiCorr_Summer16_MC_DY_80X_sumPt_cfi \
+                import multPhiCorr_MC_DY_sumPT_80X as metPhiCorrParams
+
+    # actual patch
+    getattr(process, "patPFMetTxyCorr").parameters = cms.VPSet(pset for pset in metPhiCorrParams)
+
+#    import PhysicsTools.PatUtils.patPFMETCorrections_cff as metCors
+#    metCors.patMultPhiCorrParams_T1Txy_25ns = metPhiCorrParams
+
+
 
 #
 # custom MET filters
@@ -399,9 +403,7 @@ process.load("RecoMET.METFilters.BadChargedCandidateFilter_cfi")
 process.BadChargedCandidateFilter.muons        = muonCollection
 process.BadChargedCandidateFilter.PFCandidates = cms.InputTag("packedPFCandidates")
 
-#process.BadPFMuonFilter.taggingMode = cms.bool(True)
 process.load("RecoMET.METFilters.badGlobalMuonTaggersMiniAOD_cff")
-
 process.badGlobalMuonTaggerMAOD.muons         = muonCollection
 process.badGlobalMuonTaggerMAOD.taggingMode   = cms.bool(True)
 process.cloneGlobalMuonTaggerMAOD.muons       = muonCollection
