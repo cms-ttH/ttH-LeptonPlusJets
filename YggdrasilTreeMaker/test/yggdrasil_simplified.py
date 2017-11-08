@@ -318,12 +318,6 @@ switchOnVIDElectronIdProducer(process, DataFormat.MiniAOD)
 for mod in eleVIDModules:
     setupAllVIDIdsInModule(process, mod, setupVIDElectronSelection)
 
-# update some VID modules to work with potentially changed electron collections
-#process.selectedElectrons = cms.EDFilter("PATElectronSelector",
-#    src = electronCollection,
-#    cut = cms.string("pt>5 && abs(eta)")
-#)
-
 # update the modules
 process.egmGsfElectronIDs.physicsObjectSrc = electronCollection
 process.electronRegressionValueMapProducer.srcMiniAOD = electronCollection
