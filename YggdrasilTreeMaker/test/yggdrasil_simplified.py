@@ -29,24 +29,41 @@ options = VarParsing("python")
 
 # set defaults of common options
 # ttH
-#options.setDefault("inputFiles", "/store/user/sflowers/44949CF4-96C6-E611-B9A0-0025905A6122.root")
 options.setDefault("inputFiles", "/store/mc/RunIISummer16MiniAODv2/ttHTobb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/44949CF4-96C6-E611-B9A0-0025905A6122.root")
 options.register("SyncType",
-    "ttH_test",
+    "ttH",
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "Which type of file to sync on (ttH, ttJets, data)"
 )
+options.setDefault("outputFile", "ttH_test.root")
+options.register("SyncFile","ttH_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
+options.register("realData",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
+
 # ttjets
 #options.setDefault("inputFiles","/store/mc/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/0693E0E7-97BE-E611-B32F-0CC47A78A3D8.root")
 #options.register("SyncType",
-#    "ttJets",
+#    "ttJets_test",
 #    VarParsing.multiplicity.singleton,
 #    VarParsing.varType.string,
 #    "Which type of file to sync on (ttH, ttJets, data)"
 #)
+#options.setDefault("outputFile", "ttJets_test.root")
+#options.register("SyncFile","ttJets_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
+#options.register("realData",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
 
-#options.setDefault("outputFile", "yggdrasil_treeMaker_simplified.root")
+# data
+#options.setDefault("inputFiles","/store/mc/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/0693E0E7-97BE-E611-B32F-0CC47A78A3D8.root")
+#options.register("SyncType",
+#    "Data",
+#    VarParsing.multiplicity.singleton,
+#    VarParsing.varType.string,
+#    "Which type of file to sync on (ttH, ttJets, data)"
+#)
+#options.setDefault("outputFile", "Data_test.root")
+#options.register("SyncFile","Data_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
+#options.register("realData",True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
+
 options.setDefault("maxEvents", 1000)
 #options.setDefault("maxEvents", -1)
 
@@ -65,12 +82,6 @@ options.register("globalTag",
   #  VarParsing.varType.string,
    # "triggers to use"
 #)
-options.register("realData",
-    False,
-    VarParsing.multiplicity.singleton,
-    VarParsing.varType.bool,
-    "input dataset contains real data"
-)
 options.register("dataEra",
     "2015_74x",
     VarParsing.multiplicity.singleton,
@@ -114,13 +125,13 @@ options.register("updatePUJetId",
     "update the PUJetId values"
 )
 options.register("addTtbarGenId",
-    False, # set to True for all ttbar datasets
+    options.SyncType=="ttJets", # should be set to True for all ttbar datasets
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "creates the ttbar gen id"
 )
 options.register("tagTTHF",
-    False, # set to True for all ttbar datasets
+    options.SyncType=="ttJets", # should be set to True for all ttbar datasets
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "performs ttbar heavy flavour tagging"
@@ -443,11 +454,12 @@ if options.updatePUJetId:
 # ttbar related setup
 #
 
-#if options.addTtbarGenId:
-#    process.load("FOO.BAR.ttHFGenFilter_cff") # replace FOO.BAR with your subystem.module
+if options.SyncType=="ttjets":
+#    if options.addTtbarGenId:
+#        process.load("FOO.BAR.ttHFGenFilter_cff") # replace FOO.BAR with your subystem.module
 
-#if options.tagTThf:
-#    process.load("ttH-LeptonPlusJets.YggdrasilTreeMaker.ttbarCategorization_cff") # replace FOO.BAR with your subystem.module
+    if options.tagTThf:
+        process.load("ttH-LeptonPlusJets.YggdrasilTreeMaker.ttbarCategorization_cff") # replace FOO.BAR with your subystem.module
 
 
 #
@@ -579,7 +591,6 @@ if not options.realData:
 
 
 # common configs
-#process.ttHTreeMaker.outputFile = cms.untracked.string(options.__getattr__("outputFile", noTags=True))
 # process.myAnalyzer.triggers   = cms.vstring(options.triggers)
 
 # Set up JetCorrections chain to be used in MiniAODHelper
@@ -646,7 +657,7 @@ if options.realData:
 # process.myAnalyzer = ...
 process.ttHTreeMaker = cms.EDAnalyzer('YggdrasilTreeMaker2017')
 process.TFileService = cms.Service("TFileService",
-	fileName = cms.string('yggdrasil_treeMaker2017.root')
+	fileName = cms.string(options.outputFile)
 )
 
 
@@ -663,6 +674,7 @@ process.ttHTreeMaker.realData = cms.bool(options.realData)
 process.ttHTreeMaker.dataEra = cms.string(options.dataEra)
 process.ttHTreeMaker.DoSync = cms.bool(options.DoSync)
 process.ttHTreeMaker.SyncType = cms.string(options.SyncType)
+process.ttHTreeMaker.SyncFile = cms.string(options.SyncFile)
 process.ttHTreeMaker.SyncDebug = cms.bool(options.SyncDebug)
 process.ttHTreeMaker.SkipEvents = cms.bool(options.SkipEvents)
 process.ttHTreeMaker.doSystematics = cms.bool(options.doSystematics)

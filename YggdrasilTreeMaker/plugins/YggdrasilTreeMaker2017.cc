@@ -140,6 +140,7 @@ class YggdrasilTreeMaker2017 : public edm::EDAnalyzer {
       std::string dataEra;
       bool DoSync;
       std::string SyncType;
+      std::string SyncFile;
       bool SkipEvents;
       bool SyncDebug;
       bool doSystematics;
@@ -192,7 +193,8 @@ YggdrasilTreeMaker2017::YggdrasilTreeMaker2017(const edm::ParameterSet& iConfig)
    realData = iConfig.getParameter<bool>("realData");
    dataEra = iConfig.getParameter<std::string>("dataEra");
    DoSync = iConfig.getParameter<bool>("DoSync");
-   SyncType = iConfig.getParameter<std::string>("SyncType");
+   SyncType = iConfig.getParameter<std::string>("SyncType"); // ttH, ttJets, Data
+   SyncFile = iConfig.getParameter<std::string>("SyncFile");
    SyncDebug = iConfig.getParameter<bool>("SyncDebug");
    SkipEvents = iConfig.getParameter<bool>("SkipEvents");
    doSystematics = iConfig.getParameter<bool>("doSystematics");
@@ -406,13 +408,25 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       if( BX==0 ){
 	numTruePV = PVI->getTrueNumInteractions();
 	numGenPV  = PVI->getPU_NumInteractions();
+//        printf("oldTrueNint = %f\n",PVI->getTrueNumInteractions());
+//        printf("oldNint = %i\n",PVI->getPU_NumInteractions());
       }
     }
+    // below is test of example sync code.
+//    for (const PileupSummaryInfo& info : *PupInfo.product()) {
+//      // pu infos are stored for each bunch crossing,
+//      // we're only interested in bunch crossing 0
+//      if (info.getBunchCrossing() == 0) {
+//        double nInteractions = info.getTrueNumInteractions(); // NOT getPU_NumInteractions()!
+//        printf("getTrueInt = %f\n",nInteractions);
+//      }
+//    }
+
   }
    
-   /////////////////////
-    // TRIGGER STUFF  ///
-    ////////////////////
+    ///////////////////
+    // TRIGGER STUFF //
+    ///////////////////
   
 
     bool passHLT_Ele27_eta2p1_WPTight_Gsf_v = false;
@@ -522,6 +536,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     std::vector<int>    lepton_isTight;
     std::vector<int>    lepton_isLoose;
     std::vector<uint32_t> lepton_seed;
+
 		 
     for( std::vector<pat::Muon>::const_iterator iMu = muons->begin(); iMu != muons->end(); iMu++ ){ 
 
@@ -536,18 +551,6 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     	if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
 
         // Rochester correction
-//        rochcor2016 *rmcor = new rochcor2016(seed);
-//        TLorentzVector mu;
-//        mu.SetPtEtaPhiM(iMu->pt(),iMu->eta(),iMu->phi(),iMu->mass());
-//        float qter = 1.0;
-//        int ntrk = iMu->innerTrack()->hitPattern().trackerLayersWithMeasurement();
-////        int ntrk = iMu->track()->hitPattern().trackerLayersWithMeasurement();
-//        if(realData) {
-//          rmcor->momcor_data(mu, (float)trkCharge, 0, qter);
-//        } else {
-//          rmcor->momcor_mc(mu, (float)trkCharge, ntrk, qter);
-//        }
-//        RoccoR  rc("rcdata.2016.v3");
 //        if(realData) {
 //          double dataSF = rc.kScaleDT(trkCharge, iMu->pt(), iMu->eta(), iMu->phi(), 0, 0);
 //        } else {
@@ -737,7 +740,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
   if(!(selection . PassSingleElCh()) && !(selection.PassSingleMuCh()) && !(selection.PassElEl()) && !(selection.PassElMu()) && !(selection.PassMuMu()))selected=false;
   if(selected && pass_METFilters && pass_MuFilters && DoSync){
 
-    std::ofstream csvfile (SyncType+".csv",std::ofstream::app);
+    std::ofstream csvfile (SyncFile,std::ofstream::app);
 
     csvfile << run<< "," ;
     csvfile <<lumi << "," ;
@@ -847,8 +850,8 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       std::vector<pat::Jet> jet_JESPileUpDataMCDOWN   =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::JESPileUpDataMCdown  , doJES, doJER );
       std::vector<pat::Jet> jet_JESRelativeFSRUP =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::JESRelativeFSRup, doJES, doJER );
 
-      std::vector<pat::Jet> jet_JERNOMI =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::NA, false, true );
-      
+      std::vector<pat::Jet> jet_JERNOMI =  miniAODhelper.GetCorrectedJets(jet_JESNOMI, iEvent, iSetup, genjets ,Systematics::NA, false, true );
+      std::vector<pat::Jet> jet_JESJERNOMI =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::NA, true, true );
 
 	const double eta1 = selection.jets().at(0)->Eta();
 	const double phi1 = selection.jets().at(0)->Phi();
@@ -868,9 +871,10 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	  d_phi1 = ( d_phi1 < M_PI ) ? d_phi1 : 2 * M_PI - d_phi1 ; 
 
 	  if(  d_eta1*d_eta1 + d_phi1*d_phi1 < 0.01 * 0.01 ){
-          if(evt==31726) {
-            printf("jet1 jesnomi = %f, jernomi = %f, rawjet pt = %f, selected jet pt = %f\n",jet_JESNOMI.at( idxJet ).pt(), jet_JERNOMI.at( idxJet ).pt(),iRawJet->pt(),selection.jets().at(0)->Pt());
-          }
+//          if(evt==209064) {
+//            printf("jet1 jesnomi = %f, jesup = %f, jesdown = %f, rawjet pt = %f, selected pt = %f\n",jet_JESNOMI.at( idxJet ).userFloat("HelperJES"),jet_JESNOMI.at( idxJet ).userFloat("HelperJESup"),jet_JESNOMI.at( idxJet ).userFloat("HelperJESdown"),iRawJet->pt(),selection.jets().at(0)->Pt());
+//            printf("JERNOMI SF method = %f, JESJER SF method = %f, selected method = %f\n", jet_JERNOMI.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt(), jet_JESJERNOMI.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt(), selection.jets().at(0)->Pt() / jet_JESNOMI.at( idxJet ).pt());
+//          }
 	 // cout<<" this ";
 	   // matching btw Raw and Corrected (physics) jet.
 	    jet1_jesSF     = jet_JESNOMI.at( idxJet ).pt() / iRawJet->pt();
@@ -878,7 +882,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	    jet1_jesSF_down = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
             jet1_jesSF_PileUpDataMC_down = jet_JESPileUpDataMCDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
             jet1_jesSF_RelativeFSR_up = jet_JESRelativeFSRUP.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
-            jet1_jerSF_nominal = jet_JERNOMI.at( idxJet ).pt() / iRawJet->pt();
+            jet1_jerSF_nominal = jet_JERNOMI.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
             jet1_PUJetID = jet_JESNOMI.at( idxJet ).userInt("pileupJetIdUpdated:fullId");
             jet1_PUJetIDDiscriminant = jet_JESNOMI.at( idxJet ).userFloat("pileupJetIdUpdated:fullDiscriminant");
             jet1_seed = jet_JESNOMI.at( idxJet ).userInt("deterministicSeed");
@@ -890,9 +894,10 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	  d_phi2 = ( d_phi2 < M_PI ) ? d_phi2 : 2 * M_PI - d_phi2 ; 
 
 	  if(  d_eta2*d_eta2 + d_phi2*d_phi2 < 0.01 * 0.01 ){
-//          if(evt==31726) {
-//            printf("jet1 jesnomi = %f, jernomi = %f, rawjet pt = %f, selected jet pt = %f\n",jet_JESNOMI.at( idxJet ).pt(), jet_JERNOMI.at( idxJet ).pt(),iRawJet->pt(),selection.jets().at(1)->Pt());
-//          }
+//            if(evt==209064) {
+//              printf("jet2 jesnomi = %f, jesup = %f, jesdown = %f, rawjet pt = %f, selected pt = %f\n",jet_JESNOMI.at( idxJet ).userFloat("HelperJES"),jet_JESNOMI.at( idxJet ).userFloat("HelperJESup"),jet_JESNOMI.at( idxJet ).userFloat("HelperJESdown"),iRawJet->pt(),selection.jets().at(1)->Pt());
+//              printf("JERNOMI SF method = %f, JESJER SF method = %f, selected method = %f\n", jet_JERNOMI.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt(), jet_JESJERNOMI.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt(), selection.jets().at(1)->Pt() / jet_JESNOMI.at( idxJet ).pt());
+//            }
 	 // cout<<" this ";
 	   // matching btw Raw and Corrected (physics) jet.
 	    jet2_jesSF     = jet_JESNOMI.at( idxJet ).pt() / iRawJet->pt();
@@ -900,7 +905,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 	    jet2_jesSF_down = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
             jet2_jesSF_PileUpDataMC_down = jet_JESPileUpDataMCDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
             jet2_jesSF_RelativeFSR_up = jet_JESRelativeFSRUP.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
-            jet2_jerSF_nominal = jet_JERNOMI.at( idxJet ).pt() / iRawJet->pt();
+            jet2_jerSF_nominal = jet_JERNOMI.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
             jet2_PUJetID = jet_JESNOMI.at( idxJet ).userInt("pileupJetIdUpdated:fullId");
             jet2_PUJetIDDiscriminant = jet_JESNOMI.at( idxJet ).userFloat("pileupJetIdUpdated:fullDiscriminant");
             jet2_seed = jet_JESNOMI.at( idxJet ).userInt("deterministicSeed");
@@ -978,7 +983,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     if( !realData ){
     csvfile << additionalJetEventId << ","; //ttHFCategory
     csvfile << -1 << ","; //ttHFGenFilterTag
-    csvfile << numTruePV << ",";
+    csvfile << numTruePV << ","; //n_interactions
     csvfile << scalefactors.get_pu_wgt(numTruePV) << "," ;    // PUWeight,
     }else{
     csvfile << -1 << ",";
@@ -1065,13 +1070,15 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 //    nnpdfWeightSumUp += weightUp;
 //    nnpdfWeightSumDown += weightDown;
 
-//    if(realData) {
-//      csvfile <<-1<<",";
-//      csvfile <<-1<<",";
-//    } else {
+    if(realData) {
+      csvfile <<-1<<",";
+      csvfile <<-1<<",";
+    } else {
+      csvfile <<-1<<",";
+      csvfile <<-1<<",";
 //      csvfile << eve-> weight_PDF_NNPDF30NLO_up_ <<",";
 //      csvfile << eve-> weight_PDF_NNPDF30NLO_down_<< ",";
-//    }
+    }
 
     //mem weight
 //    int whichWeight = 1001;
@@ -1402,7 +1409,7 @@ YggdrasilTreeMaker2017::beginJob()
    badglobalmucount=0;
    cloneglobalmucount=0;
 
-   std::ofstream csvfile (SyncType+".csv",std::ofstream::trunc);
+   std::ofstream csvfile (SyncFile,std::ofstream::trunc);
  
   if(DoSync && !SyncDebug)
     csvfile  << "run,lumi,event,is_e,is_mu,is_ee,is_emu,is_mumu,n_jets,n_btags,"
