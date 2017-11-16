@@ -187,16 +187,16 @@ void ttHYggdrasilEventSelection::SetGoodVtx( const bool * _goodvtx ){
 void ttHYggdrasilEventSelection::SetLeptons(
                          const std::vector<double> * pt, 
                          const std::vector<double> * pt_preSmear, 
-					     const std::vector<double> * eta, 
-					     const std::vector<double> * scEta,
-					     const std::vector<double> * phi,
-					     const std::vector<double> * e,
-					     const std::vector<int>    * charge, 
-					     const std::vector<int>    * isMuon, 
-					     const std::vector<double> * relIso,
-					     const std::vector<int> * POGLoose,
-					     const std::vector<int> * POGTight,
-					     const std::vector<uint32_t> * seed ){
+                         const std::vector<double> * eta, 
+                         const std::vector<double> * scEta,
+                         const std::vector<double> * phi,
+                         const std::vector<double> * e,
+                         const std::vector<int>    * charge, 
+                         const std::vector<int>    * isMuon, 
+                         const std::vector<double> * relIso,
+                         const std::vector<int> * POGLoose,
+                         const std::vector<int> * POGTight,
+                         const std::vector<uint32_t> * seed ){
   
   lep_pt  = pt ;  
   lep_pt_preSmear = pt_preSmear ;  
@@ -214,11 +214,11 @@ void ttHYggdrasilEventSelection::SetLeptons(
 }
 
 void ttHYggdrasilEventSelection::SetJets( const std::vector<double> * pt, 
-					  const std::vector<double> * eta, 
-					  const std::vector<double> * phi, 
-					  const std::vector<double> * m,
-					  const std::vector<double> * bDiscriminant ,
-					  const std::vector<int> * flav ){
+                                          const std::vector<double> * eta, 
+                                          const std::vector<double> * phi, 
+                                          const std::vector<double> * m,
+                                          const std::vector<double> * bDiscriminant ,
+                                          const std::vector<int> * flav ){
 
   jet_pt = pt ; 
   jet_eta = eta ; 
@@ -251,39 +251,39 @@ void ttHYggdrasilEventSelection::doEventSelection(){
 void  ttHYggdrasilEventSelection::_SortChargedLepton(){
 
   _SortChargedLepton( & selected_tightLeptons,
-		      & selected_tightLeptonsPtPreSmear,
-		      & selected_tightLeptonsRelIso,
-		      & selected_tightLeptonsScEta,
-		      & selected_tightLeptonsIsMuon,
-		      & selected_tightLeptonsCharge,
-		      & selected_tightLeptonsSeed );
+                      & selected_tightLeptonsPtPreSmear,
+                      & selected_tightLeptonsRelIso,
+                      & selected_tightLeptonsScEta,
+                      & selected_tightLeptonsIsMuon,
+                      & selected_tightLeptonsCharge,
+                      & selected_tightLeptonsSeed );
 
   _SortChargedLepton( & selected_looseLeptons,
-		      & selected_looseLeptonsPtPreSmear,
-		      & selected_looseLeptonsRelIso,
-		      & selected_looseLeptonsScEta,
-		      & selected_looseLeptonsIsMuon,
-		      & selected_looseLeptonsCharge,
-		      & selected_looseLeptonsSeed );
+                      & selected_looseLeptonsPtPreSmear,
+                      & selected_looseLeptonsRelIso,
+                      & selected_looseLeptonsScEta,
+                      & selected_looseLeptonsIsMuon,
+                      & selected_looseLeptonsCharge,
+                      & selected_looseLeptonsSeed );
 
   _SortChargedLepton( & DLselected_tightLeptons,
-		      & DLselected_tightLeptonsPtPreSmear,
-		      & DLselected_tightLeptonsRelIso,
-		      & DLselected_tightLeptonsScEta,
-		      & DLselected_tightLeptonsIsMuon,
-		      & DLselected_tightLeptonsCharge,
-		      & DLselected_tightLeptonsSeed );
+                      & DLselected_tightLeptonsPtPreSmear,
+                      & DLselected_tightLeptonsRelIso,
+                      & DLselected_tightLeptonsScEta,
+                      & DLselected_tightLeptonsIsMuon,
+                      & DLselected_tightLeptonsCharge,
+                      & DLselected_tightLeptonsSeed );
 
 }
 
 
 void  ttHYggdrasilEventSelection::_SortChargedLepton( std::vector<const TLorentzVector*> * v_TLV ,
-						      std::vector<double>                * v_pt_preSmear ,
-						      std::vector<double>                * v_iso ,
-						      std::vector<double>                * v_scEta ,
-						      std::vector<int>                   * v_isMuon ,
-						      std::vector<int>                   * v_charge ,
-						      std::vector<unsigned int>          * v_seed ){
+                                                      std::vector<double>                * v_pt_preSmear ,
+                                                      std::vector<double>                * v_iso ,
+                                                      std::vector<double>                * v_scEta ,
+                                                      std::vector<int>                   * v_isMuon ,
+                                                      std::vector<int>                   * v_charge ,
+                                                      std::vector<unsigned int>          * v_seed ){
 
 
   for( unsigned int i = 0 ; i < v_TLV -> size() ; i++  ){
@@ -300,21 +300,21 @@ void  ttHYggdrasilEventSelection::_SortChargedLepton( std::vector<const TLorentz
       int                   swap_charge = v_charge -> at(i);
       unsigned int          swap_seed   = v_seed   -> at(i);
 
-       v_TLV    -> at(i)  = v_TLV    -> at(j);
-       v_pt_preSmear-> at(i) = v_pt_preSmear    -> at(j);
-       v_iso    -> at(i)  = v_iso    -> at(j);
-       v_scEta  -> at(i)  = v_scEta  -> at(j);
-       v_isMuon -> at(i)  = v_isMuon -> at(j);
-       v_charge -> at(i)  = v_charge -> at(j);
-       v_seed   -> at(i)  = v_seed   -> at(j);
+      v_TLV    -> at(i)  = v_TLV    -> at(j);
+      v_pt_preSmear-> at(i) = v_pt_preSmear    -> at(j);
+      v_iso    -> at(i)  = v_iso    -> at(j);
+      v_scEta  -> at(i)  = v_scEta  -> at(j);
+      v_isMuon -> at(i)  = v_isMuon -> at(j);
+      v_charge -> at(i)  = v_charge -> at(j);
+      v_seed   -> at(i)  = v_seed   -> at(j);
 
-       v_TLV    -> at(j)  = swap_TLV   ;
-       v_pt_preSmear-> at(j) = swap_pt_preSmear;
-       v_iso    -> at(j)  = swap_iso   ;
-       v_scEta  -> at(j)  = swap_scEta ;
-       v_isMuon -> at(j)  = swap_isMuon;
-       v_charge -> at(j)  = swap_charge;
-       v_seed   -> at(j)  = swap_seed  ;
+      v_TLV    -> at(j)  = swap_TLV   ;
+      v_pt_preSmear-> at(j) = swap_pt_preSmear;
+      v_iso    -> at(j)  = swap_iso   ;
+      v_scEta  -> at(j)  = swap_scEta ;
+      v_isMuon -> at(j)  = swap_isMuon;
+      v_charge -> at(j)  = swap_charge;
+      v_seed   -> at(j)  = swap_seed  ;
 
     }
   }
@@ -331,7 +331,7 @@ void ttHYggdrasilEventSelection::_InitInternalVariables(){
   for( std::vector<const TLorentzVector*>::iterator vec = selected_looseLeptons . begin();
        vec != selected_looseLeptons.end();
        vec ++
-       ){
+     ){
     if( (*vec) == 0 ) continue ;
     delete (*vec);
     (*vec) = 0 ;
@@ -340,7 +340,7 @@ void ttHYggdrasilEventSelection::_InitInternalVariables(){
   for( std::vector<const TLorentzVector*>::iterator vec = selected_jets . begin();
        vec != selected_jets.end();
        vec ++
-       ){
+     ){
     if( (*vec) == 0 ) continue ;
     delete (*vec);
     (*vec) = 0 ;
@@ -351,7 +351,7 @@ void ttHYggdrasilEventSelection::_InitInternalVariables(){
   for( std::vector<const TLorentzVector*>::iterator vec = DLselected_tightLeptons . begin();
        vec != DLselected_tightLeptons.end();
        vec ++
-       ){
+     ){
     if( (*vec) == 0 ) continue ;
     delete (*vec);
     (*vec) = 0 ;
@@ -361,7 +361,7 @@ void ttHYggdrasilEventSelection::_InitInternalVariables(){
   for( std::vector<const TLorentzVector*>::iterator vec = DLsofterselected_jets . begin();
        vec != DLsofterselected_jets.end();
        vec ++
-       ){
+     ){
     if( (*vec) == 0 ) continue ;
     delete (*vec);
     (*vec) = 0 ;
@@ -429,9 +429,9 @@ void ttHYggdrasilEventSelection::_ElectronSelection(){
 
     TLorentzVector * vec = new TLorentzVector;
     vec->SetPtEtaPhiE( lep_pt  -> at(idx),
-		       lep_eta -> at(idx),
-		       lep_phi -> at(idx),
-		       lep_e   -> at(idx) );
+                       lep_eta -> at(idx),
+                       lep_phi -> at(idx),
+                       lep_e   -> at(idx) );
 
     selected_looseLeptons.push_back( vec );
     selected_looseLeptonsPtPreSmear.push_back( lep_pt_preSmear -> at(idx) );
@@ -469,9 +469,9 @@ void ttHYggdrasilEventSelection::_ElectronSelection(){
 
     TLorentzVector * vec = new TLorentzVector;
     vec->SetPtEtaPhiE( lep_pt  -> at(idx),
-		       lep_eta -> at(idx),
-		       lep_phi -> at(idx),
-		       lep_e   -> at(idx) );
+                       lep_eta -> at(idx),
+                       lep_phi -> at(idx),
+                       lep_e   -> at(idx) );
 
     DLselected_tightLeptons.push_back( vec );
     DLselected_tightLeptonsPtPreSmear.push_back( lep_pt_preSmear -> at(idx) );
@@ -499,9 +499,9 @@ void ttHYggdrasilEventSelection::_MuonSelection(){
 
     TLorentzVector * vec = new TLorentzVector;
     vec->SetPtEtaPhiE( lep_pt  -> at(idx),
-		       lep_eta -> at(idx),
-		       lep_phi -> at(idx),
-		       lep_e   -> at(idx) );
+                       lep_eta -> at(idx),
+                       lep_phi -> at(idx),
+                       lep_e   -> at(idx) );
 
     selected_looseLeptons.push_back( vec );
     selected_looseLeptonsPtPreSmear.push_back( lep_pt_preSmear -> at(idx) );
@@ -538,9 +538,9 @@ void ttHYggdrasilEventSelection::_MuonSelection(){
 
     TLorentzVector * vec = new TLorentzVector;
     vec->SetPtEtaPhiE( lep_pt  -> at(idx),
-		       lep_eta -> at(idx),
-		       lep_phi -> at(idx),
-		       lep_e   -> at(idx) );
+                       lep_eta -> at(idx),
+                       lep_phi -> at(idx),
+                       lep_e   -> at(idx) );
 
     DLselected_tightLeptons.push_back( vec );
     DLselected_tightLeptonsPtPreSmear.push_back( lep_pt_preSmear -> at(idx) );
@@ -559,23 +559,22 @@ void ttHYggdrasilEventSelection::_JetSelection(){
 
   for( unsigned int idx = 0 ; idx < jet_pt->size() ; idx++ ){
   
- selected_jets_step.push_back(0);
- 
+    selected_jets_step.push_back(0);
+
     if(        jet_pt    -> at(idx)   < Thre_Jet_PT  ) continue ;
-    
- selected_jets_step[idx]++;
+    selected_jets_step[idx]++;
+
     if( fabs( jet_eta    -> at(idx) ) > Thre_Jet_Eta ) continue ;
- selected_jets_step[idx]++;
+    selected_jets_step[idx]++;
 
     if( _OverlapWithLooseLeptons( jet_eta -> at(idx), jet_phi -> at(idx) ) ) continue ; 
-    
- selected_jets_step[idx]++;
+    selected_jets_step[idx]++;
 
     TLorentzVector * vec = new TLorentzVector;
     vec->SetPtEtaPhiM( jet_pt  -> at(idx),
-		       jet_eta -> at(idx),
-		       jet_phi -> at(idx),
-		       jet_m   -> at(idx) );
+                       jet_eta -> at(idx),
+                       jet_phi -> at(idx),
+                       jet_m   -> at(idx) );
 
     selected_jets.push_back( vec );
     selected_jetsBdiscriminant.push_back( jet_bDiscriminant ->at(idx) );
@@ -601,9 +600,9 @@ void ttHYggdrasilEventSelection::_JetSelection(){
 
     TLorentzVector * vec = new TLorentzVector;
     vec->SetPtEtaPhiM( jet_pt  -> at(idx),
-		       jet_eta -> at(idx),
-		       jet_phi -> at(idx),
-		       jet_m   -> at(idx) );
+                       jet_eta -> at(idx),
+                       jet_phi -> at(idx),
+                       jet_m   -> at(idx) );
 
     DLsofterselected_jets.push_back( vec );
     DLsofterselected_jetsBdiscriminant.push_back( jet_bDiscriminant ->at(idx) );
@@ -623,7 +622,8 @@ bool ttHYggdrasilEventSelection::_OverlapWithLooseLeptons( double eta, double ph
 
   for( std::vector<const TLorentzVector*>::iterator lep = selected_looseLeptons.begin(); 
        lep != selected_looseLeptons.end();
-       lep++){
+       lep++
+     ){
     if( _calcDR2( eta, (*lep)->Eta(), phi, (*lep)->Phi() ) < 0.4 * 0.4 ){ return true ; }
   }
   return false ;
@@ -640,24 +640,24 @@ bool ttHYggdrasilEventSelection::PassSingleMuCh(){
   nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // (no vertex requirement inside the tool.)
-  if( ! (*goodvtx) ){return false;}
+  if( ! (*goodvtx) ){ return false; }
   nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // One tight muon.
-  if( selected_tightLeptons.size() != 1 || selected_tightLeptonsIsMuon[0] != 1 ){ return false ; }
+  if( selected_tightLeptons.size() != 1 || selected_tightLeptonsIsMuon[0] != 1 ) { return false ; }
   nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // No additional loose leptons.
-  if( selected_looseLeptons.size() != 1 ){ return false ; } ;
+  if( selected_looseLeptons.size() != 1 ) { return false ; } ;
   nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // jet
-  if( selected_jets . size() < 4 ){ return false ;}
+  if( selected_jets . size() < 4 ) { return false ;}
   nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   // btagjet
   // jet
-  if( selected_bjets . size() < 2 ){ return false ;}
+  if( selected_bjets . size() < 2 ) { return false; }
   nEvent_passSingleMuCh[ i_step++ ]++ ; 
 
   return true; 
@@ -669,28 +669,28 @@ bool ttHYggdrasilEventSelection::PassSingleElCh(){
   nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // Trig Requirement.
-  if( ! passElTrig() ){ return false ;}
+  if( ! passElTrig() ){ return false;}
   nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // (no vertex requirement inside the tool.)
-  if( ! (*goodvtx) ){ return false;}
+  if( ! (*goodvtx) ){ return false; }
   nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // One tight muon.
-  if( selected_tightLeptons.size() != 1 || selected_tightLeptonsIsMuon[0] == 1 ){ return false ; }
+  if( selected_tightLeptons.size() != 1 || selected_tightLeptonsIsMuon[0] == 1 ){ return false; }
   nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // No additional loose leptons.
-  if( selected_looseLeptons.size() != 1 ){ return false ; } ;
+  if( selected_looseLeptons.size() != 1 ){ return false; } ;
   nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // jet
-  if( selected_jets . size() < 4 ){ return false ;}
+  if( selected_jets . size() < 4 ){ return false; }
   nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   // btagjet
   // jet
-  if( selected_bjets . size() < 2 ){ return false ;}
+  if( selected_bjets . size() < 2 ){ return false; }
   nEvent_passSingleElCh[ i_step++ ]++ ; 
 
   return true; 
@@ -703,11 +703,11 @@ bool ttHYggdrasilEventSelection::PassElEl(){
   nEvent_passElElCh[ i_step++ ]++ ; 
 
   // Trigger 
-  if( ! passElElTrig()  ){ return false ;}
+  if( ! passElElTrig()  ){ return false; }
   nEvent_passElElCh[ i_step++ ]++ ; 
 
   // GoodVtx
-  if( ! (*goodvtx) ) { return false ;}
+  if( ! (*goodvtx) ) { return false; }
   nEvent_passElElCh[ i_step++ ]++ ; 
 
   // 2 OS-leptons (in DL definition) && FlavMatching with triggers.
@@ -827,7 +827,7 @@ bool ttHYggdrasilEventSelection::PassElMu(){
   
 //  std::cout<<"ElMu_3 ";
   
-	
+
 
   // 2 OS-leptons (in DL definition) && FlavMatching with triggers.
   if( DLselected_tightLeptons.size() < 1 ){ return false ;}
@@ -842,10 +842,10 @@ bool ttHYggdrasilEventSelection::PassElMu(){
 
   if(  !
        ( ( selected_looseLeptonsIsMuon.at(0) == 1 && selected_looseLeptonsIsMuon.at(1) == 0 )
-	 ||
-	 ( selected_looseLeptonsIsMuon.at(0) == 0 && selected_looseLeptonsIsMuon.at(1) == 1 )
-	 )
-       ){ return false ;}
+         ||
+         ( selected_looseLeptonsIsMuon.at(0) == 0 && selected_looseLeptonsIsMuon.at(1) == 1 )
+       )
+    ){ return false ;}
   nEvent_passElMuCh[ i_step++ ]++ ; 
 
 

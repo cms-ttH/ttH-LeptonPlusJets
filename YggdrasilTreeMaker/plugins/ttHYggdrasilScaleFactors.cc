@@ -316,9 +316,9 @@ double ttHYggdrasilScaleFactors::getTightMuon_IsoSF( ttHYggdrasilEventSelection 
     double wgt_for_this_mu = 0 ;
     for( unsigned int iSF = 0 ; iSF < h_MuSF_tightIso.size() ; iSF ++ ){
       wgt_for_this_mu +=
-	GetBinValueFromXYValues( h_MuSF_tightIso[iSF] , pt , abs_eta )
-	*
-	( MuSF_Iso_Lumi[iSF] / MuSF_Iso_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+        GetBinValueFromXYValues( h_MuSF_tightIso[iSF] , pt , abs_eta )
+        *
+        ( MuSF_Iso_Lumi[iSF] / MuSF_Iso_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
     }
     weight *= wgt_for_this_mu ;
     
@@ -341,9 +341,9 @@ double ttHYggdrasilScaleFactors::getLooseMuon_IsoSF( ttHYggdrasilEventSelection 
     double wgt_for_this_mu = 0 ;
     for( unsigned int iSF = 0 ; iSF < h_MuSF_looseIso.size() ; iSF ++ ){
       wgt_for_this_mu +=
-	GetBinValueFromXYValues( h_MuSF_looseIso[iSF] , pt , abs_eta )
-	*
-	( MuSF_Iso_Lumi[iSF] / MuSF_Iso_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+        GetBinValueFromXYValues( h_MuSF_looseIso[iSF] , pt , abs_eta )
+        *
+        ( MuSF_Iso_Lumi[iSF] / MuSF_Iso_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
     }
     weight *= wgt_for_this_mu ;
     
@@ -366,9 +366,9 @@ double ttHYggdrasilScaleFactors::getTightMuon_TrackingSF( ttHYggdrasilEventSelec
     double wgt_for_this_mu = 0 ;
     for( unsigned int iSF = 0 ; iSF < tgraph_MuSF_Tracking.size() ; iSF ++ ){
       wgt_for_this_mu +=
-	GetTGraphAsymmErrorsValue( tgraph_MuSF_Tracking[iSF] , abs_eta , err )
-	*
-	( MuSF_Tracking_Lumi[iSF] / MuSF_Tracking_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+        GetTGraphAsymmErrorsValue( tgraph_MuSF_Tracking[iSF] , abs_eta , err )
+        *
+        ( MuSF_Tracking_Lumi[iSF] / MuSF_Tracking_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
     }
     weight *= wgt_for_this_mu ;
     
@@ -515,9 +515,9 @@ std::vector<double> ttHYggdrasilScaleFactors::getLooseLepton_TrackingSF_vector( 
     double wgt_for_this_mu = 0 ;
     for( unsigned int iSF = 0 ; iSF < tgraph_MuSF_Tracking.size() ; iSF ++ ){
       wgt_for_this_mu +=
-	GetTGraphAsymmErrorsValue( tgraph_MuSF_Tracking[iSF] , abs_eta , err )
-	*
-	( MuSF_Tracking_Lumi[iSF] / MuSF_Tracking_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
+        GetTGraphAsymmErrorsValue( tgraph_MuSF_Tracking[iSF] , abs_eta , err )
+        *
+        ( MuSF_Tracking_Lumi[iSF] / MuSF_Tracking_LumiTotal ) ; //<- Weight based on the int_lumi in the period.
     }
     weight.push_back( wgt_for_this_mu );
     
@@ -637,7 +637,7 @@ ttHYggdrasilScaleFactors::~ttHYggdrasilScaleFactors(){
 
 
 double ttHYggdrasilScaleFactors::get_csv_wgt( std::vector<double> jetPts, std::vector<double> jetEtas, std::vector<double> jetCSVs, std::vector<int> jetFlavors, 
-					      int iSys, double &csvWgtHF, double &csvWgtLF, double &csvWgtCF ){
+                                              int iSys, double &csvWgtHF, double &csvWgtLF, double &csvWgtCF ){
 
   int iSysHF = 0;
   switch(iSys){
@@ -736,7 +736,7 @@ double ttHYggdrasilScaleFactors::get_csv_wgt( std::vector<double> jetPts, std::v
 
 
 double ttHYggdrasilScaleFactors::get_csv_wgt( ttHYggdrasilEventSelection * event,
-					      int iSys, double &csvWgtHF, double &csvWgtLF, double &csvWgtCF ){
+                                              int iSys, double &csvWgtHF, double &csvWgtLF, double &csvWgtCF ){
 
   std::vector<double> pt, eta  ; 
   for( unsigned int i = 0 ; i < event->jets().size() ; i++ ){
@@ -745,15 +745,15 @@ double ttHYggdrasilScaleFactors::get_csv_wgt( ttHYggdrasilEventSelection * event
   }
 
   return get_csv_wgt(
-		     pt , 
-		     eta , 
-		     event -> jetsBdiscriminant() , 
-		     event -> jetsFlav() , 
-		     iSys,
-		     csvWgtHF,
-		     csvWgtLF,
-		     csvWgtCF 
-		     );
+                     pt , 
+                     eta , 
+                     event -> jetsBdiscriminant() , 
+                     event -> jetsFlav() , 
+                     iSys,
+                     csvWgtHF,
+                     csvWgtLF,
+                     csvWgtCF 
+                     );
 
 }
 
@@ -770,10 +770,10 @@ void ttHYggdrasilScaleFactors::init_Pileup(){
     { 
       double total = 0 ;
       for( int i = 0 ; i < 75 ; i ++ ){
-	total += PU_MC[ i ];
+        total += PU_MC[ i ];
       }
       for( int i = 0 ; i < 75 ; i ++ ){
-	PU_MC[ i ] /= total;
+        PU_MC[ i ] /= total;
       }
     }
 
@@ -787,7 +787,7 @@ void ttHYggdrasilScaleFactors::init_Pileup(){
       
       f -> GetObject( "pileup" , h ) ;
       for( int i = 0 ; i < 75 ; i++ ){
-	PU_DATA[i] = h->GetBinContent( i + 1 );
+        PU_DATA[i] = h->GetBinContent( i + 1 );
       } 
     }
 
@@ -796,20 +796,20 @@ void ttHYggdrasilScaleFactors::init_Pileup(){
     { 
       double total = 0 ;
       for( int i = 0 ; i < 75 ; i ++ ){
-	total += PU_DATA[ i ];
+        total += PU_DATA[ i ];
       }
       // normalization.
       for( int i = 0 ; i < 75 ; i ++ ){
-	PU_DATA[ i ] /= total;
+        PU_DATA[ i ] /= total;
       }
     }
 
     
     for(int i = 0 ; i < 75 ; i ++){
       if( PU_MC[i] == 0 ){
-	PU_weight[ i ] = 0 ; 
+        PU_weight[ i ] = 0 ; 
       }else{
-	PU_weight[ i ] = PU_DATA[i] / PU_MC[i];
+        PU_weight[ i ] = PU_DATA[i] / PU_MC[i];
       }
     }
     

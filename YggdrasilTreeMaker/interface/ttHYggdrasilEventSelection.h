@@ -30,23 +30,23 @@ class ttHYggdrasilEventSelection{
   void SetLeptons(
            const std::vector<double> * pt, 
            const std::vector<double> * pt_preSmear, 
-		   const std::vector<double> * eta, 
-		   const std::vector<double> * scEta,
-		   const std::vector<double> * phi,
-		   const std::vector<double> * e,
-		   const std::vector<int>    * charge,
-		   const std::vector<int>    * isMuon, 
-		   const std::vector<double> * relIso,
-		   const std::vector<int> * POGLoose,
-		   const std::vector<int> * POGTight,
-		   const std::vector<uint32_t> * seed );
+           const std::vector<double> * eta, 
+           const std::vector<double> * scEta,
+           const std::vector<double> * phi,
+           const std::vector<double> * e,
+           const std::vector<int>    * charge,
+           const std::vector<int>    * isMuon, 
+           const std::vector<double> * relIso,
+           const std::vector<int> * POGLoose,
+           const std::vector<int> * POGTight,
+           const std::vector<uint32_t> * seed );
 
   void SetJets( const std::vector<double> * pt, 
-		const std::vector<double> * eta, 
-		const std::vector<double> * phi, 
-		const std::vector<double> * m,
-		const std::vector<double> * bDiscriminant ,
-		const std::vector<int> * flav );
+                const std::vector<double> * eta, 
+                const std::vector<double> * phi, 
+                const std::vector<double> * m,
+                const std::vector<double> * bDiscriminant ,
+                const std::vector<int> * flav );
 
   void SetMet( const float * _met_pt, const float * _met_phi );
 
@@ -117,8 +117,8 @@ class ttHYggdrasilEventSelection{
   std::vector<const TLorentzVector*> DLSofterbjets();
   std::vector<double> DLSofterbjetsBdiscriminant();
 
-  bool passElTrig() ; 	
-  bool passMuTrig() ; 	
+  bool passElTrig() ;
+  bool passMuTrig() ;
   bool passElElTrig() ; 
   bool passMuMuTrig() ; 
   bool passElMuTrig() ; 
@@ -134,12 +134,12 @@ class ttHYggdrasilEventSelection{
   void _JetSelection();
   void _SortChargedLepton();
   void _SortChargedLepton( std::vector<const TLorentzVector*> * v_TLV ,
-			   std::vector<double>                * v_pt_preSmear ,
-			   std::vector<double>                * v_iso ,
-			   std::vector<double>                * v_scEta ,
-			   std::vector<int>                   * v_isMuon ,
-			   std::vector<int>                   * v_charge ,
-			   std::vector<unsigned int>          * v_seed );
+                           std::vector<double>                * v_pt_preSmear ,
+                           std::vector<double>                * v_iso ,
+                           std::vector<double>                * v_scEta ,
+                           std::vector<int>                   * v_isMuon ,
+                           std::vector<int>                   * v_charge ,
+                           std::vector<unsigned int>          * v_seed );
   bool _OverlapWithLooseLeptons( double eta, double phi);
   double _calcDR2( double eta1, double eta2, double phi1, double phi2 );
 
