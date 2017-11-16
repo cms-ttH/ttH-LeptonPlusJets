@@ -26,46 +26,96 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 
 options = VarParsing("python")
 
+options.register("DataList","",VarParsing.multiplicity.list,VarParsing.varType.string,"List of input datasets")
+options.DataList = ( # Era B
+#"/store/data/Run2016B/SingleElectron/MINIAOD/03Feb2017_ver2-v2/110000/003B2C1F-50EB-E611-A8F1-002590E2D9FE.root",
+"/store/data/Run2016B/SingleElectron/MINIAOD/03Feb2017_ver2-v2/110000/0043D133-4DEB-E611-BFE4-003048F5ADEC.root",
+"/store/data/Run2016B/SingleMuon/MINIAOD/03Feb2017_ver2-v2/100000/000C6E52-8BEC-E611-B3FF-0025905C42FE.root",
+"/store/data/Run2016B/SingleMuon/MINIAOD/03Feb2017_ver2-v2/100000/001E3E7D-57EB-E611-8469-0CC47A7C35D2.root",
+"/store/data/Run2016B/DoubleEG/MINIAOD/03Feb2017_ver2-v2/50000/00054938-CEEA-E611-889E-0CC47A4D7650.root",
+"/store/data/Run2016B/DoubleEG/MINIAOD/03Feb2017_ver2-v2/50000/001BC16F-90EA-E611-87E2-F04DA27540BB.root"
+)
+#options.DataList = ( # Era C
+#"/store/data/Run2016C/SingleElectron/MINIAOD/03Feb2017-v1/100000/02169BE7-81EB-E611-BB99-02163E0137CD.root",
+#"/store/data/Run2016C/SingleElectron/MINIAOD/03Feb2017-v1/100000/0244B3B4-78EB-E611-9D42-0CC47A009E24.root",
+#"/store/data/Run2016C/SingleMuon/MINIAOD/03Feb2017-v1/50000/001CF316-1AEB-E611-BBBD-0CC47A4C8EE2.root",
+#"/store/data/Run2016C/SingleMuon/MINIAOD/03Feb2017-v1/50000/0022D65B-05EB-E611-84E9-0025905A6104.root",
+#"/store/data/Run2016C/DoubleEG/MINIAOD/03Feb2017-v1/80000/00371362-6AEC-E611-9845-842B2B758BAA.root",
+#"/store/data/Run2016C/DoubleEG/MINIAOD/03Feb2017-v1/80000/006E86B9-77EC-E611-BA8F-02163E019CE7.root"
+#)
+#options.DataList = ( # Era D
+#"/store/data/Run2016D/SingleElectron/MINIAOD/03Feb2017-v1/110000/001A5DEC-77EB-E611-95CD-0CC47A4C8EE8.root",
+#"/store/data/Run2016D/SingleElectron/MINIAOD/03Feb2017-v1/110000/001F5992-6DEA-E611-AF62-A4BF01013DD5.root",
+#"/store/data/Run2016D/SingleMuon/MINIAOD/03Feb2017-v1/100000/00622F98-20EB-E611-A0A4-28924A33AFF6.root",
+#"/store/data/Run2016D/SingleMuon/MINIAOD/03Feb2017-v1/100000/023071E7-97EA-E611-A89A-0025904C67B6.root",
+#"/store/data/Run2016D/DoubleEG/MINIAOD/03Feb2017-v1/100000/002CE21C-0BEB-E611-8597-001E67E6F8E6.root",
+#"/store/data/Run2016D/DoubleEG/MINIAOD/03Feb2017-v1/100000/006BB826-05EB-E611-97F4-0025904A8ED2.root"
+#)
+#options.DataList = ( # Era E
+#"/store/data/Run2016E/SingleElectron/MINIAOD/03Feb2017-v1/110000/00022327-8BEA-E611-86CB-0025905B8566.root",
+#"/store/data/Run2016E/SingleElectron/MINIAOD/03Feb2017-v1/110000/002070E4-1BEB-E611-BA80-0025905A608E.root",
+#"/store/data/Run2016E/SingleMuon/MINIAOD/03Feb2017-v1/110000/001D567A-0CEB-E611-A438-D8D385AE8848.root",
+#"/store/data/Run2016E/SingleMuon/MINIAOD/03Feb2017-v1/110000/004309C7-E6EA-E611-92B5-0025905A60DA.root",
+#"/store/data/Run2016E/DoubleEG/MINIAOD/03Feb2017-v1/110000/003AF399-ABEA-E611-92CF-002590E2DA08.root",
+#"/store/data/Run2016E/DoubleEG/MINIAOD/03Feb2017-v1/110000/048E7FCD-98EA-E611-AB8A-002590D9D966.root"
+#)
+#options.DataList = ( # Era F
+#"/store/data/Run2016F/SingleElectron/MINIAOD/03Feb2017-v1/100000/00B336D6-6AEC-E611-8581-E0071B7AC7B0.root",
+#"/store/data/Run2016F/SingleElectron/MINIAOD/03Feb2017-v1/100000/0229A4E9-5DEC-E611-B931-A0000420FE80.root",
+#"/store/data/Run2016F/SingleMuon/MINIAOD/03Feb2017-v1/100000/00E6AB6D-BCEC-E611-8F6E-0025905C3D98.root",
+#"/store/data/Run2016F/SingleMuon/MINIAOD/03Feb2017-v1/100000/040B13AE-C3EC-E611-8082-0025904C6564.root",
+#"/store/data/Run2016F/DoubleEG/MINIAOD/03Feb2017-v1/80000/0006AFD8-F8EA-E611-9F9D-0CC47A13D09C.root",
+#"/store/data/Run2016F/DoubleEG/MINIAOD/03Feb2017-v1/80000/00A7E4D9-F8EA-E611-A62B-002590E3A004.root"
+#)
+#options.DataList = ( # Era G
+#"/store/data/Run2016G/SingleElectron/MINIAOD/03Feb2017-v1/50000/004A75AB-B2EA-E611-B000-24BE05CEFDF1.root",
+#"/store/data/Run2016G/SingleElectron/MINIAOD/03Feb2017-v1/50000/00539EDD-F8EA-E611-AC1D-0025900B5648.root",
+#"/store/data/Run2016G/SingleMuon/MINIAOD/03Feb2017-v1/100000/00E6DF50-70EA-E611-ACC4-0CC47A1E089C.root",
+#"/store/data/Run2016G/SingleMuon/MINIAOD/03Feb2017-v1/100000/02382B19-D1EA-E611-B2F9-0CC47ABAC11C.root",
+#"/store/data/Run2016G/DoubleEG/MINIAOD/03Feb2017-v1/100000/002F14FF-D0EA-E611-952E-008CFA197AF4.root",
+#"/store/data/Run2016G/DoubleEG/MINIAOD/03Feb2017-v1/100000/02642443-F0EA-E611-9D24-008CFA197D74.root"
+#)
+#options.DataList = ( # Era Hv2
+#"/store/data/Run2016H/SingleElectron/MINIAOD/03Feb2017_ver2-v1/100000/00553E5F-29EC-E611-ADB0-00259074AE8C.root",
+#"/store/data/Run2016H/SingleElectron/MINIAOD/03Feb2017_ver2-v1/100000/006EC85C-29EC-E611-B2E1-20CF3019DF17.root",
+#"/store/data/Run2016H/SingleMuon/MINIAOD/03Feb2017_ver2-v1/110000/00633FF0-85EA-E611-811C-001E674FB25C.root",
+#"/store/data/Run2016H/SingleMuon/MINIAOD/03Feb2017_ver2-v1/110000/006517CB-8AEA-E611-8CF6-0CC47AC08BD4.root",
+#"/store/data/Run2016H/DoubleEG/MINIAOD/03Feb2017_ver2-v1/100000/023E858B-F7EC-E611-889C-047D7BD6DDF2.root",
+#"/store/data/Run2016H/DoubleEG/MINIAOD/03Feb2017_ver2-v1/100000/02AD337A-95ED-E611-B1AE-047D7B881D90.root"
+#)
+#options.DataList = ( # Era Hv3
+#"/store/data/Run2016H/SingleElectron/MINIAOD/03Feb2017_ver3-v1/110000/02973E99-69EC-E611-9913-5065F381A2F1.root",
+#"/store/data/Run2016H/SingleElectron/MINIAOD/03Feb2017_ver3-v1/110000/04C8C9AF-62EC-E611-AB90-A0000420FE80.root",
+#"/store/data/Run2016H/SingleMuon/MINIAOD/03Feb2017_ver3-v1/80000/0040ECBB-76EA-E611-8FE7-A0000420FE80.root",
+#"/store/data/Run2016H/SingleMuon/MINIAOD/03Feb2017_ver3-v1/80000/16F28614-84EA-E611-8083-A0369F310374.root",
+#"/store/data/Run2016H/DoubleEG/MINIAOD/03Feb2017_ver3-v1/1030000/D41C6358-4DF0-E611-BBAC-002590DB927A.root",
+#"/store/data/Run2016H/DoubleEG/MINIAOD/03Feb2017_ver3-v1/110000/78C7FC4D-7CED-E611-870F-0CC47A7FC858.root"
+#)
 
 # set defaults of common options
 # ttH
-options.setDefault("inputFiles", "/store/mc/RunIISummer16MiniAODv2/ttHTobb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/44949CF4-96C6-E611-B9A0-0025905A6122.root")
-options.register("SyncType",
-    "ttH",
-    VarParsing.multiplicity.singleton,
-    VarParsing.varType.string,
-    "Which type of file to sync on (ttH, ttJets, data)"
-)
-options.setDefault("outputFile", "ttH_test.root")
-options.register("SyncFile","ttH_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
-options.register("realData",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
+#options.setDefault("inputFiles", "/store/mc/RunIISummer16MiniAODv2/ttHTobb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/44949CF4-96C6-E611-B9A0-0025905A6122.root")
+#options.register("SyncType","ttH",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Which type of file to sync on (ttH, ttJets, data)")
+#options.setDefault("outputFile", "ttH_test.root")
+#options.register("SyncFile","ttH_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
+#options.register("realData",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
 
 # ttjets
 #options.setDefault("inputFiles","/store/mc/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/0693E0E7-97BE-E611-B32F-0CC47A78A3D8.root")
-#options.register("SyncType",
-#    "ttJets_test",
-#    VarParsing.multiplicity.singleton,
-#    VarParsing.varType.string,
-#    "Which type of file to sync on (ttH, ttJets, data)"
-#)
+#options.register("SyncType","ttJets_test",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Which type of file to sync on (ttH, ttJets, data)")
 #options.setDefault("outputFile", "ttJets_test.root")
 #options.register("SyncFile","ttJets_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
 #options.register("realData",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
 
 # data
-#options.setDefault("inputFiles","/store/mc/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/0693E0E7-97BE-E611-B32F-0CC47A78A3D8.root")
-#options.register("SyncType",
-#    "Data",
-#    VarParsing.multiplicity.singleton,
-#    VarParsing.varType.string,
-#    "Which type of file to sync on (ttH, ttJets, data)"
-#)
-#options.setDefault("outputFile", "Data_test.root")
-#options.register("SyncFile","Data_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
-#options.register("realData",True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
+options.setDefault("inputFiles",options.DataList)
+options.register("SyncType","Data",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Which type of file to sync on (ttH, ttJets, data)")
+options.setDefault("outputFile", "Data_test.root")
+options.register("SyncFile","Data_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
+options.register("realData",True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
 
-options.setDefault("maxEvents", 1000)
-#options.setDefault("maxEvents", -1)
+options.setDefault("maxEvents", 2000)
+#options.setDefault("maxEvents", -1) // run all events
 
 # add custom options
 options.register("globalTag",
@@ -74,16 +124,8 @@ options.register("globalTag",
     VarParsing.varType.string,
     "the global tag to use"
 )
-
-### Implemented in YggdrasilTreeMaker2017.cc
-#options.register("triggers",
- #   [],
-  #  VarParsing.multiplicity.list,
-  #  VarParsing.varType.string,
-   # "triggers to use"
-#)
 options.register("dataEra",
-    "2015_74x",
+    "2016B", # Overwritten in treemaker since MiniAODHelper has dead code preventing 2016 data
     VarParsing.multiplicity.singleton,
     VarParsing.varType.string,
     "the era of the data taking period, e.g. '2016B', empty for MC"
@@ -371,7 +413,7 @@ if options.recorrectMET:
             runOnMiniAOD          = True,
             postfix               = "MuEGClean"
         )
-        process.slimmedMETsMuEGClean = process.slimmedMETsRecorrected.clone(
+        process.slimmedMETsMuEGClean = getattr(process, METCollection.getModuleLabel()).clone(
             src             = cms.InputTag("patPFMetT1MuEGClean"),
             rawVariation    = cms.InputTag("patPFMetRawMuEGClean"),
             t1Uncertainties = cms.InputTag("patPFMetT1%sMuEGClean")
@@ -444,9 +486,14 @@ if options.updatePUJetId:
     # overwrite output collections
     jetCollection = cms.InputTag("updatedPatJets", "", process.name_())
 
-
-
-
+#
+# top pt reweighting
+#
+# Not used -- unnecessary!
+#process.load("TopQuarkAnalysis.TopEventProducers.sequences.ttGenEvent_cff")
+#process.makeGenEvt
+#process.decaySubset.fillMode = cms.string("kME")
+#process.myWeightAnalyzer.ttGenEvent = cms.InputTag('genEvt')
 
 
 
@@ -479,13 +526,14 @@ if not options.realData:
              cms.EDProducer("InputGenJetsParticleSelector",
                             src = cms.InputTag("packedGenParticles"),
                             ignoreParticleIDs = cms.vuint32(
-                1000022,
-                1000012, 1000014, 1000016,
-                2000012, 2000014, 2000016,
-                1000039, 5100039,
-                4000012, 4000014, 4000016,
-                9900012, 9900014, 9900016,
-                39, 12,14,16),
+                              1000022,
+                              1000012, 1000014, 1000016,
+                              2000012, 2000014, 2000016,
+                              1000039, 5100039,
+                              4000012, 4000014, 4000016,
+                              9900012, 9900014, 9900016,
+                              39, 12,14,16
+                            ),
                             partonicFinalState = cms.bool(False),
                             excludeResonances = cms.bool(False),
                             excludeFromResonancePids = cms.vuint32(12, 13, 14, 16),
@@ -585,13 +633,9 @@ if not options.realData:
         genJetPtMin = 20.,
         genJetAbsEtaMax = 2.4,
         genJets = genJetCollection,
-        )
+    )
 
 
-
-
-# common configs
-# process.myAnalyzer.triggers   = cms.vstring(options.triggers)
 
 # Set up JetCorrections chain to be used in MiniAODHelper
 # Note: name is hard-coded to ak4PFchsL1L2L3 and does not
