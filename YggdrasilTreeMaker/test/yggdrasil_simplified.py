@@ -94,11 +94,11 @@ options.DataList = ( # Era B
 
 # set defaults of common options
 # ttH
-#options.setDefault("inputFiles", "/store/mc/RunIISummer16MiniAODv2/ttHTobb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/44949CF4-96C6-E611-B9A0-0025905A6122.root")
-#options.register("SyncType","ttH",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Which type of file to sync on (ttH, ttJets, data)")
-#options.setDefault("outputFile", "ttH_test.root")
-#options.register("SyncFile","ttH_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
-#options.register("realData",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
+options.setDefault("inputFiles", "/store/mc/RunIISummer16MiniAODv2/ttHTobb_M125_TuneCUETP8M2_ttHtranche3_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/44949CF4-96C6-E611-B9A0-0025905A6122.root")
+options.register("SyncType","ttH",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Which type of file to sync on (ttH, ttJets, data)")
+options.setDefault("outputFile", "ttH_test.root")
+options.register("SyncFile","ttH_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
+options.register("realData",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
 
 # ttjets
 #options.setDefault("inputFiles","/store/mc/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/0693E0E7-97BE-E611-B32F-0CC47A78A3D8.root")
@@ -108,14 +108,15 @@ options.DataList = ( # Era B
 #options.register("realData",False,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
 
 # data
-options.setDefault("inputFiles",options.DataList)
-options.register("SyncType","Data",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Which type of file to sync on (ttH, ttJets, data)")
-options.setDefault("outputFile", "Data_test.root")
-options.register("SyncFile","Data_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
-options.register("realData",True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
+#options.setDefault("inputFiles",options.DataList)
+#options.register("SyncType","Data",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Which type of file to sync on (ttH, ttJets, data)")
+#options.setDefault("outputFile", "Data_test.root")
+#options.register("SyncFile","Data_test.csv",VarParsing.multiplicity.singleton,VarParsing.varType.string,"Name of sync .csv file")
+#options.register("realData",True,VarParsing.multiplicity.singleton,VarParsing.varType.bool,"input dataset contains real data")
 
-options.setDefault("maxEvents", 2000)
-#options.setDefault("maxEvents", -1) // run all events
+options.setDefault("maxEvents", 1000) # good enough for ttH, ttJets
+#options.setDefault("maxEvents", 2000) # Need for RunB Datah to get an event or two
+#options.setDefault("maxEvents", -1) # run all events
 
 # add custom options
 options.register("globalTag",
@@ -179,13 +180,13 @@ options.register("tagTTHF",
     "performs ttbar heavy flavour tagging"
 )
 options.register("reportEvery",
-    1000,
+    100,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.int,
     "number of events after which a report message is written"
 )
 options.register("summary",
-    True,
+    False,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
     "print a summary at the end?"

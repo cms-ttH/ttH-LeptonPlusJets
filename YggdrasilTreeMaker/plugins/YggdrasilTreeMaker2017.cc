@@ -68,10 +68,12 @@
 
 #include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilEventSelection.h"
 #include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilScaleFactors.h"
-//#include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/RoccoR.h"
-//#include "ttH-LeptonPlusJets/YggdrasilTreeMaker/plugins/RoccoR.cc"
-//#include "LHAPDF/LHAPDF.h"
-//#include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
+
+#include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/RoccoR.h"
+
+#include "LHAPDF/LHAPDF.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
 
 #include "DataFormats/JetReco/interface/PileupJetIdentifier.h"
 
@@ -115,9 +117,9 @@ class YggdrasilTreeMaker2017 : public edm::EDAnalyzer {
     edm::EDGetTokenT <std::vector< PileupSummaryInfo > > puInfoToken;
 
     //pdf weights
-//    edm::EDGetTokenT<LHEEventProduct> lheEventToken_;
-//    edm::EDGetTokenT<LHERunInfoProduct> lheRunToken_;
-//    std::map<int, int> pdfIdMap_;
+    edm::EDGetTokenT<LHEEventProduct> lheEventToken_;
+    edm::EDGetTokenT<LHERunInfoProduct> lheRunToken_;
+    std::map<int, int> pdfIdMap_;
    
     HLTConfigProvider hlt_config_;
     HLTConfigProvider filter_config_;
@@ -179,8 +181,9 @@ YggdrasilTreeMaker2017::YggdrasilTreeMaker2017(const edm::ParameterSet& iConfig)
 
   puInfoToken = consumes <std::vector< PileupSummaryInfo > > (edm::InputTag(std::string("slimmedAddPileupInfo")));
 
-//  lheEventToken_ = consumes<LHEEventProduct>("externalLHEProducer");
-//  lheRunToken_ = consumes<LHERunInfoProduct, edm::InRun>("externalLHEProducer");
+  //pdf weights
+  lheEventToken_ = consumes <LHEEventProduct> (edm::InputTag(std::string("externalLHEProducer")));
+  lheRunToken_ = consumes <LHERunInfoProduct, edm::InRun> (edm::InputTag(std::string("externalLHEProducer")));
 
   realData = iConfig.getParameter<bool>("realData");
   dataEra = iConfig.getParameter<std::string>("dataEra");
@@ -242,7 +245,6 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
   edm::Handle<std::vector< PileupSummaryInfo > > PupInfo;
 
   edm::Handle<int> genTtbarId;
-
 
   iEvent.getByToken(beamspotToken,bsHandle);
   iEvent.getByToken(vertexToken,vtxHandle);
@@ -522,7 +524,9 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     std::vector<int>    lepton_isLoose;
     std::vector<uint32_t> lepton_seed;
 
-                 
+//    RoccoR  rc("ttH-LeptonPlusJets/YggdrasilTreeMaker/test/rcdata.2016.v3");
+    RoccoR  rc("rcdata.2016.v3");
+
     for( std::vector<pat::Muon>::const_iterator iMu = muons->begin(); iMu != muons->end(); iMu++ ){ 
 
       TRandom3 rng; 
@@ -535,24 +539,29 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       int trkCharge = -99;
       if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
 
-    // Rochester correction
-  //    if(realData) {
-  //      double dataSF = rc.kScaleDT(trkCharge, iMu->pt(), iMu->eta(), iMu->phi(), 0, 0);
-  //    } else {
-  //      double mcSF = rc.kScaleFromGenMC(trkCharge, iMu->pt(), iMu->eta(), iMu->phi(), iMu->innerTrack()->hitPattern().trackerLayersWithMeasurement(), rng.Rndm(), rng.Rndm(), 0, 0);
-  //    }
+      // Rochester correction
+      double muRochesterSF = 1;
+      if(realData) {
+        muRochesterSF = rc.kScaleDT(trkCharge, iMu->pt(), iMu->eta(), iMu->phi(), 0, 0);
+      } else {
+        int nl = 0;
+        if(!iMu->innerTrack().isNull()) nl = iMu->innerTrack()->hitPattern().trackerLayersWithMeasurement();
+//        muRochesterSF = rc.kScaleAndSmearMC(trkCharge, iMu->pt(), iMu->eta(), iMu->phi(), nl, rng.Rndm(), rng.Rndm(), 0, 0);
+        muRochesterSF = rc.kScaleFromGenMC(trkCharge, iMu->pt(), iMu->eta(), iMu->phi(), nl, iMu->pt(), rng.Rndm(), 0, 0);
+
+      }
+//      printf("rochesterSF=%f\n",muRochesterSF);
 
       int isPOGTight = miniAODhelper.passesMuonPOGIdTight(*iMu) ? 1 : 0;
       int isPOGLoose = 1 ; //this is needed for the consistency of variables with electron.
 
 
-
       // our pre-selections 
-      if( iMu->pt() < 15 ){ continue;}
+      if( muRochesterSF*iMu->pt() < 15 ){ continue;}
       if( fabs( iMu->eta() ) > 2.4 ){ continue;}
 
 
-      lepton_pt.push_back(iMu->pt());
+      lepton_pt.push_back(muRochesterSF*iMu->pt());
       lepton_pt_preSmear.push_back(ptPreSmear);
       lepton_eta.push_back(iMu->eta());
       lepton_scEta.push_back(-99);
@@ -678,7 +687,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     // Misc //
     //////////
 
-    // Top pt weight - unused in analysis!
+    // Top pt weight - unused in analysis! So unnecessary to sync on
     // move --> #include "AnalysisDataFormats/TopObjects/interface/TtGenEvent.h"
 //    double topPtLepTrue = genEvt->leptonicDecayTop()->pt();
 //    double topPtHadTrue = genEvt->hadronicDecayTop()->pt();
@@ -986,7 +995,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
         int nom_sys = 0 ;
         int lf_up_sys = 9 ;
         int hf_down_sys = 12 ;
-        int cErr1_down_sys = 22;  
+        int cErr1_down_sys = 22;
         double dummy = - 1 ;
         csvSF = scalefactors.get_csv_wgt( & selection , nom_sys,  dummy , dummy , dummy );
         csvSF_lf_up = scalefactors.get_csv_wgt( & selection , lf_up_sys,  dummy , dummy , dummy );
@@ -1001,68 +1010,72 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
       //pdf weight
 
-  //    edm::Handle<LHEEventProduct> lheEvent;
-  //    iEvent.getByToken(lheEventToken_, lheEvent);
+      edm::Handle<LHEEventProduct> lheEvent;
+      iEvent.getByToken(lheEventToken_, lheEvent);
 
-  //    std::vector<double> nnpdfWeights;
-  //    double origWeight = lheEvent->originalXWGTUP());
+      std::vector<double> nnpdfWeights;
+      double origWeight = lheEvent->originalXWGTUP();
 
-  //    // create the PDF
-  //    LHAPDF::PDFSet nnpdfSet("NNPDF30_nlo_as_0118");
+      // create the PDF
+      LHAPDF::PDFSet nnpdfSet("NNPDF30_nlo_as_0118");
 
-  //    // sums for renormalization
-  //    double nnpdfWeightSumUp = 0.;
-  //    double nnpdfWeightSumDown = 0.;
+      // sums for renormalization
+      double nnpdfWeightSumUp = 0.;
+      double nnpdfWeightSumDown = 0.;
 
-  //    // obtain weights
-  //    auto& mcWeights = lheEvent->weights();
-  //    for (size_t i = 0; i < mcWeights.size(); i++)
-  //    {
-  //        // use the mapping to identify the weight
-  //        int idInt = stoi(mcWeights[i].id);
-  //        if (pdfIdMap_.find(idInt) != pdfIdMap_.end())
-  //        {
-  //            int setId = pdfIdMap_[idInt];
-  //            if (setId >= 260001 && setId <= 260100) // NNPDF30_nlo_as_0118
-  //            {
-  //                // divide by original weight to get scale-factor-like number
-  //                nnpdfWeights.push_back(mcWeights[i].wgt / origWeight);
-  //            }
-  //        }
-  //    }
+      // obtain weights
+      auto& mcWeights = lheEvent->weights();
+      for (size_t i = 0; i < mcWeights.size(); i++)
+      {
+          // use the mapping to identify the weight
+          int idInt = stoi(mcWeights[i].id);
+          if (pdfIdMap_.find(idInt) != pdfIdMap_.end())
+          {
+              int setId = pdfIdMap_[idInt];
+              if (setId >= 260001 && setId <= 260100) // NNPDF30_nlo_as_0118
+              {
+                  // divide by original weight to get scale-factor-like number
+                  nnpdfWeights.push_back(mcWeights[i].wgt / origWeight);
+              }
+          }
+      }
 
-  //    // create the combined up/down variations
-  //    double weightUp = 1.;
-  //    double weightDown = 1.;
-  //    if (pdfWeights.size() > 0)
-  //    {
-  //        // in rare cases it might happen that not all weights are present, so in order to
-  //        // use LHAPDF's uncertainty function, we fill up the vector
-  //        // this is expected not to have a big impact
-  //        while ((int)pdfWeights.size() < (end - start + 1))
-  //        {
-  //            pdfWeights.push_back(1.);
-  //        }
-  //        // first value must be the nominal value, i.e. 1 since we normalize by original weight
-  //        pdfWeights.insert(pdfWeights.begin(), 1.);
-  //        // calculate combined weights
-  //        const LHAPDF::PDFUncertainty pdfUnc = nnpdfSet.uncertainty(pdfWeights, 68.268949);
-  //        weightUp = pdfUnc.central + pdfUnc.errplus;
-  //        weightDown = pdfUnc.central - pdfUnc.errminus;
-  //    }
+      // create the combined up/down variations
+      double weightUp = 1.;
+      double weightDown = 1.;
+      if (nnpdfWeights.size() > 0)
+      {
+          // in rare cases it might happen that not all weights are present, so in order to
+          // use LHAPDF's uncertainty function, we fill up the vector
+          // this is expected not to have a big impact
+          while ((int)nnpdfWeights.size() < (260100 - 260001 + 1))
+          {
+              nnpdfWeights.push_back(1.);
+          }
+          // first value must be the nominal value, i.e. 1 since we normalize by original weight
+          nnpdfWeights.insert(nnpdfWeights.begin(), 1.);
+          // calculate combined weights
+          const LHAPDF::PDFUncertainty pdfUnc = nnpdfSet.uncertainty(nnpdfWeights, 68.268949);
+          weightUp = pdfUnc.central + pdfUnc.errplus;
+          weightDown = pdfUnc.central - pdfUnc.errminus;
+      }
 
-  //    // add to sums
-  //    nnpdfWeightSumUp += weightUp;
-  //    nnpdfWeightSumDown += weightDown;
+      // add to sums
+      nnpdfWeightSumUp += weightUp;
+      nnpdfWeightSumDown += weightDown;
+
+      // end pdf weights
 
       if(realData) {
         csvfile <<-1<<",";
         csvfile <<-1<<",";
       } else {
-        csvfile <<-1<<",";
-        csvfile <<-1<<",";
-  //      csvfile << eve-> weight_PDF_NNPDF30NLO_up_ <<",";
-  //      csvfile << eve-> weight_PDF_NNPDF30NLO_down_<< ",";
+//        csvfile <<-1<<",";
+//        csvfile <<-1<<",";
+//        csvfile << eve-> weight_PDF_NNPDF30NLO_up_ <<",";
+//        csvfile << eve-> weight_PDF_NNPDF30NLO_down_<< ",";
+        csvfile << nnpdfWeightSumUp << ",";
+        csvfile << nnpdfWeightSumDown << ",";
       }
 
       //mem weight
@@ -1454,46 +1467,46 @@ YggdrasilTreeMaker2017::beginRun(edm::Run const& iRun, edm::EventSetup const& iS
     flt_filterNames_.push_back(pathNameNoVer);
   }
   
-//  //pdf weights
-//  edm::Handle<LHERunInfoProduct> runInfo;
-//  iRun.getByLabel(lheEventCollection_, runInfo);
+  //pdf weights
+  edm::Handle<LHERunInfoProduct> runInfo;
+  iRun.getByLabel("externalLHEProducer", runInfo);
 
-//  std::string weightTag = "initrwgt";
-//  std::string startStr = "<weight id=";
-//  std::string setStr = "> PDF set = ";
-//  std::string endStr = "</weight>";
+  std::string weightTag = "initrwgt";
+  std::string startStr = "<weight id=";
+  std::string setStr = "> PDF set = ";
+  std::string endStr = "</weight>";
 
-//  for (std::vector<LHERunInfoProduct::Header>::const_iterator it = runInfo->headers_begin();
-//       it != runInfo->headers_end(); it++)
-//  {
-//      if (it->tag() != weightTag)
-//      {
-//          continue;
-//      }
+  for (std::vector<LHERunInfoProduct::Header>::const_iterator it = runInfo->headers_begin();
+       it != runInfo->headers_end(); it++)
+  {
+    if (it->tag() != weightTag)
+    {
+      continue;
+    }
 
-//      std::vector<std::string> lines = it->lines();
-//      for (size_t i = 0; i < lines.size(); i++)
-//      {
-//          size_t startPos = lines[i].find(startStr);
-//          size_t setPos = lines[i].find(setStr);
-//          size_t endPos = lines[i].find(endStr);
-//          if (startPos == std::string::npos || setPos == std::string::npos || endPos == std::string::npos)
-//          {
-//              continue;
-//          }
-//          std::string weightId = lines[i].substr(startPos + startStr.size() + 1, setPos - startPos - startStr.size() - 2);
-//          std::string setId = lines[i].substr(setPos + setStr.size(), endPos - setPos - setStr.size() - 1);
-//          try
-//          {
-//              pdfIdMap_[stoi(weightId)] = stoi(setId);
-//          }
-//          catch (...)
-//          {
-//              std::cerr << "error while parsing the lhe run xml header: ";
-//              std::cerr << "cannot interpret as ints:" << weightId << " -> " << setId << std::endl;
-//          }
-//      }
-//  }
+    std::vector<std::string> lines = it->lines();
+    for (size_t i = 0; i < lines.size(); i++)
+    {
+      size_t startPos = lines[i].find(startStr);
+      size_t setPos = lines[i].find(setStr);
+      size_t endPos = lines[i].find(endStr);
+      if (startPos == std::string::npos || setPos == std::string::npos || endPos == std::string::npos)
+      {
+        continue;
+      }
+      std::string weightId = lines[i].substr(startPos + startStr.size() + 1, setPos - startPos - startStr.size() - 2);
+      std::string setId = lines[i].substr(setPos + setStr.size(), endPos - setPos - setStr.size() - 1);
+      try
+      {
+        pdfIdMap_[stoi(weightId)] = stoi(setId);
+      }
+      catch (...)
+      {
+        std::cerr << "error while parsing the lhe run xml header: ";
+        std::cerr << "cannot interpret as ints:" << weightId << " -> " << setId << std::endl;
+      }
+    }
+  }
  
 }
 
