@@ -624,7 +624,7 @@ bool ttHYggdrasilEventSelection::_OverlapWithLooseLeptons( double eta, double ph
        lep != selected_looseLeptons.end();
        lep++
      ){
-    if( _calcDR2( eta, (*lep)->Eta(), phi, (*lep)->Phi() ) < 0.4 * 0.4 ){ return true ; }
+    if( _calcDR2( eta, (*lep)->Eta(), phi, (*lep)->Phi() ) <= 0.4 * 0.4 ){ return true ; }
   }
   return false ;
 }

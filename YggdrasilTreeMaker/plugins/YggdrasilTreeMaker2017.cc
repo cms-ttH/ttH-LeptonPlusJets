@@ -69,6 +69,7 @@
 #include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilEventSelection.h"
 #include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/ttHYggdrasilScaleFactors.h"
 
+
 #include "ttH-LeptonPlusJets/YggdrasilTreeMaker/interface/RoccoR.h"
 
 #include "LHAPDF/LHAPDF.h"
@@ -524,18 +525,22 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     std::vector<int>    lepton_isLoose;
     std::vector<uint32_t> lepton_seed;
 
-//    RoccoR  rc("ttH-LeptonPlusJets/YggdrasilTreeMaker/test/rcdata.2016.v3");
+    // Load rochester correction table
     RoccoR  rc("rcdata.2016.v3");
 
+    // Muon loop
     for( std::vector<pat::Muon>::const_iterator iMu = muons->begin(); iMu != muons->end(); iMu++ ){ 
 
+      // Get deterministic seed
       TRandom3 rng; 
       int32_t seed = iMu->userInt("deterministicSeed");
-      rng.SetSeed((uint32_t)seed); // Unused! FIXME
+      rng.SetSeed((uint32_t)seed);
 
-      //Muons don't have smearing, so use regular pt.
+      // Muons don't have smearing, so save regular pt.
+      // Must keep this since we save electrons and muon in same struct
       double ptPreSmear = iMu->pt();
 
+      // Get charge
       int trkCharge = -99;
       if( iMu->muonBestTrack().isAvailable() ) trkCharge = iMu->muonBestTrack()->charge();
 
@@ -556,11 +561,11 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       int isPOGLoose = 1 ; //this is needed for the consistency of variables with electron.
 
 
-      // our pre-selections 
+      // Kinematic pre-selections 
       if( muRochesterSF*iMu->pt() < 15 ){ continue;}
       if( fabs( iMu->eta() ) > 2.4 ){ continue;}
 
-
+      // Save to vector for event selection
       lepton_pt.push_back(muRochesterSF*iMu->pt());
       lepton_pt_preSmear.push_back(ptPreSmear);
       lepton_eta.push_back(iMu->eta());
@@ -575,36 +580,39 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       lepton_seed.push_back(seed);
 
     }
-    
+
+    // Electron loop
     for( std::vector<pat::Electron>::const_iterator iEle = electrons->begin(); iEle != electrons->end(); iEle++ ){ 
 
+      // Get deterministic seed
       TRandom3 rng;
       int32_t seed = iEle->userInt("deterministicSeed");
       rng.SetSeed((uint32_t)seed);
 
+      // Save pt before smearing for electron SF
       double ptPreSmear = iEle->userFloat("ptBeforeRun2Calibration");
 
+      // Get charge
       int trkCharge = -99;
       if( iEle->gsfTrack().isAvailable() ) trkCharge = iEle->gsfTrack()->charge();
 
       int isPOGTight = miniAODhelper.PassElectron80XId(*iEle ,electronID::electron80XCutBasedM ) ? 1 : 0  ;
       int isPOGLoose = miniAODhelper.PassElectron80XId(*iEle ,electronID::electron80XCutBasedL ) ? 1 : 0  ;
 
-
-  // our pre-selections 
+      // Kinematic pre-selections 
       if( iEle->pt() < 15 ) continue;
       if( fabs( iEle->eta() ) > 2.4 ) continue;
-  //
 
+      // Debugging: check if electron is in calorimeter crack
       bool inCrack = false;
       double scEta = -99;
       if( iEle->superCluster().isAvailable() ){
         inCrack = ( fabs(iEle->superCluster()->position().eta())>=1.4442 && fabs(iEle->superCluster()->position().eta())<=1.5660 );
          scEta = iEle->superCluster()->position().eta();
       }
-
       if(inCrack)isPOGTight=0;
 
+      // Save to vector for event selection
       lepton_pt.push_back(iEle->pt());
       lepton_pt_preSmear.push_back(ptPreSmear);
       lepton_eta.push_back(iEle->eta());
@@ -624,18 +632,21 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     //// Jets ////
     //////////////
     
+    // Get loose jets (no pt, eta requirements)
     const std::vector<pat::Jet> pfJets_ID = miniAODhelper.GetSelectedJets(*pfjets, 0., 9999., jetID::jetLoose, '-' );
     
-    // Jet Corrections //
-    
+    // Get jet corrector for JEC
     const JetCorrector* corrector = JetCorrector::getJetCorrector( "ak4PFchsL1L2L3", iSetup );
-    miniAODhelper.SetJetCorrector(corrector); 
+    miniAODhelper.SetJetCorrector(corrector);
     
-    
+    // Undo built-in corrections from generator
     std::vector<pat::Jet> rawJets = miniAODhelper.GetUncorrectedJets(pfJets_ID);
+
+    // Recorrect with specified corrector JEC
     std::vector<pat::Jet> correctedJets_noSys = miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets,Systematics::NA,true,true);
-    
-    std::vector<pat::Jet> selectedJets_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 20., 5.0, jetID::none, '-' );
+
+    // Apply PUJetID and pre-seelction pt, eta cuts
+    std::vector<pat::Jet> selectedJets_noSys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_noSys, 20., 5.0, jetID::none, '-', PUJetID::loose );
     std::vector<pat::Jet> selectedJets_noSys_sorted = miniAODhelper.GetSortedByPt(selectedJets_noSys_unsorted);
      
     std::vector<double> jet_pt;
@@ -644,35 +655,20 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     std::vector<double> jet_m;
     std::vector<double> jet_csvV;
     std::vector<int> jet_flavour;
-    std::vector<int> jet_PUID_passWPLooseV;
 
-    // Loop over selected jets
+    // Loop over remaining jets
     for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_noSys_sorted.begin(); iJet != selectedJets_noSys_sorted.end(); iJet++ ){ 
 
+      // Save kinematic variables
       jet_pt  .push_back( iJet -> pt()  );
       jet_phi .push_back( iJet -> phi() );
       jet_eta .push_back( iJet -> eta() );
       jet_m   .push_back( iJet -> mass()   );
       
-      
+      // Save b-tag csv value
       double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
       jet_csvV.push_back(myCSV);
       jet_flavour.push_back(iJet->hadronFlavour());
-      
-      
-      
-      //PU jet ID
-      if(!iJet->hasUserFloat("pileupJetIdUpdated:fullDiscriminant") || !iJet->hasUserInt("pileupJetIdUpdated:fullId")) {
-         std::cout << "no mvaValue or idflag info for the jet ---" << std::endl;
-      }
-
-      
-      int    idflag = iJet->userInt("pileupJetIdUpdated:fullId");
-      bool passPUIDLoose = PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kLoose ); 
-
-      if(passPUIDLoose)jet_PUID_passWPLooseV.push_back(99);
-      else jet_PUID_passWPLooseV.push_back(88);
-
 
     }// end loop over iJet    
 
@@ -854,7 +850,6 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
       std::vector<pat::Jet> jet_JESPileUpDataMCDOWN   =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::JESPileUpDataMCdown  , doJES, doJER );
       std::vector<pat::Jet> jet_JESRelativeFSRUP =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::JESRelativeFSRup, doJES, doJER );
 
-      std::vector<pat::Jet> jet_JERNOMI =  miniAODhelper.GetCorrectedJets(jet_JESNOMI, iEvent, iSetup, genjets ,Systematics::NA, false, true );
       std::vector<pat::Jet> jet_JESJERNOMI =  miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets ,Systematics::NA, true, true );
 
       // For matching between selected jets and raw jets
@@ -884,7 +879,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
           jet1_jesSF_down = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
           jet1_jesSF_PileUpDataMC_down = jet_JESPileUpDataMCDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
           jet1_jesSF_RelativeFSR_up = jet_JESRelativeFSRUP.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
-          jet1_jerSF_nominal = jet_JERNOMI.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+          jet1_jerSF_nominal = jet_JESJERNOMI.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
           jet1_PUJetID = jet_JESNOMI.at( idxJet ).userInt("pileupJetIdUpdated:fullId");
           jet1_PUJetIDDiscriminant = jet_JESNOMI.at( idxJet ).userFloat("pileupJetIdUpdated:fullDiscriminant");
           jet1_seed = jet_JESNOMI.at( idxJet ).userInt("deterministicSeed");
@@ -907,7 +902,7 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
           jet2_jesSF_down = jet_JESDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
           jet2_jesSF_PileUpDataMC_down = jet_JESPileUpDataMCDOWN.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
           jet2_jesSF_RelativeFSR_up = jet_JESRelativeFSRUP.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
-          jet2_jerSF_nominal = jet_JERNOMI.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
+          jet2_jerSF_nominal = jet_JESJERNOMI.at( idxJet ).pt() / jet_JESNOMI.at( idxJet ).pt();
           jet2_PUJetID = jet_JESNOMI.at( idxJet ).userInt("pileupJetIdUpdated:fullId");
           jet2_PUJetIDDiscriminant = jet_JESNOMI.at( idxJet ).userFloat("pileupJetIdUpdated:fullDiscriminant");
           jet2_seed = jet_JESNOMI.at( idxJet ).userInt("deterministicSeed");
@@ -1153,32 +1148,26 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
         csvfile << std::setprecision(4) << ( nj1 ? selection.selected_jets_step[0] : -1)<< "," ;
         csvfile << std::setprecision(4) << ( nj1 ? jet_csvV[0] : -1 )<< "," ;
         csvfile << std::setprecision(4) << ( nj1 ? dR1 : -1 )<< "," ;
-        csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[0] : -1)<<","; 
         csvfile << std::setprecision(4) << ( nj2 ? jet_pt[1] : -1 )<< "," ;
         csvfile << std::setprecision(4) << ( nj2 ? selection.selected_jets_step[1] : -1)<< "," ;
         csvfile << std::setprecision(4) << ( nj2 ? jet_csvV[1] : -1 )<< "," ;
         csvfile << std::setprecision(4) << ( nj1 ? dR2 : -1 )<< "," ;
-        csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[1] : -1)<<","; 
         csvfile << std::setprecision(4) << ( nj3 ? jet_pt[2] : -1 )<< "," ;
         csvfile << std::setprecision(4) << ( nj3 ? selection.selected_jets_step[2] : -1)<< "," ;
         csvfile << std::setprecision(4) << ( nj3 ? jet_csvV[2] : -1 )<< "," ;
         csvfile << std::setprecision(4) << ( nj1 ? dR3 : -1 )<< "," ;
-        csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[2] : -1)<<","; 
         csvfile << std::setprecision(4) << ( nj4 ? jet_pt[3] : -1 )<< "," ;
         csvfile << std::setprecision(4) << ( nj4 ? selection.selected_jets_step[3] : -1)<< "," ;
         csvfile << std::setprecision(4) << ( nj4 ? jet_csvV[3] : -1 )<< "," ;
         csvfile << std::setprecision(4) << ( nj1 ? dR4 : -1 )<< "," ;
-        csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[3] : -1)<<","; 
         csvfile << std::setprecision(4) << ( nj5 ? jet_pt[4] : -1 )<< "," ;
         csvfile << std::setprecision(4) << ( nj5 ? selection.selected_jets_step[4] : -1)<< "," ;
         csvfile << std::setprecision(4) << ( nj5 ? jet_csvV[4] : -1 )<< "," ;
         csvfile << std::setprecision(4) << ( nj1 ? dR5 : -1 )<< "," ;
-        csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[4] : -1)<<","; 
         csvfile << std::setprecision(4) << ( nj6 ? jet_pt[5] : -1 )<< "," ;
         csvfile << std::setprecision(4) << ( nj6 ? selection.selected_jets_step[5] : -1)<< "," ;
         csvfile << std::setprecision(4) << ( nj6 ? jet_csvV[5] : -1 )<< "," ;
         csvfile << std::setprecision(4) << ( nj1 ? dR6 : -1 )<< "," ;
-        csvfile << std::setprecision(4) << ( nj1 ? jet_PUID_passWPLooseV[5] : -1)<<","; 
         
       }
       
@@ -1212,14 +1201,13 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
     std::vector<std::vector<double>> vjet_m_sys;
     std::vector<std::vector<double>> vjet_csvV_sys;
     std::vector<std::vector<int>>    vjet_flavour_sys;
-    std::vector<std::vector<int>>    vjet_PUID_passWPLooseV_sys;
 
     if(doSystematics){
       for(int iSys=0; iSys<int(systematics.size());iSys++){
 
         std::vector<pat::Jet> correctedJets_Sys = miniAODhelper.GetCorrectedJets(rawJets, iEvent, iSetup, genjets,systematics[iSys],true,true);
 
-        std::vector<pat::Jet> selectedJets_Sys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_Sys, 20., 5.0, jetID::none, '-' );
+        std::vector<pat::Jet> selectedJets_Sys_unsorted = miniAODhelper.GetSelectedJets(correctedJets_Sys, 20., 5.0, jetID::none, '-', PUJetID::loose );
         std::vector<pat::Jet> selectedJets_Sys_sorted = miniAODhelper.GetSortedByPt(selectedJets_Sys_unsorted);
 
         std::vector<double> jet_pt_sys;
@@ -1228,7 +1216,6 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
         std::vector<double> jet_m_sys;
         std::vector<double> jet_csvV_sys;
         std::vector<int> jet_flavour_sys;
-        std::vector<int> jet_PUID_passWPLooseV_sys;
      
         // Loop over selected jets
         for( std::vector<pat::Jet>::const_iterator iJet = selectedJets_Sys_sorted.begin(); iJet != selectedJets_Sys_sorted.end(); iJet++ ){ 
@@ -1239,13 +1226,8 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
           jet_m_sys   .push_back( iJet -> mass()   );
 
           double myCSV = iJet->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
-          jet_csvV.push_back(myCSV);
-          jet_flavour.push_back(iJet->hadronFlavour());
-
-          int idflag = iJet->userInt("pileupJetId:fullId");
-          bool passPUIDLoose = PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kLoose ); 
-          if(passPUIDLoose)jet_PUID_passWPLooseV.push_back(99);
-          else jet_PUID_passWPLooseV.push_back(88);
+          jet_csvV_sys.push_back(myCSV);
+          jet_flavour_sys.push_back(iJet->hadronFlavour());
           
         }// end loop over iJet    
 
@@ -1256,7 +1238,6 @@ YggdrasilTreeMaker2017::analyze(const edm::Event& iEvent, const edm::EventSetup&
         vjet_m_sys.push_back(jet_m_sys);
         vjet_csvV_sys.push_back(jet_csvV_sys);
         vjet_flavour_sys.push_back(jet_flavour_sys);
-        //vjet_PUID_passWPLooseV_sys(jet_PUID_passWPLooseV_sys);
           
       }// End Systematics Loop
     }
